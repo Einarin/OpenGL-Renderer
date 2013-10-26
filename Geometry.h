@@ -13,7 +13,7 @@ namespace gl{
         }
     };
 
-	class Billboard{
+	class Billboard : public Geometry{
 	protected:
 		unsigned int vao;
 		unsigned int vbo;
@@ -28,6 +28,9 @@ namespace gl{
 		Billboard(float topLeftX, float topLeftY, float width, float height);
 		virtual void init();
 		virtual void download();
+		void move(float topLeftX, float topLeftY, float width, float height);
+		void move(float topLeftX, float topLeftY);
+		void moveRel(float dx, float dy);
 		virtual void draw();
 		virtual ~Billboard();
 	};

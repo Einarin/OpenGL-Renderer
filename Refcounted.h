@@ -1,17 +1,64 @@
+#pragma once
 
-class RefManager{
-};
-
-template<class T> class Ref {
-	friend class RefManager;
+template<class T>
+class Ref {
 private:
-	T* object;
-protected:
-	Ref(T* obj) : object(obj)
-	{
-		obj->retain();
-	}
+	template <class T>
+	class IRef{
+	protected:
+		unsigned int refcount;
+		virtual void dealloc()=0;
+		IRef():refcount(1)
+		{}
+		~IRef()
+		{}
+	public:
+		inline void retain(){
+			refcount++;
+		}
+		inline void release(){
+			refcount--;
+			if(refcount < 1){
+				dealloc();
+			}
+		}
+		T* data;
+	};
+	template <class T>
+	class RefPtr : public IRef<T> {
+	public:
+		RefPtr(T* object)
+		{
+			data = object;
+		}
+		virtual void dealloc(){
+			delete data;
+			delete this;
+		}
+	};
+	template <class T>
+	class RefInline : public IRef<T> {
+	protected:
+		T dataStore;
+	public:
+		RefInline()
+		{
+			data = & dataStore;
+		}
+		virtual void dealloc(){
+			delete this;
+		}
+	};
+	IRef<T>* object;
 public:
+	Ref()
+	{
+		object = new RefInline<T>();
+	}
+	Ref(T* obj)
+	{
+		object = new RefPtr<T>(obj);
+	}
 	Ref(const Ref& other)
 	{
 		other.object->retain();
@@ -28,48 +75,12 @@ public:
 		object = other.object;
 		return other;
 	}
-	const inline T* operator->() const
+	const inline T* operator*() const
 	{
-		referenced();
-		return object;
+		return object->data;
 	}
 	inline T* operator->()
 	{
-		referenced();
-		return object;
-	}
-};
-
-
-class Refcounted{
-	friend Ref<Refcounted>;
-protected:
-	bool allocated;
-	bool valid;
-	unsigned int refcount;
-	virtual void referenced()
-	{}
-	inline void retain()
-	{
-		refcount++;
-	}
-	inline void release()
-	{
-		refcount--;
-		if(refcount < 1)
-			delete this;
-	}
-public:
-	Refcounted():refcount(1)
-	{}
-	virtual void alloc()
-	{}
-	virtual void dealloc()
-	{}
-	virtual ~Refcounted(){
-		if(allocated){
-			dealloc();
-			allocated = false;
-		}
+		return object->data;
 	}
 };

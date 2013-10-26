@@ -1,39 +1,35 @@
 #pragma once
 #include "Refcounted.h"
 #include <string>
-#include <vector>
+#include <list>
 
 namespace gl
 {
-	class GlShaderStage {
+	class ShaderStage {
 	protected:
 		int id;
+		ShaderStage(int stage);
 	public:
-		GlShaderStage(int stage);
-		GlShaderStage(const GlShaderStage& other);
+		static Ref<ShaderStage> Allocate(int stage);
 		bool compile(std::string source);
+		bool compileFromFile(std::string filename);
 		int getId();
-		
 	};
 	
-	class Shader : public Refcounted{
-	public:
-		virtual void bind()=0;
-	};
-
-	class GlShader : public Shader{
+	class Shader {
 	protected:
-		std::vector<GlShaderStage> stages;
+		std::list<Ref<ShaderStage>> stages;
 		int id;
+		Shader();
 	public:
-		void attachStage(GlShaderStage& stage);
-		virtual bool link();
-		virtual void bind();
-		GlShader();
-		~GlShader();
+		~Shader();
+		static Ref<Shader> Allocate();
+		void attachStage(Ref<ShaderStage> stage);
+		void addAttrib(std::string name, int index);
+		int getUniformLocation(std::string name);
+		bool link();
+		void bind();
 		int getId();
 	};
-
-	//typedef Ref<Shader> ShaderRef;
 
 }//namespace gl

@@ -84,14 +84,18 @@ protected:
 public:
 	static TextureManager* Instance();
 	virtual TexRef texFromFile(std::string image)=0;
-	virtual TexRef unbackedTex(glm::vec2 size)=0;
+	virtual TexRef texFromPngBytestream(char* buff, int bytes)=0;
+	virtual TexRef texFromRGBA8888(char* buff, glm::ivec2 size)=0;
+	virtual TexRef unbackedTex(glm::ivec2 size)=0;
 	virtual void contextLost()=0;
 };
 
 class GlTextureManager : public TextureManager {
 public:
 	virtual TexRef texFromFile(std::string image);
-	virtual TexRef unbackedTex(glm::vec2 size);
+	virtual TexRef texFromPngBytestream(char* buff, int bytes);
+	virtual TexRef texFromRGBA8888(char* buff, glm::ivec2 size);
+	virtual TexRef unbackedTex(glm::ivec2 size);
 	virtual void contextLost();
 };
 

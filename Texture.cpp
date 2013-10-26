@@ -127,12 +127,24 @@ TexRef GlTextureManager::texFromFile(std::string file){
 	tex->filename = file;
 	return TexRef(tex);
 }
-TexRef GlTextureManager::unbackedTex(glm::vec2 size){
+TexRef GlTextureManager::unbackedTex(glm::ivec2 size){
 	return TexRef(new GlTexture2D());
 }
 void GlTextureManager::contextLost()
 {
 	//TODO: need to call init on all Textures when the context is lost
+}
+TexRef GlTextureManager::texFromPngBytestream(char* buff, int size){
+	GlTexture2D* tex = new GlTexture2D();
+	if(!loadGlTex2dFromPngBytestream(tex,buff,size)){
+		std::cout << "Loading image from PNG bytestream failed, texture will be invalid\n";
+	}
+	return TexRef(tex);
+}
+TexRef GlTextureManager::texFromRGBA8888(char* buff, glm::ivec2 size){
+	GlTexture2D* tex = new GlTexture2D();
+	tex->setImage(GL_RGBA8,size,GL_UNSIGNED_BYTE,(void*)buff);
+	return TexRef(tex);
 }
 void FileBackedGlTexture2D::bind(){
 	if(!backed){

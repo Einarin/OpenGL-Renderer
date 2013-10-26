@@ -59,6 +59,32 @@ void Billboard::download(){
 #endif
 }
 
+void Billboard::move(float topLeftX, float topLeftY, float width, float height)
+{
+	corners[0].pos = vec4(topLeftX,topLeftY,0,1);
+    corners[1].pos = vec4(topLeftX,topLeftY+height,0,1);
+    corners[2].pos = vec4(topLeftX+width,topLeftY,0,1);
+    corners[3].pos = vec4(topLeftX+width,topLeftY+height,0,1);
+	download();
+}
+void Billboard::move(float topLeftX, float topLeftY)
+{
+	vec2 size = corners[3].pos.xy - corners[0].pos.xy;
+	corners[0].pos = vec4(topLeftX,topLeftY,0,1);
+    corners[1].pos = vec4(topLeftX,topLeftY+size.y,0,1);
+    corners[2].pos = vec4(topLeftX+size.x,topLeftY,0,1);
+    corners[3].pos = vec4(topLeftX+size.x,topLeftY+size.y,0,1);
+	download();
+}
+void Billboard::moveRel(float dx, float dy)
+{
+	corners[0].pos.xy += vec2(dx,dy);
+	corners[1].pos.xy += vec2(dx,dy);
+	corners[2].pos.xy += vec2(dx,dy);
+	corners[3].pos.xy += vec2(dx,dy);
+	download();
+}
+
 void Billboard::draw(){
 	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

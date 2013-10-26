@@ -1,0 +1,286 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|Win32">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|Win32">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGUID>{1143868B-F8AC-43E0-B473-A6F80B29B1CC}</ProjectGUID>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>Win32</Platform>
+    <ProjectName>freetype-gl</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">freetype-gl</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Users\Johnny\Programs\freetype-gl-build\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">freetype-gl.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">freetype-gl</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">C:\Users\Johnny\Programs\freetype-gl-build\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">freetype-gl.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">freetype-gl</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">C:\Users\Johnny\Programs\freetype-gl-build\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">freetype-gl.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">freetype-gl</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>CompileAsC</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>
+      </ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>Debug</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>C:/Users/Johnny/Programs/freetype-gl-build/Debug/freetype-gl.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:/Users/Johnny/Programs/freetype-gl;C:/Users/Johnny/Programs/freetype-gl/windows/include;C:/Users/Johnny/Programs/freetype-gl/windows;C:/Users/Johnny/Programs/freetype-gl/windows/glut;C:/Users/Johnny/Programs/freetype-gl/windows/glew/include;C:/Users/Johnny/Programs/freetype-gl/windows/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/freetype/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/AntTweakBar/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:/Users/Johnny/Programs/freetype-gl;C:/Users/Johnny/Programs/freetype-gl/windows/include;C:/Users/Johnny/Programs/freetype-gl/windows;C:/Users/Johnny/Programs/freetype-gl/windows/glut;C:/Users/Johnny/Programs/freetype-gl/windows/glew/include;C:/Users/Johnny/Programs/freetype-gl/windows/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/freetype/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/AntTweakBar/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:/Users/Johnny/Programs/freetype-gl;C:/Users/Johnny/Programs/freetype-gl/windows/include;C:/Users/Johnny/Programs/freetype-gl/windows;C:/Users/Johnny/Programs/freetype-gl/windows/glut;C:/Users/Johnny/Programs/freetype-gl/windows/glew/include;C:/Users/Johnny/Programs/freetype-gl/windows/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/freetype/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/AntTweakBar/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAs>CompileAsC</CompileAs>
+      <ExceptionHandling>
+      </ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>Release</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>C:/Users/Johnny/Programs/freetype-gl-build/Release/freetype-gl.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:/Users/Johnny/Programs/freetype-gl;C:/Users/Johnny/Programs/freetype-gl/windows/include;C:/Users/Johnny/Programs/freetype-gl/windows;C:/Users/Johnny/Programs/freetype-gl/windows/glut;C:/Users/Johnny/Programs/freetype-gl/windows/glew/include;C:/Users/Johnny/Programs/freetype-gl/windows/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/freetype/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/AntTweakBar/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:/Users/Johnny/Programs/freetype-gl;C:/Users/Johnny/Programs/freetype-gl/windows/include;C:/Users/Johnny/Programs/freetype-gl/windows;C:/Users/Johnny/Programs/freetype-gl/windows/glut;C:/Users/Johnny/Programs/freetype-gl/windows/glew/include;C:/Users/Johnny/Programs/freetype-gl/windows/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/freetype/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/AntTweakBar/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:/Users/Johnny/Programs/freetype-gl;C:/Users/Johnny/Programs/freetype-gl/windows/include;C:/Users/Johnny/Programs/freetype-gl/windows;C:/Users/Johnny/Programs/freetype-gl/windows/glut;C:/Users/Johnny/Programs/freetype-gl/windows/glew/include;C:/Users/Johnny/Programs/freetype-gl/windows/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/freetype/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/AntTweakBar/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAs>CompileAsC</CompileAs>
+      <ExceptionHandling>
+      </ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>MinSizeRel</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>C:/Users/Johnny/Programs/freetype-gl-build/MinSizeRel/freetype-gl.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:/Users/Johnny/Programs/freetype-gl;C:/Users/Johnny/Programs/freetype-gl/windows/include;C:/Users/Johnny/Programs/freetype-gl/windows;C:/Users/Johnny/Programs/freetype-gl/windows/glut;C:/Users/Johnny/Programs/freetype-gl/windows/glew/include;C:/Users/Johnny/Programs/freetype-gl/windows/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/freetype/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/AntTweakBar/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:/Users/Johnny/Programs/freetype-gl;C:/Users/Johnny/Programs/freetype-gl/windows/include;C:/Users/Johnny/Programs/freetype-gl/windows;C:/Users/Johnny/Programs/freetype-gl/windows/glut;C:/Users/Johnny/Programs/freetype-gl/windows/glew/include;C:/Users/Johnny/Programs/freetype-gl/windows/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/freetype/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/AntTweakBar/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:/Users/Johnny/Programs/freetype-gl;C:/Users/Johnny/Programs/freetype-gl/windows/include;C:/Users/Johnny/Programs/freetype-gl/windows;C:/Users/Johnny/Programs/freetype-gl/windows/glut;C:/Users/Johnny/Programs/freetype-gl/windows/glew/include;C:/Users/Johnny/Programs/freetype-gl/windows/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/freetype/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/AntTweakBar/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAs>CompileAsC</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>
+      </ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>RelWithDebInfo</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>C:/Users/Johnny/Programs/freetype-gl-build/RelWithDebInfo/freetype-gl.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:/Users/Johnny/Programs/freetype-gl;C:/Users/Johnny/Programs/freetype-gl/windows/include;C:/Users/Johnny/Programs/freetype-gl/windows;C:/Users/Johnny/Programs/freetype-gl/windows/glut;C:/Users/Johnny/Programs/freetype-gl/windows/glew/include;C:/Users/Johnny/Programs/freetype-gl/windows/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/freetype/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/AntTweakBar/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:/Users/Johnny/Programs/freetype-gl;C:/Users/Johnny/Programs/freetype-gl/windows/include;C:/Users/Johnny/Programs/freetype-gl/windows;C:/Users/Johnny/Programs/freetype-gl/windows/glut;C:/Users/Johnny/Programs/freetype-gl/windows/glew/include;C:/Users/Johnny/Programs/freetype-gl/windows/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/freetype/freetype;C:/Users/Johnny/Programs/freetype-gl/windows/AntTweakBar/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\freetype-gl\CMakeLists.txt">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building Custom Rule C:/Users/Johnny/Programs/freetype-gl/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">setlocal
+"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" -HC:/Users/Johnny/Programs/freetype-gl -BC:/Users/Johnny/Programs/freetype-gl-build --check-stamp-file C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:/Users/Johnny/Programs/freetype-gl/CMakeLists.txt;C:\Users\Johnny\Programs\freetype-gl\CMakeLists.txt;C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\2.8.11.1\CMakeSystem.cmake;C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\2.8.11.1\CMakeCCompiler.cmake;C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\2.8.11.1\CMakeCXXCompiler.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-MSVC.cmake;C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\2.8.11.1\CMakeRCCompiler.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCXXInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindOpenGL.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageMessage.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeParseArguments.cmake;C:\Users\Johnny\Programs\freetype-gl\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\generate.stamp</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building Custom Rule C:/Users/Johnny/Programs/freetype-gl/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">setlocal
+"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" -HC:/Users/Johnny/Programs/freetype-gl -BC:/Users/Johnny/Programs/freetype-gl-build --check-stamp-file C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:/Users/Johnny/Programs/freetype-gl/CMakeLists.txt;C:\Users\Johnny\Programs\freetype-gl\CMakeLists.txt;C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\2.8.11.1\CMakeSystem.cmake;C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\2.8.11.1\CMakeCCompiler.cmake;C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\2.8.11.1\CMakeCXXCompiler.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-MSVC.cmake;C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\2.8.11.1\CMakeRCCompiler.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCXXInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindOpenGL.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageMessage.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeParseArguments.cmake;C:\Users\Johnny\Programs\freetype-gl\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\generate.stamp</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">Building Custom Rule C:/Users/Johnny/Programs/freetype-gl/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">setlocal
+"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" -HC:/Users/Johnny/Programs/freetype-gl -BC:/Users/Johnny/Programs/freetype-gl-build --check-stamp-file C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">C:/Users/Johnny/Programs/freetype-gl/CMakeLists.txt;C:\Users\Johnny\Programs\freetype-gl\CMakeLists.txt;C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\2.8.11.1\CMakeSystem.cmake;C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\2.8.11.1\CMakeCCompiler.cmake;C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\2.8.11.1\CMakeCXXCompiler.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-MSVC.cmake;C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\2.8.11.1\CMakeRCCompiler.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCXXInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindOpenGL.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageMessage.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeParseArguments.cmake;C:\Users\Johnny\Programs\freetype-gl\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\generate.stamp</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">Building Custom Rule C:/Users/Johnny/Programs/freetype-gl/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">setlocal
+"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" -HC:/Users/Johnny/Programs/freetype-gl -BC:/Users/Johnny/Programs/freetype-gl-build --check-stamp-file C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">C:/Users/Johnny/Programs/freetype-gl/CMakeLists.txt;C:\Users\Johnny\Programs\freetype-gl\CMakeLists.txt;C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\2.8.11.1\CMakeSystem.cmake;C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\2.8.11.1\CMakeCCompiler.cmake;C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\2.8.11.1\CMakeCXXCompiler.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-MSVC.cmake;C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\2.8.11.1\CMakeRCCompiler.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCXXInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindOpenGL.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageMessage.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeParseArguments.cmake;C:\Users\Johnny\Programs\freetype-gl\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">C:\Users\Johnny\Programs\freetype-gl-build\CMakeFiles\generate.stamp</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\freetype-gl\freetype-gl.h" />
+    <ClInclude Include="..\freetype-gl\vec234.h" />
+    <ClInclude Include="..\freetype-gl\opengl.h" />
+    <ClInclude Include="..\freetype-gl\markup.h" />
+    <ClInclude Include="..\freetype-gl\mat4.h" />
+    <ClInclude Include="..\freetype-gl\texture-atlas.h" />
+    <ClInclude Include="..\freetype-gl\texture-font.h" />
+    <ClInclude Include="..\freetype-gl\vertex-buffer.h" />
+    <ClInclude Include="..\freetype-gl\vertex-attribute.h" />
+    <ClInclude Include="..\freetype-gl\font-manager.h" />
+    <ClInclude Include="..\freetype-gl\text-buffer.h" />
+    <ClInclude Include="..\freetype-gl\shader.h" />
+    <ClInclude Include="..\freetype-gl\vector.h" />
+    <ClInclude Include="..\freetype-gl\platform.h" />
+    <ClCompile Include="..\freetype-gl\mat4.c" />
+    <ClCompile Include="..\freetype-gl\texture-atlas.c" />
+    <ClCompile Include="..\freetype-gl\texture-font.c" />
+    <ClCompile Include="..\freetype-gl\vertex-buffer.c" />
+    <ClCompile Include="..\freetype-gl\vertex-attribute.c" />
+    <ClCompile Include="..\freetype-gl\font-manager.c" />
+    <ClCompile Include="..\freetype-gl\text-buffer.c" />
+    <ClCompile Include="..\freetype-gl\shader.c" />
+    <ClCompile Include="..\freetype-gl\vector.c" />
+    <ClCompile Include="..\freetype-gl\platform.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\glew\glew.vcxproj">
+      <Project>{8abb7188-77b8-4a24-b9d6-64771db0423c}</Project>
+    </ProjectReference>
+    <ProjectReference Include="C:/Users/Johnny/Programs/freetype-gl-build/ZERO_CHECK.vcxproj">
+      <Project>11FB45FB-9F98-41E9-A5FD-1758432CACBA</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

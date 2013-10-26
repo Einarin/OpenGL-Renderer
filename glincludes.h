@@ -5,6 +5,7 @@
 #endif //_WIN32
 //#include "GL/freeglut.h"
 #include "GlFW/glfw3.h"
+#define GLM_SWIZZLE 
 #include "glm/glm.hpp"
 #include <string>
 #ifdef _DEBUG

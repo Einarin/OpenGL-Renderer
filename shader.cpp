@@ -1,18 +1,19 @@
 #include "shader.h"
 #include "glincludes.h"
 #include <iostream>
+#include <fstream>
 
 namespace gl{
 
-GlShaderStage::GlShaderStage(int stage)
+ShaderStage::ShaderStage(int stage)
 {
 	id = glCreateShader(stage);
 }
-GlShaderStage::GlShaderStage(const GlShaderStage& other)
+Ref<ShaderStage> ShaderStage::Allocate(int stage)
 {
-	id = other.id;
+	return Ref<ShaderStage>(new ShaderStage(stage));
 }
-bool GlShaderStage::compile(std::string source)
+bool ShaderStage::compile(std::string source)
 {
 	const char* src = source.c_str();
 	int len = source.size();
@@ -35,25 +36,45 @@ bool GlShaderStage::compile(std::string source)
 	return true;
 }
 
-int GlShaderStage::getId(){
+bool ShaderStage::compileFromFile(std::string filename){
+	std::ifstream file(filename);
+	if(!file.is_open()){
+		return false;
+	}
+	std::istreambuf_iterator<char> eos;
+	std::string s(std::istreambuf_iterator<char>(file), eos);
+	return compile(s);
+}
+
+int ShaderStage::getId(){
 	return id;
 }
 
-GlShader::GlShader() : id(0){
+Shader::Shader() : id(0){
 	id = glCreateProgram();
 }
-
-GlShader::~GlShader(){
+Ref<Shader> Shader::Allocate(){
+	return Ref<Shader>(new Shader());
+}
+Shader::~Shader(){
 	glDeleteProgram(id);
 }
 
-void GlShader::attachStage(GlShaderStage& stage){
+void Shader::attachStage(Ref<ShaderStage> stage){
 	stages.push_back(stage);
 }
 
-bool GlShader::link(){
-	for(unsigned int i=0;i<stages.size();i++){
-		glAttachShader(id,stages.at(i).getId());
+void Shader::addAttrib(std::string name, int index){
+	glBindAttribLocation(id,index, name.c_str());
+}
+
+int Shader::getUniformLocation(std::string name){
+	return glGetUniformLocation(id, name.c_str());
+}
+
+bool Shader::link(){
+	for(auto it = stages.begin(); it != stages.end(); it++){
+		glAttachShader(id,(*it)->getId());
 	}
 	glLinkProgram(id);
 	int linked;
@@ -75,11 +96,11 @@ bool GlShader::link(){
 	return true;
 }
 
-void GlShader::bind(){
+void Shader::bind(){
 	glUseProgram(id);
 }
 
-int GlShader::getId(){
+int Shader::getId(){
 	return id;
 }
 
