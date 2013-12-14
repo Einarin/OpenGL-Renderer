@@ -8,9 +8,10 @@ namespace gl{
 	class Mesh{
 	public:
 		std::vector<vertex> vertices;
+		std::vector<unsigned int> indices;
 		bool hasNormals;
 		bool hasTangents;
-		unsigned int vertexCount;
+		unsigned int drawCount;
 		unsigned int numVertexColorChannels;
 		unsigned int numUVChannels;
 		unsigned int materialIndex;
@@ -21,6 +22,7 @@ namespace gl{
 	protected:
 		unsigned int vao;
 		unsigned int vbo;
+		unsigned int ibo;
 	public:
 		virtual void init();
         virtual void download();

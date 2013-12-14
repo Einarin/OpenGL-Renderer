@@ -263,5 +263,11 @@ void main( void )
   
   vec4 specular = vec4(1.0,1.0,0.9,0.0);
   float angle = -dot(normalize(eyevec.xyz),normalize(normal.xyz));
-  gl_FragColor = angle * specular + diffuse;
+  vec3 color;
+  if(gl_FrontFacing){
+	color = vec3(0.,0.,1.);
+}else{
+	color = vec3(1.,0.,0.);
+	}
+  gl_FragColor = vec4(color*vec3(snoise(texCoords.stp)+1.0)*0.5,1.0);//angle * specular + diffuse;
 }

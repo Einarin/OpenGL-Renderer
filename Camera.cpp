@@ -1,5 +1,6 @@
 #include "Camera.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 
 namespace gl {
 	using namespace ::glm;
@@ -17,17 +18,38 @@ namespace gl {
 		position = place;
 	}
 	void Camera::moveBy(glm::vec3 offset){
-		position += offset;
+		position += inverse(q) * offset;
 	}
 	void Camera::rotate(float angle, glm::vec3 axis){
-		::glm::rotate(q,angle,axis);
+		q = ::glm::rotate(q,angle,axis);
+	}
+	void Camera::rotate(::glm::quat rotation){
+		q = rotation * q;
+	}
+	void Camera::zeroZ(){
+		/*vec3 rotation = glm::eulerAngles(q);
+		rotation.z = 0;*/
+		glm::quat iq = inverse(q);
+		vec3 zvec = iq * vec3(0.f,0.f,1.f);
+		float angle = dot(vec3(0.f,1.f,0.f),iq * vec3(0.f,1.f,0.f));
+		std::cout << angle << " " << acos(angle)*180.f/3.1415f << std::endl;
+		q = glm::rotate(q,acos(angle),zvec);
 	}
 	::glm::mat4 Camera::toMat4(){
 		mat4 tmp;
+		tmp = glm::mat4_cast(q);
 		tmp = glm::translate(tmp,position);
-		//tmp = glm::rotate(tmp,q);
 		return tmp;
 		
+	}
+	::glm::vec3 Camera::pos(){
+		return position;
+	}
+
+	::glm::vec3 Camera::front(){
+		glm::quat iq = inverse(q);
+		vec3 zvec = iq * vec3(0.f,0.f,1.f);
+		return zvec;
 	}
 
 } //namespace gl

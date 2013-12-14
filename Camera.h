@@ -14,7 +14,11 @@ namespace gl {
 		void moveTo(::glm::vec3 place);
 		void moveBy(::glm::vec3 offset);
 		void rotate(float angle, ::glm::vec3 axis);
+		void rotate(::glm::quat rotation);
+		void zeroZ();
 		::glm::mat4 toMat4();
+		::glm::vec3 pos();
+		::glm::vec3 front();
 	};
 
 }

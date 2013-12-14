@@ -7,7 +7,7 @@
 namespace gl {
 using namespace Assimp;
 
-#define VEC_COPY(v1,v2) v1.x=v2.x;v1.y=v2.y;v1.z=v2.z
+#define VEC_COPY(v1,v2) v1.x=v2.x;v1.y=v2.y;v1.z=v2.z;
 #define COLOR_COPY(c1,c2) c1.r=c2.r;c1.g=c2.g;c1.b=c2.b
 #define RGBA_COPY(c1,c2) c1.r=c2.r;c1.g=c2.g;c1.b=c2.b;c1.a=c2.a
 
@@ -17,7 +17,8 @@ Model::Model(std::string filename) : filepath(filename){
 	const aiScene* scene = importer.ReadFile(filename
 								,aiProcess_CalcTangentSpace 
 								| aiProcess_Triangulate 
-								| aiProcess_JoinIdenticalVertices);
+								| aiProcess_JoinIdenticalVertices
+								| aiProcess_GenUVCoords);
 	if(scene->HasTextures()){
 		std::cout << filepath << " contains " << scene->mNumTextures << "textures\n";
 		loadTextures(scene);
@@ -117,7 +118,15 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 	output.numUVChannels = aim.GetNumUVChannels();
 	output.numVertexColorChannels = aim.GetNumColorChannels();
 	output.materialIndex = aim.mMaterialIndex;
-	output.vertexCount = aim.mNumVertices;
+	output.drawCount = aim.mNumFaces;
+	output.indices.clear();
+	//assume triangles
+	output.indices.reserve(aim.mNumFaces*3);
+	for(int i=0;i<aim.mNumFaces;i++){
+		for(int j=0;j<aim.mFaces[j].mNumIndices;j++){
+			output.indices.push_back(aim.mFaces[i].mIndices[j]);
+		}
+	}
 	for(int i=0;i<AI_MAX_NUMBER_OF_TEXTURECOORDS;i++){
 		output.numUVComponents[i] = aim.mNumUVComponents[i];
 	}
@@ -125,7 +134,7 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 	for(unsigned int i=0;i<aim.mNumVertices;i++){
 		vertex& v = output.vertices[i];
 		VEC_COPY(v.pos,aim.mVertices[i]);
-		v.pos = v.pos;
+		v.pos.w = 1.f;
 		if(output.hasNormals){
 			VEC_COPY(v.norm,aim.mNormals[i]);
 		}
