@@ -1,15 +1,8 @@
-attribute vec4 in_Position;
-attribute vec4 in_texCoords;
-attribute vec4 in_Normal;
-varying vec4 texCoords;
-varying vec4 normal;
-varying vec4 eyevec;
-uniform mat4 viewMatrix;
-uniform mat4 projMatrix;
-uniform vec4 camera;
-uniform float time;
+#include "noise.h"
 
-vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+using namespace glm;
+
+vec3 mod289(vec3 x) { return x - floor(x * vec3(1.0 / 289.0)) * vec3(289.0); }
 vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
 vec4 taylorInvSqrt(vec4 r) { return 1.792843 - 0.853735 * r; }
@@ -20,14 +13,14 @@ float snoise(vec3 v)
   const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
 
 // First corner
-  vec3 i = floor(v + dot(v, C.yyy) );
-  vec3 x0 = v - i + dot(i, C.xxx) ;
+  vec3 i = floor(v + dot(v, vec3(C.yyy)) );
+  vec3 x0 = v - i + dot(i, vec3(C.xxx)) ;
 
 // Other corners
-  vec3 g = step(x0.yzx, x0.xyz);
-  vec3 l = 1.0 - g;
-  vec3 i1 = min( g.xyz, l.zxy );
-  vec3 i2 = max( g.xyz, l.zxy );
+  vec3 g = step(vec3(x0.yzx), vec3(x0.xyz));
+  vec3 l = vec3(1.0) - g;
+  vec3 i1 = min( vec3(g.xyz), vec3(l.zxy) );
+  vec3 i2 = max( vec3(g.xyz), vec3(l.zxy) );
 
   vec3 x1 = x0 - i1 + C.xxx;
   vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y
@@ -81,26 +74,4 @@ float snoise(vec3 v)
   m = m * m;
   return 93.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
                                 dot(p2,x2), dot(p3,x3) ) );
-}
-
-void main(void)
-{
-	//texCoords = in_Position;
-	//normal = vec4(normalize(transpose(inverse(mat3(viewMatrix))) * in_Normal.xyz),1.0);
-	float scale = 0.1;////clamp(time,0.0,1.0);
-	float frequency = 1.0;
-	time *= 0.001;
-	float displacement = 1.0;
-	/*for(int i=0;i<4;i++){
-		displacement += scale *(snoise(frequency * in_Position.xyz));
-		frequency *= 10;
-		scale *= 0.1;
-	}*/
-	displacement = clamp(displacement,0.1,3.0);
-	texCoords = vec4(in_Position.xyz * displacement,1.0);
-	normal = vec4(normalize(2.0*texCoords.xyz+in_Normal.xyz),1.0);
-	vec4 position = viewMatrix * vec4(in_Position.xyz * displacement,1.0);
-	position = viewMatrix * position;
-	eyevec = normalize(position);
-	gl_Position = projMatrix * position; 
 }

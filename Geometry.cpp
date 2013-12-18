@@ -1,5 +1,8 @@
 #include "Geometry.h"
 #include "Shader.h"
+#include "noise.h"
+#include "ThreadPool.h"
+#include <iostream>
 
 namespace gl{
 
@@ -109,14 +112,14 @@ void StarBox::init()
 	glEnableVertexAttribArray(0);
 	glBindVertexArray(0);
 	//shader
-	Ref<ShaderStage> vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	std::shared_ptr<ShaderStage> vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 	vs->compile("attribute vec4 in_Position;\n"
 "uniform mat4 viewProjMatrix;\n"
 "void main(void)\n"
 "{\n"\
 "	gl_Position = viewProjMatrix * in_Position; \n"
 "}\n");
-	Ref<ShaderStage> fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+	std::shared_ptr<ShaderStage> fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
 	starShader->attachStage(vs);
 	starShader->attachStage(fs);
 	starShader->link();
@@ -273,17 +276,19 @@ int cubeSides[6][3][3] = {
 	{{1,0,0},{0,1,0},{0,0,-1}}
 };
 
-Cube::Cube(ivec3 tesselationFactor){
-	tesselate(verts,indices,tesselationFactor);
+Cube::Cube(unsigned int tesselationFactor){
+	tesselate(verts,indices,ivec3(tesselationFactor));
 }
 
 void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indices,ivec3 tesselationFactor){
 	verts.resize(6*tesselationFactor.x*tesselationFactor.y);
 	indices.resize(6*6*tesselationFactor.x*tesselationFactor.y);
-	int vindex = 0;
-	int ind = 0;
-	int indsum = 0;
+	Future<bool> futures[6];
 	for(int side=0;side<6;side++){
+		futures[side] = glPool.async<bool>([=,&verts,&indices]()->bool{
+		int vindex = side*tesselationFactor.x*tesselationFactor.y;
+		int ind = side*6*tesselationFactor.x*tesselationFactor.y;
+		int indsum = max(0,(side-1)*tesselationFactor.x*tesselationFactor.y);
 		ivec3 ix(cubeSides[side][0][0],cubeSides[side][0][1],cubeSides[side][0][2]);
 		ivec3 iy(cubeSides[side][1][0],cubeSides[side][1][1],cubeSides[side][1][2]);
 		vec3 z(cubeSides[side][2][0],cubeSides[side][2][1],cubeSides[side][2][2]);
@@ -297,9 +302,18 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 		//vertex buffer
 		for(int i=0;i<tessX;i++){
 			for(int j=0;j<tessY;j++){
-				vec4 position = vec4(normalize(x*(2.f*float(i)/float(tessX-1)-1.f) +  y*(2.f*float(j)/float(tessY-1)-1.f) + z),1.0);
-				verts[vindex].pos = position;
-				verts[vindex].normal = position;
+				vec3 position = vec3((x*(2.f*float(i)/float(tessX-1)-1.f) +  y*(2.f*float(j)/float(tessY-1)-1.f) + z));
+				position = normalize(position);
+				float scale = 0.1f;////clamp(time,0.0,1.0);
+				float frequency = 1.0f;
+				float displacement = 1.0f;
+				for(int i=0;i<4;i++){
+					displacement += scale *(snoise(frequency * position.xyz));
+					frequency *= 10;
+					scale *= 0.1f;
+				}
+				verts[vindex].pos = vec4(position*displacement,1.0f);
+				verts[vindex].normal = vec4(position,1.0f);
 				vindex++;
 				/*verts[index].pos = vec4(x*(float(2*(i+1)-1)/float(tessX)) + y*(float(2*j-1)/float(tessY))+z,1.0);
 				index++;
@@ -337,6 +351,13 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 			}
 		}
 		indsum = vindex;
+		std::cout << "side " << side << " ";
+		return true;
+		});
+	}
+	bool success = true;
+	for(int i=0;i<6;i++){
+		success &= glPool.await(futures[i]);
 	}
 }
 

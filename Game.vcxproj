@@ -90,8 +90,10 @@
     <ClCompile Include="ImageLoader.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Model.cpp" />
+    <ClCompile Include="noise.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="ThreadPool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -105,8 +107,10 @@
     <ClInclude Include="Light.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="noise.h" />
     <ClInclude Include="Refcounted.h" />
     <ClInclude Include="Text.h" />
+    <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <ItemGroup>

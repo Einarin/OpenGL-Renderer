@@ -2,6 +2,7 @@
 #include "Refcounted.h"
 #include <string>
 #include <list>
+#include <memory>
 
 namespace gl
 {
@@ -10,7 +11,7 @@ namespace gl
 		int id;
 		ShaderStage(int stage);
 	public:
-		static Ref<ShaderStage> Allocate(int stage);
+		static std::shared_ptr<ShaderStage> Allocate(int stage);
 		bool compile(std::string source);
 		bool compileFromFile(std::string filename);
 		int getId();
@@ -18,13 +19,13 @@ namespace gl
 	
 	class Shader {
 	protected:
-		std::list<Ref<ShaderStage>> stages;
+		std::list<std::shared_ptr<ShaderStage>> stages;
 		int id;
 		Shader();
 	public:
 		~Shader();
-		static Ref<Shader> Allocate();
-		void attachStage(Ref<ShaderStage> stage);
+		static std::shared_ptr<Shader> Allocate();
+		void attachStage(std::shared_ptr<ShaderStage> stage);
 		void addAttrib(std::string name, int index);
 		int getUniformLocation(std::string name);
 		bool link();

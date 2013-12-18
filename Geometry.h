@@ -61,7 +61,7 @@ namespace gl{
 		unsigned int vao;
 		unsigned int vbo;
 		std::vector<glm::vec4> verts;
-		Ref<Shader> starShader;
+		std::shared_ptr<Shader> starShader;
 	public:
 		StarBox();
 		virtual void init();
@@ -82,7 +82,7 @@ namespace gl{
 		protected:
 		static void tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indices,glm::ivec3 tesselationFactor);
 	public:
-		Cube(glm::ivec3 tesselationFactor);
+		Cube(unsigned int tesselationFactor);
 	};
 
 	class PatchSphere : public Sphere {

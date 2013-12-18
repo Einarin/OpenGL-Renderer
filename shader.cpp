@@ -9,9 +9,9 @@ ShaderStage::ShaderStage(int stage)
 {
 	id = glCreateShader(stage);
 }
-Ref<ShaderStage> ShaderStage::Allocate(int stage)
+std::shared_ptr<ShaderStage> ShaderStage::Allocate(int stage)
 {
-	return Ref<ShaderStage>(new ShaderStage(stage));
+	return std::shared_ptr<ShaderStage>(new ShaderStage(stage));
 }
 bool ShaderStage::compile(std::string source)
 {
@@ -53,14 +53,14 @@ int ShaderStage::getId(){
 Shader::Shader() : id(0){
 	id = glCreateProgram();
 }
-Ref<Shader> Shader::Allocate(){
-	return Ref<Shader>(new Shader());
+std::shared_ptr<Shader> Shader::Allocate(){
+	return std::shared_ptr<Shader>(new Shader());
 }
 Shader::~Shader(){
 	glDeleteProgram(id);
 }
 
-void Shader::attachStage(Ref<ShaderStage> stage){
+void Shader::attachStage(std::shared_ptr<ShaderStage> stage){
 	stages.push_back(stage);
 }
 

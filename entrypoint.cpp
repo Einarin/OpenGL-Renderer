@@ -7,6 +7,7 @@
 #include "Geometry.h"
 #include "Shader.h"
 #include "Model.h"
+#include "ThreadPool.h"
 
 #include "windows.h" //for debugbreak only!
 
@@ -18,6 +19,9 @@ using namespace glm;
 Billboard* bb;
 Camera camera;
 glm::mat4 projectionMatrix;
+
+//global threadpool
+ThreadPool glPool(3);
 
 int main(int argc, char* argv[])
 {
@@ -53,8 +57,7 @@ int main(int argc, char* argv[])
 	glfwSetKeyCallback(window, onKeyPressed);
 	glfwSetWindowSizeCallback(window, onResizeWindow);
 	glfwSetCursorPosCallback(window, onCursorMoved);
-	glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_DISABLED);
-
+	
 	glClearColor(0.0f,0.0f,0.0f,1.0f);
 	glEnable(GL_DEPTH_TEST);
 
@@ -62,17 +65,17 @@ int main(int argc, char* argv[])
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
 		glViewport(0, 0, width, height);
-		projectionMatrix = glm::perspective(90.f,static_cast<float>(width)/static_cast<float>(height),0.1f,10000.f);
+		projectionMatrix = glm::perspective(90.f,static_cast<float>(width)/static_cast<float>(height),0.001f,10000.f);
 	}
 
 	//Camera setup
-	camera = Camera(vec3(0,1,5),vec3(0,0,0),vec3(0,1,0));
+	camera = Camera(vec3(0,1,-1),vec3(0,0,0),vec3(0,1,0));
 
-	//hello world setup
+	cout << "generating assets...\n";
 	
 	//Model cube("assets/shuttle.3ds");
 	//Sphere cube(32,vec2(0.0,0.0),vec2(1.0));
-	Cube cube(ivec3(50));
+	Cube cube(50);
 	cube.init();
 	cube.download();
 	/*unsigned int patchfactor = 2;
@@ -94,7 +97,10 @@ int main(int argc, char* argv[])
 	bb->init();
 	bb->download();
 	checkGlError("geometry");
-	Ref<ShaderStage> vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+
+	cout << "compiling shaders...\n";
+
+	std::shared_ptr<ShaderStage> vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 	/*vs->compile("attribute vec4 in_Position;\n"
 "attribute vec4 in_texCoords;\n"
 "attribute vec4 in_Normal;\n"
@@ -114,7 +120,7 @@ int main(int argc, char* argv[])
 "}\n");*/
 	if(!vs->compileFromFile("displace.vert"))
 		DebugBreak();
-	Ref<ShaderStage> fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+	std::shared_ptr<ShaderStage> fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
 	/*fs->compile("uniform sampler2D framedata;"
 "varying vec4 texCoords;\n"
 "void main(void)\n"
@@ -124,8 +130,8 @@ int main(int argc, char* argv[])
 "}\n");*/
 	if(!fs->compileFromFile("seamless.frag"))
 		DebugBreak();
-	Ref<Shader> shader = Shader::Allocate();
-	Ref<Shader> shaderCopy(shader);
+	std::shared_ptr<Shader> shader = Shader::Allocate();
+	std::shared_ptr<Shader> shaderCopy(shader);
 	shader->addAttrib("in_Position",0);
 	shader->addAttrib("in_texCoords",1);
 	shader->addAttrib("in_Normal",2);
@@ -141,12 +147,18 @@ int main(int argc, char* argv[])
 	glActiveTexture(GL_TEXTURE0);
 	tex->bind();
 	checkGlError("bindTexture");
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-	glCullFace(GL_BACK);
-	glEnable(GL_CULL_FACE);
-	float i = 0.f;
+
+
+	//grab the mouse last so we can do things during load
+	glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_DISABLED);
+
+	//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	//glCullFace(GL_BACK);
+	//glEnable(GL_CULL_FACE);
+	float i = 5.f;
 	while (!glfwWindowShouldClose(window))
 	{
+		//input handling
 		handleKeys(window);
 		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_UP)){
 			bb->moveRel(0.f,.01f);
@@ -160,6 +172,12 @@ int main(int argc, char* argv[])
 		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_RIGHT)){
 			bb->moveRel(.01f,0.f);
 		}
+
+		//process async work
+		//todo: process this while we have time before next draw call
+		glPool.processMainQueueUnit();
+
+		//draw
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		mat4 projview = projectionMatrix* camera.toMat4();
 		glUniformMatrix4fv(shader->getUniformLocation("viewMatrix"), 1, GL_FALSE, value_ptr(camera.toMat4()));
@@ -171,7 +189,7 @@ int main(int argc, char* argv[])
 			patches[index].draw();
 		}*/
 		glUniform1f(shader->getUniformLocation("time"),i);
-		i+=0.001f;
+		i+=0.00001f;
 		//bb->draw();
 		glfwSwapBuffers(window);
 		glfwPollEvents();

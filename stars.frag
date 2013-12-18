@@ -1,10 +1,8 @@
 uniform sampler2D framedata;
 uniform float time;
-varying vec4 eyevec;
 varying vec4 texCoords;
-varying vec4 normal;
 
-vec2 st = vec2(texCoords.s,texCoords.t);
+vec2 st = vec2(texCoords.s*5.0,texCoords.t);
 vec2 dims = vec2(510.0,133.0);
 vec2 one = 1.0/dims;
 
@@ -226,50 +224,26 @@ void cellular(in vec2 P, out vec2 F, out vec4 d1d2) {
 	d1d2 = vec4(d1x.x, d1y.x, d1x.y, d1y.y);
 }
 
+//crappy random
+float rand(vec2 co){
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
 
+vec4 starColor(float starBrightness,float alpha){
+	float r = ((rand(gl_FragCoord.xy)-0.5)*0.3333);
+	float g = ((rand(gl_FragCoord.xy)-0.5)*0.3333);
+	float b = -r - g;
+	r = min(starBrightness+r,0.0);
+	g = min(starBrightness+g,0.0);
+	b = min(starBrightness+b,0.0);
+	return vec4(r,g,b,alpha);		
+}
 
 void main( void )
 {
-  vec2 F;
-  vec4 d1d2;
-  //float it = st.x + 1.0;
-  vec2 dt = vec2(time*0.1,0.0);
-  float ft = dt.x*0.05;
-  cellular(8.0*(st+dt), F, d1d2); // Returns vectors to points
-  float pattern = length(F.xy);
-  dt *= 1.5;
-  cellular(16.0*(st+dt), F, d1d2); // Returns vectors to points
-  pattern += 0.5 * length(F.xy);
-  dt *= 1.5;
-  cellular(32.0*(st+dt), F, d1d2); // Returns vectors to points
-  pattern += 0.25 * length(F.xy);
-  dt *= 1.5;
-  cellular(64.0*(st+ft), F, d1d2); // Returns vectors to points
-  pattern += sin(dt+(2.0*3.1415*st.x))*F.x;
-  dt *= 1.5;
-  float pattern2 = snoise(vec3(st+dt+ft,50.0));
-  dt *= 1.5;
-  //pattern += snoise(vec3(2.0*st+dt+ft,60.0));
-  
-  
-  // Constant width lines, from the book "Advanced RenderMan"
-  float thresh = 0.05 * (length(d1d2.xy - d1d2.zw))
-    / (F.x + F.y);
-  float f = F.y - F.x;
-  f += (0.5 - cellular(64.0*st).y) * thresh;
-
-  vec4 diffuse = pattern * vec4(0.8,0.25,0.0,0.0) + pattern2*vec4(0.5,0.0,0.0,0.0) + vec4(0.5,0.2,0.0,1.0);
-  diffuse = mix(diffuse,vec4(0.5,0.2,0.0,1.0),10.0*clamp(abs(st.y-0.5)-0.4,0.0,0.1));
-  
-  vec4 specular = vec4(1.0,1.0,0.9,0.0);
-  float angle = -dot(normalize(eyevec.xyz),normalize(normal.xyz));
-  vec3 color;
-  if(gl_FrontFacing){
-	color = vec3(0.,0.,1.);
-}else{
-	color = vec3(1.,0.,0.);
+	if(rand(gl_FragCoord.xy) <= snoise(gl_FragCoord.xyz) * 0.2){
+		float weight = rand(gl_FragCoord.xy) * snoise(gl_FragCoord.xyz);
+		gl_FragColor = starColor(weight,1.0);
 	}
-	float maxd = max(length(dFdx(texCoords.rgb)),length(dFdy(texCoords.rgb)));
-	float dc = -dot(normalize(eyevec.xyz),normalize(texCoords.xyz));
-  gl_FragColor = vec4(angle,maxd, 0.5+gl_FragCoord.z,1.0);//vec4(color*vec3(snoise(vec3(texCoords.xy,texCoords.z+time))+1.0)*0.5,1.0);//angle * specular + diffuse;
+	gl_FragColor = vec4(0.0,0.0,0.0,1.0);
 }

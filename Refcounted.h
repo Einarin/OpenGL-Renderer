@@ -1,6 +1,6 @@
 #pragma once
 
-template<class T>
+/*template<class T>
 class Ref {
 private:
 	template <class T>
@@ -83,4 +83,4 @@ public:
 	{
 		return object->data;
 	}
-};
+};*/

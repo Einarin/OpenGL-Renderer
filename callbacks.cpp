@@ -28,22 +28,22 @@ void onKeyPressed(GLFWwindow* window, int key, int scancode, int action, int mod
 //controls
 void handleKeys(GLFWwindow* window){
 	if(glfwGetKey(window,GLFW_KEY_W) == GLFW_PRESS){
-		camera.moveBy(vec3(0.f,0.f,0.1f));
+		camera.moveBy(vec3(0.f,0.f,0.001f));
 	}
 	if(glfwGetKey(window,GLFW_KEY_A) == GLFW_PRESS){
-		camera.moveBy(vec3(0.1f,0.f,0.f));
+		camera.moveBy(vec3(0.001f,0.f,0.0f));
 	}
 	if(glfwGetKey(window,GLFW_KEY_S) == GLFW_PRESS){
-		camera.moveBy(vec3(0.f,0.f,-0.1f));
+		camera.moveBy(vec3(0.f,0.f,-0.001f));
 	}
 	if(glfwGetKey(window,GLFW_KEY_D) == GLFW_PRESS){
-		camera.moveBy(vec3(-0.1f,0.f,0.f));
+		camera.moveBy(vec3(-0.001f,0.f,0.f));
 	}
 	if(glfwGetKey(window,GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
-		camera.moveBy(vec3(0.f,-0.1f,0.f));
+		camera.moveBy(vec3(0.f,-0.001f,0.f));
 	}
 	if(glfwGetKey(window,GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS){
-		camera.moveBy(vec3(0.f,0.1f,0.f));
+		camera.moveBy(vec3(0.f,0.001f,0.f));
 	}
 }
 
