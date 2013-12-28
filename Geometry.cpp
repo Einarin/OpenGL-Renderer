@@ -63,6 +63,15 @@ void Billboard::download(){
 #endif
 }
 
+void Billboard::position(glm::vec2 topLeft, glm::vec2 topRight, glm::vec2 botLeft, glm::vec2 botRight)
+{
+	corners[0].pos = vec4(topLeft,0,1);
+    corners[1].pos = vec4(botLeft,0,1);
+    corners[2].pos = vec4(topRight,0,1);
+    corners[3].pos = vec4(botRight,0,1);
+	download();
+}
+
 void Billboard::move(float topLeftX, float topLeftY, float width, float height)
 {
 	corners[0].pos = vec4(topLeftX,topLeftY,0,1);
@@ -280,6 +289,16 @@ Cube::Cube(unsigned int tesselationFactor){
 	tesselate(verts,indices,ivec3(tesselationFactor));
 }
 
+void Cube::calcFaceNormal(std::vector<vertex>& verts,std::vector<unsigned int>& indices, int* pos)
+{
+	vec3 p1 = verts[pos[1]].pos.xyz - verts[pos[0]].pos.xyz;
+	vec3 p2 = verts[pos[2]].pos.xyz - verts[pos[0]].pos.xyz;
+	vec3 normal = normalize(cross(p1,p2));
+	for(int i=0;i<3;i++){
+		verts[pos[i]].normal.xyz += normal;
+	}
+}
+
 void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indices,ivec3 tesselationFactor){
 	verts.resize(6*tesselationFactor.x*tesselationFactor.y);
 	indices.resize(6*6*tesselationFactor.x*tesselationFactor.y);
@@ -288,7 +307,7 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 		futures[side] = glPool.async<bool>([=,&verts,&indices]()->bool{
 		int vindex = side*tesselationFactor.x*tesselationFactor.y;
 		int ind = side*6*tesselationFactor.x*tesselationFactor.y;
-		int indsum = max(0,(side-1)*tesselationFactor.x*tesselationFactor.y);
+		int indsum = side*tesselationFactor.x*tesselationFactor.y;
 		ivec3 ix(cubeSides[side][0][0],cubeSides[side][0][1],cubeSides[side][0][2]);
 		ivec3 iy(cubeSides[side][1][0],cubeSides[side][1][1],cubeSides[side][1][2]);
 		vec3 z(cubeSides[side][2][0],cubeSides[side][2][1],cubeSides[side][2][2]);
@@ -313,7 +332,7 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 					scale *= 0.1f;
 				}
 				verts[vindex].pos = vec4(position*displacement,1.0f);
-				verts[vindex].normal = vec4(position,1.0f);
+				verts[vindex].normal = vec4(0.0f,0.0f,0.0f,1.0f);//vec4(position,1.0f);
 				vindex++;
 				/*verts[index].pos = vec4(x*(float(2*(i+1)-1)/float(tessX)) + y*(float(2*j-1)/float(tessY))+z,1.0);
 				index++;
@@ -332,21 +351,30 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 					indices[ind++] = indsum + i*tessX + j;
 					indices[ind++] = indsum + (i+1)*tessX + j;
 					indices[ind++] = indsum + i*tessX + j+1;
+					int pos[3] = {indsum + i*tessX + j, indsum + (i+1)*tessX + j, indsum + i*tessX + j+1};
+					calcFaceNormal(verts,indices,pos);
+					
 					
 					//triangle 2	 
 					indices[ind++] = indsum + (i+1)*tessX + j;
 					indices[ind++] = indsum + (i+1)*tessX + j+1;
 					indices[ind++] = indsum + i*tessX + j+1;
+					int pos2[3] = {indsum + (i+1)*tessX + j, indsum + (i+1)*tessX + j+1, indsum + i*tessX + j+1};
+					calcFaceNormal(verts,indices,pos2);
 				} else {
 					//triangle 1
 					indices[ind++] = indsum + i*tessX + j;
 					indices[ind++] = indsum + i*tessX + j+1;
 					indices[ind++] = indsum + (i+1)*tessX + j;
+					int pos[3] = {indsum + i*tessX + j, indsum + i*tessX + j+1, indsum + (i+1)*tessX + j};
+					calcFaceNormal(verts,indices,pos);
 								 
 					//triangle 2	 
 					indices[ind++] = indsum + (i+1)*tessX + j;
 					indices[ind++] = indsum + i*tessX + j+1;
 					indices[ind++] = indsum + (i+1)*tessX + j+1;
+					int pos2[3] = {indsum + (i+1)*tessX + j, indsum + i*tessX + j+1, indsum + (i+1)*tessX + j+1};
+					calcFaceNormal(verts,indices,pos2);
 				}
 			}
 		}

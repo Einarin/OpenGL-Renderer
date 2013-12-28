@@ -1,39 +1,85 @@
 #pragma once
-#include "windows.h"
 #include <memory>
 #include <queue>
 #include <vector>
 #include <functional>
 #include <utility>
+//use Standard library concurrency when available
+#define USE_STD_CONCURRENCY
+
+#ifdef _MSC_VER
+#if _MSC_VER < 1700
+#undef USE_STD_CONCURRENCY
+#endif
+#endif
+
+#if USE_STD_CONCURRENCY
+#include <thread>
+#include <mutex>
+#define MUTEX std::unique_ptr<std::mutex>
+#define NEW_MUTEX std::unique_ptr<std::mutex>(new mutex())
+#define ACQUIRE_MUTEX(m) m->lock()
+#define TRY_MUTEX(m) m->try_lock()
+#define RELEASE_MUTEX(m) m->unlock()
+#define THREAD_ID thread::id
+#define LPVOID void*
+#using std::thread;
+#else
+//no STL support for concurrency
+#ifdef _WIN32
+#define WIN32_CONCURRENCY
+#include "windows.h"
+#define MUTEX HANDLE
+#define NEW_MUTEX CreateMutex(NULL,FALSE,NULL)
+#define ACQUIRE_MUTEX(m) while(WaitForSingleObject(m,INFINITE)!=0) { }
+#define TRY_MUTEX(m) 0==WaitForSingleObject(m,10)
+#define RELEASE_MUTEX(m) ReleaseMutex(m)
+#define thread_local __declspec(thread)
+#define THREAD_ID DWORD
+typedef HANDLE thread;
+#else
+#error "Unsupported compiler environment"
+#endif
+#endif
 
 template<typename T>
 class Future{
 protected:
 	struct Data{
-	HANDLE s;
+	MUTEX m;
+	bool started;
 	bool complete;
 	T result;
 	};
 	std::shared_ptr<Data> data;
 public:
 	Future():data(new Data()){
-		data->s = CreateSemaphore(NULL,0,1,NULL);
+		data->m = NEW_MUTEX;
+		data->started = false;
 		data->complete = false;
+	}
+	void start(){
+		ACQUIRE_MUTEX(data->m);
+		data->started = true;
 	}
 	void set(T val){
 		data->result = val;
 		data->complete = true;
-		ReleaseSemaphore(data->s,1,NULL);
+		RELEASE_MUTEX(data->m);
 	}
 	inline bool complete(){
 		return data->complete;
 	}
 	T val(){
-		while(!data->complete){
-			if(!WaitForSingleObject(data->s,INFINITE)){
-				ReleaseSemaphore(data->s,1,NULL);
+		for(;;){
+			ACQUIRE_MUTEX(data->m);
+			if(data->complete == true){
+				break;
 			}
+			RELEASE_MUTEX(data->m);
+			Sleep(100);
 		}
+		RELEASE_MUTEX(data->m);
 		return data->result;
 	}
 };
@@ -42,30 +88,34 @@ template<typename T>
 class Future<Future<T>>{
 protected:
 	struct Data{
-	HANDLE s;
+	MUTEX m;
 	bool complete;
 	Future<T> result;
 	};
 	std::shared_ptr<Data> data;
 public:
 	Future():data(new Data()){
-		data->s = CreateSemaphore(NULL,0,1,NULL);
+		data->m = NEW_MUTEX;
 		data->complete = false;
 	}
 	void set(T val){
 		data->result = val;
 		data->complete = true;
-		ReleaseSemaphore(s,1);
+		RELEASE_MUTEX(data->m);
 	}
 	inline bool complete(){
 		return data->complete && result.complete();
 	}
 	T val(){
-		while(!complete){
-			if(!WaitForSingleObject(data->s,INFINITE)){
-				ReleaseSemaphore(data->s,1);
+		for(;;){
+			ACQUIRE_MUTEX(data->m);
+			if(data->complete == true){
+				break;
 			}
+			RELEASE_MUTEX(data->m);
+			Sleep(100);
 		}
+		RELEASE_MUTEX(data->m);
 		return result.val();
 	}
 };
@@ -81,21 +131,21 @@ public:
 
 struct WorkerThreadData{
 public:
-	HANDLE thread;
-	DWORD threadId;
-	HANDLE mutex;
+	thread thread;
+	THREAD_ID threadId;
+	MUTEX mutex;
 	bool stop;
 	bool blocked;
 	std::queue<std::function<void()>> workData; 
 	WorkerThreadData(): stop(false),blocked(false),thread(NULL){
-		mutex = CreateMutex(NULL,FALSE,NULL);
+		mutex = NEW_MUTEX;
 	}
 };
 
 struct DispatchData{
 	std::vector<WorkerThreadData> workerThreads;
 	std::queue<std::function<void()>> dispatchQueue;
-	HANDLE dispatchMutex;
+	MUTEX dispatchMutex;
 	//HANDLE dispatchSemaphore;
 	/*HANDLE queuingThread;
 	int roundRobinIndex;*/
@@ -106,14 +156,14 @@ DWORD WINAPI awaitWorkerThreadProc(LPVOID lpParameter){
 	std::pair<DispatchData*,Future<T>>* stuff = (std::pair<DispatchData*,Future<T>>*)lpParameter;
 	DispatchData* data = stuff->first;
 	while(true/*!stuff->second.complete()*/){
-		WaitForSingleObject(data->dispatchMutex,INFINITE);
+		ACQUIRE_MUTEX(data->dispatchMutex);
 		if(!data->dispatchQueue.empty()){
 			std::function<void()> workUnit = data->dispatchQueue.front();
 			data->dispatchQueue.pop();
-			ReleaseMutex(data->dispatchMutex);
+			RELEASE_MUTEX(data->dispatchMutex);
 			workUnit();
 		} else {
-			ReleaseMutex(data->dispatchMutex);
+			RELEASE_MUTEX(data->dispatchMutex);
 			break; //no work to do, let this thread die
 		}	
 	}
@@ -134,6 +184,7 @@ public:
 	Future<T> async(std::function<T()> func){
 		Future<T> f;
 		async([f,func]()mutable{
+			f.start();
 			f.set(func());
 		});
 		return f;
@@ -147,20 +198,20 @@ public:
 	}*/
 	template<typename T>
 	T await(Future<T> result){
-		__declspec(thread) static int depth;
+		thread_local static int depth;
 		depth++; //track recursion depth
 		//put upper bound on recursion depth to prevent stack overflow
 		if(depth < 100){ 
 			while(!result.complete()){
 				//do some other work while we wait	
-				if(!WaitForSingleObject(sharedState.dispatchMutex,10)){
+				if(TRY_MUTEX(sharedState.dispatchMutex)){
 					if(!sharedState.dispatchQueue.empty()){
 						std::function<void()> workUnit = sharedState.dispatchQueue.front();
 						sharedState.dispatchQueue.pop();
-						ReleaseMutex(sharedState.dispatchMutex);
+						RELEASE_MUTEX(sharedState.dispatchMutex);
 						workUnit();
 					} else {
-						ReleaseMutex(sharedState.dispatchMutex);
+						RELEASE_MUTEX(sharedState.dispatchMutex);
 					}
 				}
 			}
@@ -170,7 +221,12 @@ public:
 			std::pair<DispatchData*,Future<T>>* data = new std::pair<DispatchData*,Future<T>>;
 			data->first = &sharedState;
 			data->second = result;
-			HANDLE thread = CreateThread(NULL,0,awaitWorkerThreadProc<T>,(LPVOID)data,0,NULL);
+			#ifdef WIN32_CONCURRENCY
+				thread worker = CreateThread(NULL,0,awaitWorkerThreadProc<T>,(LPVOID)data,0,NULL);
+			#else
+				thread worker(awaitWorkerThreadProc<T>,(LPVOID)data);
+				worker.detach();
+			#endif
 			//block on the return value rather than the other thread
 			//WaitForSingleObject(thread,INFINITE);
 		}

@@ -49,6 +49,7 @@ namespace gl{
 		Billboard(float topLeftX, float topLeftY, float width, float height);
 		virtual void init();
 		virtual void download();
+		void position(glm::vec2 topLeft, glm::vec2 topRight, glm::vec2 botLeft, glm::vec2 botRight);
 		void move(float topLeftX, float topLeftY, float width, float height);
 		void move(float topLeftX, float topLeftY);
 		void moveRel(float dx, float dy);
@@ -81,6 +82,7 @@ namespace gl{
 	class Cube : public IndexedGeometry {
 		protected:
 		static void tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indices,glm::ivec3 tesselationFactor);
+		static void calcFaceNormal(std::vector<vertex>& verts,std::vector<unsigned int>& indices, int* pos);
 	public:
 		Cube(unsigned int tesselationFactor);
 	};

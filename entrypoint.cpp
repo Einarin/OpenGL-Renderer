@@ -3,11 +3,13 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "callbacks.h"
 #include <iostream>
+#include <sstream>
 #include "Texture.h"
 #include "Geometry.h"
 #include "Shader.h"
 #include "Model.h"
 #include "ThreadPool.h"
+#include "Text.h"
 
 #include "windows.h" //for debugbreak only!
 
@@ -19,9 +21,10 @@ using namespace glm;
 Billboard* bb;
 Camera camera;
 glm::mat4 projectionMatrix;
+glm::mat4 orthoMatrix;
 
 //global threadpool
-ThreadPool glPool(3);
+ThreadPool glPool(4);
 
 int main(int argc, char* argv[])
 {
@@ -35,7 +38,7 @@ int main(int argc, char* argv[])
 
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
-	window = glfwCreateWindow(1000, 1000, "Game", NULL, NULL);
+	window = glfwCreateWindow(800, 600, "Game", NULL, NULL);
 	if (!window)
 	{
 	glfwTerminate();
@@ -61,12 +64,11 @@ int main(int argc, char* argv[])
 	glClearColor(0.0f,0.0f,0.0f,1.0f);
 	glEnable(GL_DEPTH_TEST);
 
-	{
-		int width, height;
-		glfwGetFramebufferSize(window, &width, &height);
-		glViewport(0, 0, width, height);
-		projectionMatrix = glm::perspective(90.f,static_cast<float>(width)/static_cast<float>(height),0.001f,10000.f);
-	}
+	int width, height;
+	glfwGetFramebufferSize(window, &width, &height);
+	glViewport(0, 0, width, height);
+	projectionMatrix = glm::perspective(90.f,static_cast<float>(width)/static_cast<float>(height),0.001f,10000.f);
+	orthoMatrix = glm::ortho(0.f,static_cast<float>(width),0.f,static_cast<float>(height),-1.f,1.f);
 
 	//Camera setup
 	camera = Camera(vec3(0,1,-1),vec3(0,0,0),vec3(0,1,0));
@@ -75,7 +77,7 @@ int main(int argc, char* argv[])
 	
 	//Model cube("assets/shuttle.3ds");
 	//Sphere cube(32,vec2(0.0,0.0),vec2(1.0));
-	Cube cube(50);
+	Cube cube(10);
 	cube.init();
 	cube.download();
 	/*unsigned int patchfactor = 2;
@@ -97,6 +99,9 @@ int main(int argc, char* argv[])
 	bb->init();
 	bb->download();
 	checkGlError("geometry");
+
+	Light light;
+	light.position = vec3(2.0,2.0,2.0);
 
 	cout << "compiling shaders...\n";
 
@@ -151,11 +156,30 @@ int main(int argc, char* argv[])
 
 	//grab the mouse last so we can do things during load
 	glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_DISABLED);
+	float la[4];
+	la[0] = light.position.x;
+	la[1] = light.position.y;
+	la[2] = light.position.z;
+	la[3] = 1.f;
+	glUniform4fv(shader->getUniformLocation("light"),1,la);
+
+	TextManager textMan;
+	textMan.init();
+	TextRenderer* textRenderer = textMan.getTextRenderer("DejaVuSans.ttf",30);
+	textRenderer->loadAscii();
+	TextRenderer* fps = textMan.getTextRenderer("DejaVuSans.ttf",32);
+	fps->loadAscii();
+	vec2 end = textRenderer->addText("Hello World!",vec2(5,5),vec4(1.0,1.0,1.0,1.0));
 
 	//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-	//glCullFace(GL_BACK);
-	//glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	float i = 5.f;
+	double time = glfwGetTime();
+	int fpsCount = 60;
+	int counter = 0;
 	while (!glfwWindowShouldClose(window))
 	{
 		//input handling
@@ -180,6 +204,7 @@ int main(int argc, char* argv[])
 		//draw
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		mat4 projview = projectionMatrix* camera.toMat4();
+		shader->bind();
 		glUniformMatrix4fv(shader->getUniformLocation("viewMatrix"), 1, GL_FALSE, value_ptr(camera.toMat4()));
 		glUniformMatrix4fv(shader->getUniformLocation("projMatrix"), 1, GL_FALSE, value_ptr(projectionMatrix));
 		vec3 pos = camera.pos();
@@ -191,6 +216,19 @@ int main(int argc, char* argv[])
 		glUniform1f(shader->getUniformLocation("time"),i);
 		i+=0.00001f;
 		//bb->draw();
+		textRenderer->draw(orthoMatrix);
+		counter++;
+		if(counter >= fpsCount){
+			counter = 0;
+			fps->clearText();
+			double newtime = glfwGetTime();
+			stringstream ss;
+			ss << double(fpsCount) / (newtime - time);
+			ss << " FPS";
+			time = newtime;
+			fps->addText(ss.str(),vec2(5,height-32),vec4(1.0f));
+		}
+		fps->draw(orthoMatrix);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}

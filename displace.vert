@@ -4,9 +4,11 @@ attribute vec4 in_Normal;
 varying vec4 texCoords;
 varying vec4 normal;
 varying vec4 eyevec;
+varying vec4 lightvec;
 uniform mat4 viewMatrix;
 uniform mat4 projMatrix;
 uniform vec4 camera;
+uniform vec4 light;
 uniform float time;
 
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -86,7 +88,7 @@ float snoise(vec3 v)
 void main(void)
 {
 	//texCoords = in_Position;
-	//normal = vec4(normalize(transpose(inverse(mat3(viewMatrix))) * in_Normal.xyz),1.0);
+	normal = vec4(normalize(transpose(inverse(mat3(viewMatrix))) * normalize(in_Normal.xyz)),1.0);
 	float scale = 0.1;////clamp(time,0.0,1.0);
 	float frequency = 1.0;
 	time *= 0.001;
@@ -98,9 +100,10 @@ void main(void)
 	}*/
 	displacement = clamp(displacement,0.1,3.0);
 	texCoords = vec4(in_Position.xyz * displacement,1.0);
-	normal = vec4(normalize(2.0*texCoords.xyz+in_Normal.xyz),1.0);
+	//normal = vec4(normalize(2.0*texCoords.xyz+in_Normal.xyz),1.0);
 	vec4 position = viewMatrix * vec4(in_Position.xyz * displacement,1.0);
 	position = viewMatrix * position;
+	lightvec = light - position;
 	eyevec = normalize(position);
 	gl_Position = projMatrix * position; 
 }
