@@ -65,17 +65,17 @@ int main(int argc, char* argv[])
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
 		glViewport(0, 0, width, height);
-		projectionMatrix = glm::perspective(90.f,static_cast<float>(width)/static_cast<float>(height),0.001f,10000.f);
+		projectionMatrix = glm::perspective(120.f,static_cast<float>(width)/static_cast<float>(height),0.001f,1000.f);
 	}
 
 	//Camera setup
-	camera = Camera(vec3(0,1,-1),vec3(0,0,0),vec3(0,1,0));
+	camera = Camera(vec3(0,0.5,1.0),vec3(0,0.25,0),vec3(0,1,0));
 
 	cout << "generating assets...\n";
 	
-	//Model cube("assets/shuttle.3ds");
+	Model cube("E:\\Google Drive\\3D Models\\missile hp tri.obj");
 	//Sphere cube(32,vec2(0.0,0.0),vec2(1.0));
-	Cube cube(50);
+	//Cube cube(50);
 	cube.init();
 	cube.download();
 	/*unsigned int patchfactor = 2;

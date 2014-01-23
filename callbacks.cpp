@@ -28,22 +28,22 @@ void onKeyPressed(GLFWwindow* window, int key, int scancode, int action, int mod
 //controls
 void handleKeys(GLFWwindow* window){
 	if(glfwGetKey(window,GLFW_KEY_W) == GLFW_PRESS){
-		camera.moveBy(vec3(0.f,0.f,0.001f));
+		camera.moveLocal(vec3(0.f,0.f,0.001f));
 	}
 	if(glfwGetKey(window,GLFW_KEY_A) == GLFW_PRESS){
-		camera.moveBy(vec3(0.001f,0.f,0.0f));
+		camera.moveLocal(vec3(0.01f,0.f,0.0f));
 	}
 	if(glfwGetKey(window,GLFW_KEY_S) == GLFW_PRESS){
-		camera.moveBy(vec3(0.f,0.f,-0.001f));
+		camera.moveLocal(vec3(0.f,0.f,-0.001f));
 	}
 	if(glfwGetKey(window,GLFW_KEY_D) == GLFW_PRESS){
-		camera.moveBy(vec3(-0.001f,0.f,0.f));
+		camera.moveLocal(vec3(-0.01f,0.f,0.f));
 	}
 	if(glfwGetKey(window,GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
-		camera.moveBy(vec3(0.f,-0.001f,0.f));
+		camera.moveLocal(vec3(0.f,-0.01f,0.f));
 	}
 	if(glfwGetKey(window,GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS){
-		camera.moveBy(vec3(0.f,0.001f,0.f));
+		camera.moveLocal(vec3(0.f,0.01f,0.f));
 	}
 }
 
@@ -53,12 +53,9 @@ void onCursorMoved(GLFWwindow* window, double xpos, double ypos){
 	if(hasmouse){
 		double dx = oldMouseX-xpos;
 		double dy = oldMouseY-ypos;
-		double angle = glm::length(glm::vec3(-dy,dx,0.0));
-		glm::vec3 axis = glm::normalize(glm::vec3(-dy,dx,0.0));
-		glm::quat q;
-		q = glm::rotate(q,angle,axis);
-		camera.rotate(q);
-		camera.zeroZ();
+
+		camera.rotate(-dy,glm::inverse(camera.rot())*glm::vec3(1.f,0.f,0.f));
+		camera.rotate(dx,vec3(0.,1.,0.));
 	}
 	oldMouseX = xpos;
 	oldMouseY = ypos;

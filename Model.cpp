@@ -14,11 +14,18 @@ using namespace Assimp;
 Model::Model(std::string filename) : filepath(filename){
 	rootPart.name = filename+" root node";
 	Assimp::Importer importer;
+	std::cout << "loading " << filename << " using assimp..." << std::endl;
 	const aiScene* scene = importer.ReadFile(filename
 								,aiProcess_CalcTangentSpace 
 								| aiProcess_Triangulate 
 								| aiProcess_JoinIdenticalVertices
+								| aiProcess_GenSmoothNormals 
 								| aiProcess_GenUVCoords);
+	std::cout << "processing " << filename << " scene..." << std::endl;
+	if(scene == NULL){
+		std::cout << importer.GetErrorString() << std::endl;
+		return;
+	}
 	if(scene->HasTextures()){
 		std::cout << filepath << " contains " << scene->mNumTextures << "textures\n";
 		loadTextures(scene);
@@ -79,6 +86,7 @@ void Model::loadTextures(const aiScene* scene){
 }
 //walk the node heirarchy
 void Model::buildFromNode(const aiScene* scene, aiNode* node, glm::mat4 transform, ModelPart* currentPart){
+	std::cout << "processing node " << node->mName.C_Str() << "..." << std::endl;
 	std::vector<Light*> currentLights;
 	glm::mat4 localTransform = glm::mat4();
 	glm::mat4 nodeTransform = *((glm::mat4*)&node->mTransformation);
