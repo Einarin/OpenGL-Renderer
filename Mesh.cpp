@@ -5,18 +5,23 @@ void RenderableMesh::init(){
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
 	glGenBuffers(1, &ibo);
+	checkGlError("gen");
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	checkGlError("bind");
 	glVertexAttribPointer(0, 4, GL_FLOAT, false, sizeof(vertex), 0);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 4, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)16);
 	glEnableVertexAttribArray(1);
+	checkGlError("attribs");
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	glBindVertexArray(0);
+	checkGlError("init");
 }
 
 void RenderableMesh::download(){
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	checkGlError("glBindBuffer verts");
 	glBufferData(GL_ARRAY_BUFFER,vertices.size() * sizeof(vertex),&vertices[0],GL_STATIC_DRAW);
 #ifdef _DEBUG
 	glBindBuffer(GL_ARRAY_BUFFER,0);
@@ -28,6 +33,7 @@ void RenderableMesh::download(){
 #ifdef _DEBUG
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
 #endif
+	checkGlError("download complete");
 }
 
 void RenderableMesh::draw(){

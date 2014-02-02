@@ -2,11 +2,13 @@
 #include "Vertex.h"
 #include "Geometry.h"
 #include <vector>
+#include <string>
 
 namespace gl{
 
 	class Mesh{
 	public:
+		std::string name;
 		std::vector<vertex> vertices;
 		std::vector<unsigned int> indices;
 		bool hasNormals;

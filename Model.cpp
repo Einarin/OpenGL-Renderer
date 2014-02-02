@@ -2,6 +2,7 @@
 #include "Model.h"
 #include <assimp/Importer.hpp> // C++ importer interface
 #include <assimp/postprocess.h> // Post processing flags
+#include <assimp/ProgressHandler.hpp>
 #include <iostream>
 
 namespace gl {
@@ -11,16 +12,50 @@ using namespace Assimp;
 #define COLOR_COPY(c1,c2) c1.r=c2.r;c1.g=c2.g;c1.b=c2.b
 #define RGBA_COPY(c1,c2) c1.r=c2.r;c1.g=c2.g;c1.b=c2.b;c1.a=c2.a
 
+class CoutProgressHandler : public Assimp::ProgressHandler
+{
+public:
+	CoutProgressHandler()
+	{}
+	virtual ~CoutProgressHandler()
+	{}
+	virtual bool Update(float percentage = -1.f)
+	{
+		if(percentage == -1.f)
+			std::cout << "processing..." << std::endl;
+		else
+			std::cout << percentage << "% complete" << std::endl;
+		return true;
+	}
+};
+
 Model::Model(std::string filename) : filepath(filename){
 	rootPart.name = filename+" root node";
 	Assimp::Importer importer;
 	std::cout << "loading " << filename << " using assimp..." << std::endl;
+	//remove properties we don't care about to aid optimization
+	importer.SetPropertyInteger(AI_CONFIG_PP_RRM_EXCLUDE_LIST,
+								aiComponent_CAMERAS |
+								aiComponent_COLORS );
+	importer.SetPropertyInteger(AI_CONFIG_PP_FD_REMOVE, 1);
+
+	importer.SetProgressHandler(new CoutProgressHandler());
 	const aiScene* scene = importer.ReadFile(filename
 								,aiProcess_CalcTangentSpace 
+								| aiProcess_ValidateDataStructure
 								| aiProcess_Triangulate 
 								| aiProcess_JoinIdenticalVertices
 								| aiProcess_GenSmoothNormals 
-								| aiProcess_GenUVCoords);
+								| aiProcess_GenUVCoords
+								| aiProcess_TransformUVCoords 
+								| aiProcess_OptimizeMeshes 
+								| aiProcess_ImproveCacheLocality
+								| aiProcess_OptimizeGraph 
+								| aiProcess_RemoveRedundantMaterials
+								| aiProcess_FindDegenerates
+								| aiProcess_FindInvalidData
+								| aiProcess_SortByPType
+								);
 	std::cout << "processing " << filename << " scene..." << std::endl;
 	if(scene == NULL){
 		std::cout << importer.GetErrorString() << std::endl;
@@ -30,6 +65,7 @@ Model::Model(std::string filename) : filepath(filename){
 		std::cout << filepath << " contains " << scene->mNumTextures << "textures\n";
 		loadTextures(scene);
 	}
+	std::cout << "model has " << scene->mNumLights << " lights" << std::endl;
 	if(scene->HasLights()){
 		for(int i=0;i<(int)scene->mNumLights;i++){
 			aiLight* assLight = scene->mLights[i];
@@ -61,6 +97,42 @@ Model::Model(std::string filename) : filepath(filename){
 			lights.push_back(light);
 		}
 	}
+	if(scene->HasMaterials()){
+		for(int i=0;i<scene->mNumMaterials;i++){
+			aiMaterial* assmat = scene->mMaterials[i];
+			aiString name;
+			assmat->Get(AI_MATKEY_NAME,name);
+			std::cout << "material " << name.C_Str() << std::endl;
+			int shadingModel;
+			assmat->Get(AI_MATKEY_SHADING_MODEL,shadingModel);
+			std::cout << "\tshading model is ";
+			switch(shadingModel){
+			case aiShadingMode_Flat:
+				std::cout << "Flat\n";
+				break;
+			case aiShadingMode_Gouraud:
+				std::cout << "Gouraud\n";
+				break;
+			case aiShadingMode_Phong:
+				std::cout << "Phong\n";
+				break;
+			default:
+				std::cout << "advanced...\n";
+			}
+			aiString file;
+			if(AI_SUCCESS == assmat->Get(AI_MATKEY_TEXTURE_DIFFUSE(0),file))
+				std::cout << "Diffuse tex: " << file.C_Str() << std::endl;
+			if(AI_SUCCESS == assmat->Get(AI_MATKEY_TEXTURE_NORMALS(0),file))
+				std::cout << "Normal tex: " << file.C_Str() << std::endl;
+			if(AI_SUCCESS == assmat->Get(AI_MATKEY_TEXTURE_DISPLACEMENT(0),file))
+				std::cout << "Diffuse tex: " << file.C_Str() << std::endl;
+
+			/*std::cout << "\tproperty key dump:\n";
+			for(int j=0;j<assmat->mNumProperties;j++){
+				std::cout <<"\t"<< assmat->mProperties[j]->mKey.C_Str() << " ";
+			}*/
+		}
+	}
 	
 	buildFromNode(scene, scene->mRootNode, glm::mat4(),&rootPart);
 
@@ -88,21 +160,11 @@ void Model::loadTextures(const aiScene* scene){
 void Model::buildFromNode(const aiScene* scene, aiNode* node, glm::mat4 transform, ModelPart* currentPart){
 	std::cout << "processing node " << node->mName.C_Str() << "..." << std::endl;
 	std::vector<Light*> currentLights;
-	glm::mat4 localTransform = glm::mat4();
 	glm::mat4 nodeTransform = *((glm::mat4*)&node->mTransformation);
 	for(auto light = lights.begin();light != lights.end();light++){
 		if(light->name == node->mName.C_Str()){
 			currentLights.push_back(&*light);
 		}
-	}
-	if(node->mNumMeshes > 0 || currentLights.size() > 0){
-		currentPart->localTranform = nodeTransform * transform;
-		currentPart->children.push_back(ModelPart());
-		currentPart->children.back().parent = currentPart;
-		currentPart = &currentPart->children.back();
-		currentPart->name = node->mName.C_Str();
-	} else {
-		localTransform = nodeTransform * transform;
 	}
 	for(auto it = currentLights.begin();it!=currentLights.end();it++){
 		currentPart->lights.push_back(*it);
@@ -115,12 +177,18 @@ void Model::buildFromNode(const aiScene* scene, aiNode* node, glm::mat4 transfor
 		meshCount++;
 	}
 	for(unsigned int i=0;i<node->mNumChildren;i++){
-		buildFromNode(scene,node->mChildren[i],localTransform,currentPart);
+		currentPart->children.push_back(ModelPart());
+		currentPart->children.back().parent = currentPart;
+		buildFromNode(scene,node->mChildren[i],nodeTransform * transform,&currentPart->children.back());
 	}
 }
 
 void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& output){
 	aiMesh& aim = *scene->mMeshes[meshIndex];
+	if (aim.mPrimitiveTypes & ( aiPrimitiveType_LINE | aiPrimitiveType_POINT | aiPrimitiveType_POLYGON )){
+		std::cout << "mesh " << aim.mName.C_Str() <<" has unsupported primitive types, expect rendering errors" << std::endl;
+	}
+	output.name = aim.mName.C_Str();
 	output.hasNormals = aim.HasNormals();
 	output.hasTangents = aim.HasTangentsAndBitangents();
 	output.numUVChannels = aim.GetNumUVChannels();
@@ -128,7 +196,6 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 	output.materialIndex = aim.mMaterialIndex;
 	output.drawCount = aim.mNumFaces;
 	output.indices.clear();
-	//assume triangles
 	output.indices.reserve(aim.mNumFaces*3);
 	for(int i=0;i<aim.mNumFaces;i++){
 		for(int j=0;j<aim.mFaces[j].mNumIndices;j++){

@@ -22,7 +22,8 @@ namespace gl {
 		position += offset;
 	}
 	void Camera::moveLocal(glm::vec3 offset){
-		vec4 change = rotation * vec4(offset.x,offset.y,offset.z,0.0f);
+		mat4 rotate = mat4_cast(inverse(normalize(rotation)));
+		vec4 change = rotate * vec4(offset.x,offset.y,offset.z,0.0f);
 		position += vec3(change.xyz);
 	}
 	void Camera::rotate(float angle, glm::vec3 axis){
@@ -44,7 +45,7 @@ namespace gl {
 		/*rotation[0][3] = 0.f;
 		rotation[1][3] = 0.f;
 		rotation[2][3] = 0.f;*/
-		return translate(glm::mat4_cast(rotation),position);
+		return translate(position) * mat4_cast(rotation);
 		
 	}
 	::glm::vec3 Camera::pos(){

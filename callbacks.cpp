@@ -24,17 +24,37 @@ void onKeyPressed(GLFWwindow* window, int key, int scancode, int action, int mod
 	if(key == GLFW_KEY_C){
 		glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_NORMAL);
 	}
+	if(key == GLFW_KEY_Y && action == GLFW_PRESS){
+		static int wireframe;
+		if(wireframe == 0){
+			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+			wireframe = 1;
+		} else {
+			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+			wireframe = 0;
+		}
+	}
+	if(key == GLFW_KEY_T && action == GLFW_PRESS){
+		static int culling;
+		if(culling == 0){
+			glDisable(GL_CULL_FACE);
+			culling = 1;
+		} else {
+			glEnable(GL_CULL_FACE);
+			culling = 0;
+		}
+	}
 }
 //controls
 void handleKeys(GLFWwindow* window){
 	if(glfwGetKey(window,GLFW_KEY_W) == GLFW_PRESS){
-		camera.moveLocal(vec3(0.f,0.f,0.001f));
+		camera.moveLocal(vec3(0.f,0.f,0.01f));
 	}
 	if(glfwGetKey(window,GLFW_KEY_A) == GLFW_PRESS){
 		camera.moveLocal(vec3(0.01f,0.f,0.0f));
 	}
 	if(glfwGetKey(window,GLFW_KEY_S) == GLFW_PRESS){
-		camera.moveLocal(vec3(0.f,0.f,-0.001f));
+		camera.moveLocal(vec3(0.f,0.f,-0.01f));
 	}
 	if(glfwGetKey(window,GLFW_KEY_D) == GLFW_PRESS){
 		camera.moveLocal(vec3(-0.01f,0.f,0.f));

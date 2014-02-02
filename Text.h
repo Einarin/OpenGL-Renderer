@@ -1,16 +1,24 @@
 #pragma once
-#include "freetype-gl\freetype-gl.h"
-#include "freetype-gl\font-manager.h"
-#include "freetype-gl\vertex-buffer.h"
+
 #include "glincludes.h"
-#include <vector>
+#include "shader.h"
 #include <string>
 #include <cstdlib>
 
-namespace gl {
+//freetype-gl causes massive namespace pollution so we keep it out of the rest of the program
+// we define new types here because C++ sucks >.>
+extern "C" {
+struct vertex_buffer_type;
+struct texture_font_type;
+struct texture_atlas_type;
+struct font_manager_type;
+}
 
-	class TextRenderable{
-		friend TextManager;
+namespace gl {
+	class TextRendererMembers;
+	class TextManagerMembers;
+	class TextRenderer{
+		friend class TextManager;
 	protected:
 		struct vertex_t {
 			float x, y, z;
@@ -19,67 +27,59 @@ namespace gl {
 			float shift, gamma;
 		};
 		std::string text;
-		vertex_buffer_t* buffer;
-		texture_font_t * font;
-		TextRenderable(texture_font_t * fnt, vertex_buffer_t* vbuf) : font(fnt),buffer(vbuf)
+		vertex_buffer_type* buffer;
+		texture_font_type * font;
+		texture_atlas_type *atlas;
+		std::shared_ptr<Shader> shader;
+		TextRenderer(std::shared_ptr<Shader> shdr, texture_font_type * fnt, vertex_buffer_type* vbuf,texture_atlas_type *atls) : font(fnt),buffer(vbuf),shader(shdr),atlas(atls)
 		{}
 	public:
-		~TextRenderable()
-		{
-			vertex_buffer_delete(buffer);
-		}
-		glm::vec2 addText(std::string text,glm::vec2 pos,glm::vec4 color){
-			wchar_t* wstr = new wchar_t[text.size()];
-			mbstowcs(wstr,text.c_str(),text.size());
-			texture_font_load_glyphs(font,wstr);
-			for(int i=0;i<(int)text.size();i++){
-				texture_glyph_t *glyph = texture_font_get_glyph( font, text[i] );
-				if(glyph != NULL){
-					int kerning = 0;
-					if( i > 0)
-					{
-						kerning = texture_glyph_get_kerning( glyph, text[i-1] );
-					}
-					pos.x += kerning;
-					int x0  = (int)( pos.x + glyph->offset_x );
-					int y0  = (int)( pos.y + glyph->offset_y );
-					int x1  = (int)( x0 + glyph->width );
-					int y1  = (int)( y0 - glyph->height );
-					float s0 = glyph->s0;
-					float t0 = glyph->t0;
-					float s1 = glyph->s1;
-					float t1 = glyph->t1;
-					GLuint index = buffer->vertices->size;
-					GLuint indices[] = {index, index+1, index+2,
-										index, index+2, index+3};
-					vertex_t vertices[] = { { x0,y0,0,  s0,t0,  color.r,color.g,color.b,color.a, 0,1 },
-											{ x0,y1,0,  s0,t1,  color.r,color.g,color.b,color.a, 0,1 },
-											{ x1,y1,0,  s1,t1,  color.r,color.g,color.b,color.a, 0,1 },
-											{ x1,y0,0,  s1,t0,  color.r,color.g,color.b,color.a, 0,1 } };
-					vertex_buffer_push_back_indices( buffer, indices, 6 );
-					vertex_buffer_push_back_vertices( buffer, vertices, 4 );
-					pos.x += glyph->advance_x;
-				}
-			}
-			return pos;
-		}
-		void draw(){
-
-		}
+		~TextRenderer();
+		glm::vec2 addText(std::string text,glm::vec2 pos,glm::vec4 color);
+		void clearText();
+		void loadAscii();
+		void draw(glm::mat4 ortho);
 	};
 
 	class TextManager{
 	protected:
-		font_manager_t * manager;
-		std::vector<texture_font_t> fonts;
-	public:
-		TextManager() : manager(font_manager_new( 512, 512, 3 ))
-		{}
-		TextRenderable * getTextRenderable(std::string font, float size){
-			texture_font_t * font = font_manager_get_from_filename(manager,font.c_str(),size);
-			vertex_buffer_t * buffer = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f,ashift:1f,agamma:1f");
-			return new TextRenderable(font,buffer);
+		font_manager_type * manager;
+		std::shared_ptr<Shader> shader;
+		void buildShader(){
+			std::shared_ptr<ShaderStage> vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+			if(!vs->compile(
+				"uniform mat4 projection;\n"
+				"attribute vec3 vertex;\n"
+				"attribute vec2 tex_coord;\n"
+				"attribute vec4 color;\n"
+				"void main()\n"
+				"{\n"
+					"gl_TexCoord[0].xy = tex_coord.xy;\n"
+					"gl_FrontColor = color;\n"
+					"gl_Position = projection * vec4(vertex,1.0);\n"
+				"}\n")) DebugBreak();
+			std::shared_ptr<ShaderStage> fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+			if(!fs->compile(
+				"uniform sampler2D texture;\n"
+				"void main()\n"
+				"{\n"
+				"float a = texture2D(texture, gl_TexCoord[0].xy).a;\n"
+				"gl_FragColor = vec4(gl_Color.rgb, gl_Color.a*a);\n"
+				"}\n")) DebugBreak();
+			shader->addAttrib("vertex",0);
+			shader->addAttrib("tex_coord",1);
+			shader->addAttrib("color",2);
+			shader->attachStage(vs);
+			shader->attachStage(fs);
+			shader->link();
 		}
+	public:
+		TextManager();
+		void init()
+		{
+			buildShader();
+		}
+		TextRenderer * getTextRenderer(std::string font, float size);
 
 	};
 

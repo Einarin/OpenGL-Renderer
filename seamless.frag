@@ -3,6 +3,7 @@ uniform float time;
 varying vec4 eyevec;
 varying vec4 texCoords;
 varying vec4 normal;
+varying vec4 lightvec;
 
 vec2 st = vec2(texCoords.s,texCoords.t);
 vec2 dims = vec2(510.0,133.0);
@@ -270,6 +271,6 @@ void main( void )
 	color = vec3(1.,0.,0.);
 	}
 	float maxd = max(length(dFdx(texCoords.rgb)),length(dFdy(texCoords.rgb)));
-	float dc = -dot(normalize(eyevec.xyz),normalize(texCoords.xyz));
-  gl_FragColor = vec4(angle,maxd, 0.5+gl_FragCoord.z,1.0);//vec4(color*vec3(snoise(vec3(texCoords.xy,texCoords.z+time))+1.0)*0.5,1.0);//angle * specular + diffuse;
+	float dc = max(-dot(normalize(normal.xyz),normalize(lightvec.xyz)),0);
+  gl_FragColor = vec4(vec3(dc+0.15),1.0);//vec4(angle,maxd, 0.5+gl_FragCoord.z,1.0);//vec4(color*vec3(snoise(vec3(texCoords.xy,texCoords.z+time))+1.0)*0.5,1.0);//angle * specular + diffuse;
 }
