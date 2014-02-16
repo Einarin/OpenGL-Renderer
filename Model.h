@@ -20,6 +20,7 @@ protected:
 		glm::mat4 localTranform;
 		std::vector<ModelPart> children;
 		std::vector<Light*> lights;
+		uint32 index; //used for flattening the graph
 	};
 	std::string filepath;
 	std::vector<TexRef> textures;
@@ -31,8 +32,10 @@ protected:
 	void initPart(ModelPart& part);
 	void downloadPart(ModelPart& part);
 	void drawPart(ModelPart& part);
+	void loadCache(std::string cachefile);
 public:
 	Model(std::string filename);
+	void save(std::string filename);
 	virtual void init();
 	virtual void download();
 	virtual void draw();

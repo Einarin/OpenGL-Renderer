@@ -18,6 +18,8 @@ namespace gl{
 		unsigned int numUVChannels;
 		unsigned int materialIndex;
 		unsigned int numUVComponents[VERTEX_MAX_TEXCOORDS];
+		virtual uint32 serialize(char** inbuff);
+		void deserialize(char* buf);
 	};
 
 	class RenderableMesh : public Mesh, public Geometry{

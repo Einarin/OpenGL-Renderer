@@ -1,6 +1,72 @@
 #include "Mesh.h"
 
+enum flags{
+	HAS_NORMAL = 0x1,
+	HAS_TANGENT = 0x2
+};
+
 namespace gl{
+struct MeshHeader{
+	unsigned int nameoff;
+	unsigned int vertoff;
+	unsigned int vertsize;
+	unsigned int indoff;
+	unsigned int indsize;
+	unsigned int flags;
+	unsigned int drawCount;
+	unsigned int numVertexColorChannels;
+	unsigned int numUVChannels;
+	unsigned int materialIndex;
+	unsigned int numUVComponents[VERTEX_MAX_TEXCOORDS];
+};
+uint32 Mesh::serialize(char** inbuff){
+	unsigned int bufflen = sizeof(MeshHeader)
+			  + (name.size()+1)*sizeof(char)
+			  + vertices.size() * sizeof(vertex)
+			  + indices.size() * sizeof(unsigned int);
+	char* buff = new char[bufflen];
+	*inbuff = buff;
+	MeshHeader* head = new(buff) MeshHeader;
+	head->flags = hasNormals ? HAS_NORMAL : 0;
+	head->flags |= hasTangents ? HAS_TANGENT : 0;
+	head->drawCount = drawCount;
+	head->numVertexColorChannels = numVertexColorChannels;
+	head->numUVChannels = numUVChannels;
+	head->materialIndex = materialIndex;
+	for(int i=0;i<VERTEX_MAX_TEXCOORDS;i++){
+		head->numUVComponents[i] = numUVComponents[i];
+	}
+	head->nameoff = sizeof(MeshHeader);
+	strcpy((buff+head->nameoff),name.c_str());
+	head->vertoff = sizeof(MeshHeader) + (name.size()+1)*sizeof(char);
+	head->vertsize = vertices.size();
+	memcpy(buff+head->vertoff,&vertices[0],vertices.size() * sizeof(vertex));
+	head->indoff = sizeof(MeshHeader)
+			  + (name.size()+1)*sizeof(char)
+			  + vertices.size() * sizeof(vertex);
+	head->indsize = indices.size();
+	memcpy(buff+head->indoff,&indices[0],indices.size() * sizeof(unsigned int));
+	return bufflen;
+}
+
+void Mesh::deserialize(char* buff){
+	MeshHeader* head = reinterpret_cast<MeshHeader*>(buff);
+	hasNormals = head->flags & HAS_NORMAL;
+	hasTangents = head->flags & HAS_TANGENT;
+	drawCount = head->drawCount;
+	numVertexColorChannels = head->numVertexColorChannels;
+	numUVChannels = head->numUVChannels;
+	materialIndex = head->materialIndex;
+	for(int i=0;i<VERTEX_MAX_TEXCOORDS;i++){
+		numUVComponents[i] = head->numUVComponents[i];
+	}
+	name = buff+head->nameoff;
+	vertices.resize(head->vertsize);
+	memcpy(&vertices[0],buff+head->vertoff,head->vertsize * sizeof(vertex));
+	indices.resize(head->indsize);
+	memcpy(&indices[0],buff+head->indoff,head->indsize * sizeof(unsigned int));
+}
+
 void RenderableMesh::init(){
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);

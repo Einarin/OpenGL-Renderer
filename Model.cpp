@@ -4,6 +4,7 @@
 #include <assimp/postprocess.h> // Post processing flags
 #include <assimp/ProgressHandler.hpp>
 #include <iostream>
+#include <fstream>
 
 namespace gl {
 using namespace Assimp;
@@ -30,6 +31,14 @@ public:
 };
 
 Model::Model(std::string filename) : filepath(filename){
+	std::string cachename = filename.substr(0,filename.find_last_of('.'))+".model";
+	std::ifstream cachefile(cachename);
+	if(cachefile.is_open()){
+		std::cout << "loading cached version of " << filename << std::endl;
+		cachefile.close();
+		loadCache(cachename);
+		return;
+	}
 	rootPart.name = filename+" root node";
 	Assimp::Importer importer;
 	std::cout << "loading " << filename << " using assimp..." << std::endl;
@@ -135,7 +144,8 @@ Model::Model(std::string filename) : filepath(filename){
 	}
 	
 	buildFromNode(scene, scene->mRootNode, glm::mat4(),&rootPart);
-
+	std::cout << "saving optimized representation to disk...\n";
+	save(cachename);
 }
 
 void Model::loadTextures(const aiScene* scene){
@@ -267,6 +277,162 @@ void Model::download(){
 }
 void Model::draw(){
 	drawPart(rootPart);
+}
+struct FlatModel{
+	uint32 nameoff;
+	uint32 parentind;
+	glm::mat4 localTransform;
+	uint32 meshlistoff;
+	uint32 meshlistsize;
+	uint32 childlistoff;
+	uint32 childlistsize;
+	uint32 lightlistoff;
+	uint32 lightlistsize;
+};
+struct Header{
+	uint32 filesize;
+	uint32 flatlistoff;
+	uint32 flatlistsize;
+	uint32 namebuffoff;
+	uint32 childbuffoff;
+	uint32 meshindoff;
+	uint32 meshbuffoff;
+};
+void Model::save(std::string filename){
+	//first walk the tree to assign indexes to nodes and determine buffer sizes
+	std::vector<ModelPart*> stack; //used as temp stack
+	stack.push_back(&rootPart);
+	uint32 nodecount = 0;
+	uint32 namebuffsize = 0;
+	uint32 childbuffsize = 0;
+	uint32 lightindbuffsize = 0;
+	while(stack.size() > 0){
+		ModelPart* current = stack.back();
+		stack.pop_back();
+		current->index = nodecount++;
+		namebuffsize += current->name.size()+1; //+1 for trailing \0
+		childbuffsize += current->children.size();
+		lightindbuffsize += current->lights.size();
+		for(int i=0; i<current->children.size();i++){
+			stack.push_back(&current->children[i]);
+		}
+	}
+	//now we have enough information to allocate arrays
+	FlatModel* flatlist = new FlatModel[nodecount];
+	char* namebuff = new char[namebuffsize];
+	uint32* childbuff = new uint32[childbuffsize];
+	//uint32* lightindbuff = new uint32[lightindbuffsize];
+	uint32 namebuffpos = 0;
+	uint32 childbuffpos = 0;
+	//uint32 lightindbuffpos = 0;
+
+	//we build the mesh collection lazily
+	uint32 meshpos = 0;
+	uint32 meshind = 0;
+	std::vector<char*> meshbuffs;
+	std::vector<uint32> meshbuffsizes;
+	std::vector<uint32> meshoffsets;
+	meshbuffs.reserve(nodecount); //cut down on reallocs
+
+	//now walk again to build our flattened list
+	stack.push_back(&rootPart);
+	while(stack.size() > 0){
+		ModelPart* current = stack.back();
+		stack.pop_back();
+		FlatModel* m = &flatlist[current->index];
+		if(current->parent != NULL){ //root has null par
+			m->parentind = current->parent->index;
+		} else {
+			m->parentind = 0; //just set it to 0 so it's initialized
+		}
+		m->nameoff = namebuffpos;
+		m->localTransform = current->localTranform;
+		strcpy(namebuff+namebuffpos,current->name.c_str());
+		namebuffpos += current->name.size()+1;
+
+		m->meshlistoff = meshind;
+		for(int i=0;i<current->meshes.size();i++){
+			meshbuffs.push_back(nullptr);
+			uint32 size = current->meshes[i].serialize(&meshbuffs.back());
+			meshoffsets.push_back(meshpos);
+			meshbuffsizes.push_back(size);
+			meshpos += size;
+			meshind++;
+		}
+		m->meshlistsize = current->meshes.size();
+
+		m->childlistoff = childbuffpos;
+		for(int i=0; i<current->children.size();i++){
+			stack.push_back(&current->children[i]);
+			childbuff[childbuffpos+i] = current->children[i].index;
+		}
+		childbuffpos += current->children.size();
+		m->childlistsize = current->children.size();
+	}
+
+	//now we have all our buffers, fill out header and write to disk
+	Header h;
+	h.flatlistoff = sizeof(Header);
+	h.flatlistsize = nodecount;
+	h.namebuffoff = h.flatlistoff + nodecount * sizeof(FlatModel);
+	h.childbuffoff = h.namebuffoff + namebuffsize * sizeof(char);
+	h.meshindoff = h.childbuffoff + childbuffsize * sizeof(uint32);
+	h.meshbuffoff = h.meshindoff + meshoffsets.size() * sizeof(uint32 );
+	h.filesize = h.meshbuffoff + meshpos;
+	std::ofstream file(filename,std::ofstream::binary);
+	file.write(reinterpret_cast<const char*>(&h),sizeof(Header));
+	file.write(reinterpret_cast<const char*>(flatlist),nodecount* sizeof(FlatModel));
+	delete[] flatlist;
+	file.write(namebuff,namebuffsize);
+	delete[] namebuff;
+	file.write(reinterpret_cast<const char*>(childbuff),childbuffsize * sizeof(uint32));
+	delete[] childbuff;
+	file.write(reinterpret_cast<const char*>(&meshoffsets[0]),meshoffsets.size() * sizeof(uint32));
+	for(int i=0;i<meshind;i++){
+		file.write(meshbuffs[i],meshbuffsizes[i]);
+		delete[] meshbuffs[i];
+	}
+	file.flush();
+	file.close();
+}
+
+void Model::loadCache(std::string filename){
+	std::ifstream file(filename, std::ifstream::binary);
+	Header h;
+	file.read(reinterpret_cast<char*>(&h),sizeof(Header));
+	char* flatbuff = new char[h.namebuffoff - h.flatlistoff];
+	file.read(flatbuff,h.namebuffoff - h.flatlistoff);
+	char* namebuff = new char[h.childbuffoff - h.namebuffoff];
+	file.read(namebuff,h.childbuffoff - h.namebuffoff);
+	uint32* childbuff = reinterpret_cast<uint32*>(new char[h.meshindoff - h.childbuffoff]);
+	file.read(reinterpret_cast<char*>(childbuff),h.meshindoff - h.childbuffoff);
+	uint32* meshindbuff = reinterpret_cast<uint32*>(new char[h.meshbuffoff - h.meshindoff]);
+	file.read(reinterpret_cast<char*>(meshindbuff),h.meshbuffoff - h.meshindoff);
+	char* meshbuff = new char[h.filesize - h.meshbuffoff];
+	file.read(meshbuff,h.filesize - h.meshbuffoff);
+	file.close();
+	FlatModel* flatlist = reinterpret_cast<FlatModel*>(flatbuff);
+	//build graph from flatlist
+	std::vector<ModelPart*> workstack;
+	workstack.push_back(&rootPart);
+	rootPart.index = 0;
+	while(workstack.size() > 0){
+		ModelPart* current = workstack.back();
+		workstack.pop_back();
+		int i = current->index;
+		current->name = namebuff+flatlist[i].nameoff;
+		for(int j = flatlist[i].meshlistoff;j<flatlist[i].meshlistoff+flatlist[i].meshlistsize;j++){
+			current->meshes.emplace_back(RenderableMesh());
+			current->meshes.back().deserialize(meshbuff+meshindbuff[j]);
+		}
+		current->localTranform = flatlist[i].localTransform;
+		for(int j= flatlist[i].childlistoff;j<flatlist[i].childlistoff+flatlist[i].childlistsize;j++){
+			current->children.emplace_back(ModelPart());
+			current->children.back().index = childbuff[j];
+			current->children.back().parent = current;
+			workstack.push_back(&current->children.back());
+		}
+	}
 }
 
 } //namespace gl

@@ -14,3 +14,5 @@
 #define checkGlError(step)
 #endif
 int checkGlErrorImpl(std::string step,std::string file,int line);
+
+typedef unsigned int uint32;
