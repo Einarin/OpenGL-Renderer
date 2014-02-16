@@ -20,7 +20,7 @@ struct MeshHeader{
 	unsigned int numUVComponents[VERTEX_MAX_TEXCOORDS];
 };
 uint32 Mesh::serialize(char** inbuff){
-	unsigned int bufflen = sizeof(MeshHeader)
+	uint32 bufflen = sizeof(MeshHeader)
 			  + (name.size()+1)*sizeof(char)
 			  + vertices.size() * sizeof(vertex)
 			  + indices.size() * sizeof(unsigned int);

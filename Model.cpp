@@ -1,5 +1,7 @@
 #include "glincludes.h"
 #include "Model.h"
+#include "lz4.h"
+#include "lz4hc.h"
 #include <assimp/Importer.hpp> // C++ importer interface
 #include <assimp/postprocess.h> // Post processing flags
 #include <assimp/ProgressHandler.hpp>
@@ -290,6 +292,7 @@ struct FlatModel{
 	uint32 lightlistsize;
 };
 struct Header{
+	uint32 type;
 	uint32 filesize;
 	uint32 flatlistoff;
 	uint32 flatlistsize;
@@ -297,6 +300,7 @@ struct Header{
 	uint32 childbuffoff;
 	uint32 meshindoff;
 	uint32 meshbuffoff;
+	uint32 compressedmeshsize;
 };
 void Model::save(std::string filename){
 	//first walk the tree to assign indexes to nodes and determine buffer sizes
@@ -370,8 +374,26 @@ void Model::save(std::string filename){
 		m->childlistsize = current->children.size();
 	}
 
+	char* combinedmeshes = new char[meshpos];
+	char* compressedmeshes = new char[LZ4_compressBound(meshpos)];
+	uint32 off = 0;
+	for(int i=0;i<meshind;i++){
+		//file.write(meshbuffs[i],meshbuffsizes[i]);
+		memcpy(combinedmeshes+off,meshbuffs[i],meshbuffsizes[i]);
+		off += meshbuffsizes[i];
+		delete[] meshbuffs[i];
+	}
+	int compressedsize = LZ4_compressHC(combinedmeshes,compressedmeshes,meshpos);
+
 	//now we have all our buffers, fill out header and write to disk
 	Header h;
+	//only used compressed data if it succeeded and is smaller than uncompressed
+	h.type = ((compressedsize > 0) && (compressedsize < meshpos)) ? 1 : 0;
+	if(h.type){
+		h.compressedmeshsize = compressedsize;
+	} else {
+		h.compressedmeshsize = 0;
+	}
 	h.flatlistoff = sizeof(Header);
 	h.flatlistsize = nodecount;
 	h.namebuffoff = h.flatlistoff + nodecount * sizeof(FlatModel);
@@ -388,9 +410,10 @@ void Model::save(std::string filename){
 	file.write(reinterpret_cast<const char*>(childbuff),childbuffsize * sizeof(uint32));
 	delete[] childbuff;
 	file.write(reinterpret_cast<const char*>(&meshoffsets[0]),meshoffsets.size() * sizeof(uint32));
-	for(int i=0;i<meshind;i++){
-		file.write(meshbuffs[i],meshbuffsizes[i]);
-		delete[] meshbuffs[i];
+	if(h.type){
+		file.write(compressedmeshes,compressedsize);
+	} else {
+		file.write(combinedmeshes,meshpos);
 	}
 	file.flush();
 	file.close();
@@ -409,7 +432,13 @@ void Model::loadCache(std::string filename){
 	uint32* meshindbuff = reinterpret_cast<uint32*>(new char[h.meshbuffoff - h.meshindoff]);
 	file.read(reinterpret_cast<char*>(meshindbuff),h.meshbuffoff - h.meshindoff);
 	char* meshbuff = new char[h.filesize - h.meshbuffoff];
-	file.read(meshbuff,h.filesize - h.meshbuffoff);
+	if(h.type){
+		char* compressedbuff = new char[h.compressedmeshsize];
+		file.read(compressedbuff,h.compressedmeshsize);
+		LZ4_decompress_fast(compressedbuff,meshbuff,h.filesize - h.meshbuffoff);
+	} else {
+		file.read(meshbuff,h.filesize - h.meshbuffoff);
+	}
 	file.close();
 	FlatModel* flatlist = reinterpret_cast<FlatModel*>(flatbuff);
 	//build graph from flatlist
