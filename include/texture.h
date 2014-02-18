@@ -99,32 +99,56 @@ public:
 	virtual void contextLost();
 };
 
-class GlTexture2D : public Texture {
-private:
-    unsigned int id;
+class GlTexture : public Texture {
+protected:
+	unsigned int id;
+	bool initialized;
+    bool backed;
+	GLenum type;
+public:
+	GlTexture();
+	virtual ~GlTexture();
+	virtual void init();
+	unsigned int getId();
+	virtual void bind();
+	virtual void unbind();
+	virtual void alloc()=0;
+	virtual void dealloc()=0;
+};
+
+class GlTexture2D : public GlTexture {
 public:
     GlTexture2D();
     GlTexture2D(unsigned int texId);
-	virtual ~GlTexture2D();
+	
+    /** for initialization that requires a valid OpenGL context
+        * 
+        * will be called before the first draw call, and will be called again
+        * if context is lost and assets need to be redownloaded to the GPU
+        */
+	virtual void alloc();
+	virtual void dealloc();
+	virtual void unreferenced();
+	void setImage(GLint format,glm::ivec2 size,GLenum datatype,void* data);
+protected:
+	void setup(GLint format,glm::ivec2 size,GLenum datatype);
+	glm::ivec2 size;
+};
+
+class GlTextureCubeMap : public GlTexture2D {
+public:
+    GlTextureCubeMap();
+    GlTextureCubeMap(unsigned int texId);
 
     /** for initialization that requires a valid OpenGL context
         * 
         * will be called before the first draw call, and will be called again
         * if context is lost and assets need to be redownloaded to the GPU
         */
-    virtual void init();
 	virtual void alloc();
 	virtual void dealloc();
-	virtual void bind();
-	virtual void unbind();
-	virtual void unreferenced();
-    void setup(GLint format,glm::ivec2 size,GLenum datatype);
-	void setImage(GLint format,glm::ivec2 size,GLenum datatype,void* data);
-	unsigned int getId();
-protected:
-	glm::ivec2 size;
-	bool initialized;
-    bool backed;
+	void setup(GLint format,glm::ivec2 texSize,GLenum datatype,GLenum face);
+	void setImage(GLint format,glm::ivec2 size,GLenum datatype,GLenum face,void* data);
 };
 
 class FileBackedGlTexture2D : public GlTexture2D {

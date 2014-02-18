@@ -10,5 +10,5 @@ void onCursorMoved(GLFWwindow* window, double xpos, double ypos);
 
 //global variables ftw
 extern gl::Billboard* bb;
-extern gl::Camera camera;
+extern Camera camera;
 extern glm::mat4 projectionMatrix;

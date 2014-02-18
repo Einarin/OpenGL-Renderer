@@ -21,16 +21,16 @@ bool ShaderStage::compile(std::string source)
 	glCompileShader(id);
 	int compiled;
 	glGetShaderiv(id, GL_COMPILE_STATUS, &compiled);
+	GLsizei length;
+	glGetShaderiv(id,GL_INFO_LOG_LENGTH,&length);
+	GLchar* buff = new GLchar[length];
+	glGetShaderInfoLog(id,length,&length,buff);
+	//do something with error log
+	std::cout << buff << std::endl;
+	delete[] buff;
 	if (compiled != GL_TRUE)
 	{
-		//shader failed to link
-		GLsizei length;
-		glGetShaderiv(id,GL_INFO_LOG_LENGTH,&length);
-		GLchar* buff = new GLchar[length];
-		glGetShaderInfoLog(id,length,&length,buff);
-		//do something with error log
-		std::cout << buff << std::endl;
-		delete[] buff;
+		//shader failed to compile
 		return false;
 	} 
 	return true;
@@ -80,15 +80,15 @@ bool Shader::link(){
 	int linked;
 		
 	glGetProgramiv(id,GL_LINK_STATUS, &linked);
+	GLsizei length;
+	glGetProgramiv(id,GL_INFO_LOG_LENGTH,&length);
+	GLchar* buff = new GLchar[length];
+	glGetProgramInfoLog(id,length,&length,buff);
+	//do something with error log
+	std::cout << buff << std::endl;
 	if(linked != GL_TRUE)
 	{
 		//shader failed to link
-		GLsizei length;
-		glGetProgramiv(id,GL_INFO_LOG_LENGTH,&length);
-		GLchar* buff = new GLchar[length];
-		glGetProgramInfoLog(id,length,&length,buff);
-		//do something with error log
-		std::cout << buff << std::endl;
 		delete[] buff;
 		return false;
 	}

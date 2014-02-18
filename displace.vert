@@ -1,10 +1,15 @@
-attribute vec4 in_Position;
-attribute vec4 in_texCoords;
-attribute vec4 in_Normal;
-varying vec4 texCoords;
-varying vec4 normal;
-varying vec4 eyevec;
-varying vec4 lightvec;
+#version 330
+in vec3 in_Position;
+in vec3 in_Normal;
+in vec3 in_Tangent;
+in vec3 in_TexCoords;
+out vec4 texCoords;
+out vec4 normal;
+out vec4 tan;
+out vec4 bitan;
+out vec4 eyevec;
+out vec4 lightvec;
+uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 projMatrix;
 uniform vec4 camera;
@@ -88,22 +93,32 @@ float snoise(vec3 v)
 void main(void)
 {
 	//texCoords = in_Position;
-	//normal = vec4(normalize(transpose(inverse(mat3(viewMatrix))) * in_Normal.xyz),1.0);
+	normal = vec4(normalize(transpose(inverse(mat3(modelMatrix))) * in_Normal),1.0);
+	tan = vec4(normalize(transpose(inverse(mat3(modelMatrix))) * in_Tangent),1.0);
+	bitan = vec4(cross(normal.xyz,tan.xyz),1.0);
+	texCoords = vec4(in_TexCoords,1.0);
+	vec4 position = modelMatrix * vec4(in_Position.xyz,1.0);
 	float scale = 0.1;////clamp(time,0.0,1.0);
 	float frequency = 1.0;
-	time *= 0.001;
-	float displacement = 1.0;
+	//time *= 0.001;
+	vec3 displacement = vec3(1.0);
 	/*for(int i=0;i<4;i++){
-		displacement += scale *(snoise(frequency * in_Position.xyz));
-		frequency *= 10;
+		displacement.x += scale *(snoise(frequency * position.xyz));
+		displacement.y = scale * snoise(frequency * (position.xyz+0.01*tan.xyz));
+		displacement.z = scale * snoise(frequency * (position.xyz+0.01*bitan.xyz));
+		frequency *= 2;
 		scale *= 0.1;
 	}*/
 	displacement = clamp(displacement,0.1,3.0);
-	texCoords = vec4(in_Position.xyz * displacement,1.0);
-	normal = viewMatrix * vec4(normalize(in_Normal.xyz),0.0);
-	vec4 position = viewMatrix * vec4(in_Position.xyz * displacement,1.0);
-	position = viewMatrix * position;
+	position.xyz = position.xyz * displacement.x;
+	vec3 off1 = (position.xyz+0.01*tan.xyz) * displacement.y;
+	off1 -= position.xyz;
+	vec3 off2 = (position.xyz+0.01*bitan.xyz) * displacement.y;
+	off2 -= position.xyz;
+	//normal = viewMatrix * vec4(normalize(in_Normal.xyz),0.0);
+	//normal.xyz = normalize(cross(off1,off2));
+	//position = viewMatrix * position;
 	eyevec = camera - position;
 	lightvec = light - position;
-	gl_Position = projMatrix * position; 
+	gl_Position = projMatrix * viewMatrix * position;//modelMatrix * vec4(in_Position.xyz,1.0); 
 }

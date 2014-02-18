@@ -4,6 +4,7 @@
 #include "lz4hc.h"
 #include <assimp/Importer.hpp> // C++ importer interface
 #include <assimp/postprocess.h> // Post processing flags
+#include <assimp/mesh.h>
 #include <assimp/ProgressHandler.hpp>
 #include <iostream>
 #include <fstream>
@@ -49,7 +50,7 @@ Model::Model(std::string filename) : filepath(filename){
 								aiComponent_CAMERAS |
 								aiComponent_COLORS );
 	importer.SetPropertyInteger(AI_CONFIG_PP_FD_REMOVE, 1);
-
+	importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,aiPrimitiveType_POINT | aiPrimitiveType_LINE);
 	importer.SetProgressHandler(new CoutProgressHandler());
 	const aiScene* scene = importer.ReadFile(filename
 								,aiProcess_CalcTangentSpace 

@@ -207,8 +207,8 @@ void Sphere::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& ind
 			float x = cos(angle) * xzMag;
 			float z = sin(angle) * xzMag;
 			vertex& vert = verts[i*tesselationFactor + j];
-			vert.pos = vec4(x,y,z,1.0f);
-			vert.tc = vec4(texCoord.st,0.f,1.f);
+			vert.pos = vec3(x,y,z);
+			vert.tc = vec3(texCoord.st,0.0);
 			vert.normal = vert.pos;
 		}
 	}
@@ -244,14 +244,17 @@ void IndexedGeometry::init(){
 	glGenBuffers(1, &ibo);
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(0, 4, GL_FLOAT, false, sizeof(vertex), 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(vertex), 0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 4, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)16);
+	glVertexAttribPointer(1, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)12);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 4, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)32);
+	glVertexAttribPointer(2, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)24);
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(3, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)36);
 	glEnableVertexAttribArray(2);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	glBindVertexArray(0);
+	initialized = true;
 }
 
 void IndexedGeometry::download(){
@@ -267,9 +270,12 @@ void IndexedGeometry::download(){
 #ifdef _DEBUG
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
 #endif
+	downloaded = true;
 }
 
 void IndexedGeometry::draw(){
+	if(!initialized || !downloaded)
+		return;
 	glBindVertexArray(vao);
 	glDrawElements(GL_TRIANGLES,indices.size(),GL_UNSIGNED_INT,(GLvoid*)0);
 	checkGlError("drawelements");
@@ -285,8 +291,11 @@ int cubeSides[6][3][3] = {
 	{{1,0,0},{0,1,0},{0,0,-1}}
 };
 
-Cube::Cube(unsigned int tesselationFactor){
-	tesselate(verts,indices,ivec3(tesselationFactor));
+Cube::Cube(){
+}
+
+void Cube::generate(unsigned int tesselationFactor, glm::vec3 seed){
+	tesselate(verts,indices,ivec3(tesselationFactor), seed);
 }
 
 void Cube::calcFaceNormal(std::vector<vertex>& verts,std::vector<unsigned int>& indices, int* pos)
@@ -299,7 +308,7 @@ void Cube::calcFaceNormal(std::vector<vertex>& verts,std::vector<unsigned int>& 
 	}
 }
 
-void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indices,ivec3 tesselationFactor){
+void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indices,ivec3 tesselationFactor, vec3 seed){
 	verts.resize(6*tesselationFactor.x*tesselationFactor.y);
 	indices.resize(6*6*tesselationFactor.x*tesselationFactor.y);
 	Future<bool> futures[6];
@@ -326,13 +335,15 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 				float scale = 0.1f;////clamp(time,0.0,1.0);
 				float frequency = 1.0f;
 				float displacement = 1.0f;
-				for(int i=0;i<4;i++){
-					displacement += scale *(snoise(frequency * position.xyz));
-					frequency *= 10;
+				/*for(int i=0;i<4;i++){
+					displacement += scale *(snoise(frequency * position.xyz + seed));
+					frequency *=2;
 					scale *= 0.1f;
-				}
-				verts[vindex].pos = vec4(position*displacement,1.0f);
-				verts[vindex].normal = vec4(0.0f,0.0f,0.0f,1.0f);//vec4(position,1.0f);
+				}*/
+				verts[vindex].pos = position*displacement;
+				verts[vindex].normal = position;//vec4(0.0f,0.0f,0.0f,1.0f);//vec4(position,1.0f);
+				verts[vindex].tan = cross(y,position);
+				verts[vindex].tc = vec3(float(i)/float(tessX-1),float(j)/float(tessY-1),side/6.f);
 				vindex++;
 				/*verts[index].pos = vec4(x*(float(2*(i+1)-1)/float(tessX)) + y*(float(2*j-1)/float(tessY))+z,1.0);
 				index++;
@@ -352,7 +363,7 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 					indices[ind++] = indsum + (i+1)*tessX + j;
 					indices[ind++] = indsum + i*tessX + j+1;
 					int pos[3] = {indsum + i*tessX + j, indsum + (i+1)*tessX + j, indsum + i*tessX + j+1};
-					calcFaceNormal(verts,indices,pos);
+					//calcFaceNormal(verts,indices,pos);
 					
 					
 					//triangle 2	 
@@ -360,21 +371,21 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 					indices[ind++] = indsum + (i+1)*tessX + j+1;
 					indices[ind++] = indsum + i*tessX + j+1;
 					int pos2[3] = {indsum + (i+1)*tessX + j, indsum + (i+1)*tessX + j+1, indsum + i*tessX + j+1};
-					calcFaceNormal(verts,indices,pos2);
+					//calcFaceNormal(verts,indices,pos2);
 				} else {
 					//triangle 1
 					indices[ind++] = indsum + i*tessX + j;
 					indices[ind++] = indsum + i*tessX + j+1;
 					indices[ind++] = indsum + (i+1)*tessX + j;
 					int pos[3] = {indsum + i*tessX + j, indsum + i*tessX + j+1, indsum + (i+1)*tessX + j};
-					calcFaceNormal(verts,indices,pos);
+					//calcFaceNormal(verts,indices,pos);
 								 
 					//triangle 2	 
 					indices[ind++] = indsum + (i+1)*tessX + j;
 					indices[ind++] = indsum + i*tessX + j+1;
 					indices[ind++] = indsum + (i+1)*tessX + j+1;
 					int pos2[3] = {indsum + (i+1)*tessX + j, indsum + i*tessX + j+1, indsum + (i+1)*tessX + j+1};
-					calcFaceNormal(verts,indices,pos2);
+					//calcFaceNormal(verts,indices,pos2);
 				}
 			}
 		}

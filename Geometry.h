@@ -7,9 +7,12 @@ namespace gl{
 	class Geometry
     {
 	public:
+		glm::mat4 ModelMatrix;
 		virtual void init()=0;
         virtual void download()=0;
         virtual void draw()=0;
+		Geometry():ModelMatrix()
+		{}
         virtual ~Geometry()
         {
         }
@@ -22,13 +25,17 @@ namespace gl{
 		unsigned int vbo;
 		unsigned int ibo;
 		struct vertex{
-			glm::vec4 pos;
-			glm::vec4 tc;
-			glm::vec4 normal;
+			glm::vec3 pos;
+			glm::vec3 normal;
+			glm::vec3 tan;
+			glm::vec3 tc;
 		};
 		std::vector<vertex> verts;
 		std::vector<unsigned int> indices;
+		bool initialized,downloaded;
 	public:
+		IndexedGeometry():initialized(false),downloaded(false)
+		{}
 		virtual void init();
 		virtual void download();
 		virtual void draw();
@@ -81,10 +88,11 @@ namespace gl{
 
 	class Cube : public IndexedGeometry {
 		protected:
-		static void tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indices,glm::ivec3 tesselationFactor);
+		static void tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indices,glm::ivec3 tesselationFactor, glm::vec3 seed);
 		static void calcFaceNormal(std::vector<vertex>& verts,std::vector<unsigned int>& indices, int* pos);
 	public:
-		Cube(unsigned int tesselationFactor);
+		Cube();
+		void generate(unsigned int tesselationFactor, glm::vec3 seed);
 	};
 
 	class PatchSphere : public Sphere {

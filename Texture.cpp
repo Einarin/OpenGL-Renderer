@@ -23,11 +23,19 @@ void Texture::nearestInterpolation()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 }
 
-GlTexture2D::GlTexture2D() : id(0),initialized(false),backed(false)
+GlTexture::GlTexture():id(0),initialized(false),backed(false)
 {}
 
-GlTexture2D::GlTexture2D(unsigned int texId) : id(texId),initialized(false)
-{}
+GlTexture2D::GlTexture2D()
+{
+	type = GL_TEXTURE_2D;
+}
+
+GlTexture2D::GlTexture2D(unsigned int texId)
+{
+	id = texId;
+	type = GL_TEXTURE_2D;
+}
 
 void GlTexture2D::alloc(){
 	allocated=true;
@@ -45,22 +53,22 @@ void GlTexture2D::dealloc(){
 	allocated=false;
 }
 
-void GlTexture2D::init()
+void GlTexture::init()
 {
-	if(allocated)
+	if(!allocated)
 	{
 		alloc();
 	}
 	initialized = true;
 	backed = false;
 }
-void GlTexture2D::bind()
+void GlTexture::bind()
 {
-    glBindTexture(GL_TEXTURE_2D, id);
+    glBindTexture(type, id);
 }
-void GlTexture2D::unbind()
+void GlTexture::unbind()
 {
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTexture(type, 0);
 }
 void GlTexture2D::setup(GLint format,ivec2 texSize,GLenum datatype)
 {
@@ -68,8 +76,8 @@ void GlTexture2D::setup(GLint format,ivec2 texSize,GLenum datatype)
 		alloc();
 	}
 	size = texSize;
-    glBindTexture(GL_TEXTURE_2D, id);
-    glTexImage2D(GL_TEXTURE_2D,0,format,size.x,size.y,0,format,datatype,0);
+    glBindTexture(type, id);
+    glTexImage2D(type,0,format,size.x,size.y,0,format,datatype,0);
 	checkGlError("GlTexture2D::setup()");
     backed = true;
 }
@@ -98,12 +106,12 @@ void GlTexture2D::setImage(GLint format,ivec2 texSize,GLenum datatype,void* data
 	}
 }
 
-GlTexture2D::~GlTexture2D() {
+GlTexture::~GlTexture() {
 	if(getId() > 0) //If id is zero we never allocated anything in OpenGL, don't print anything
 	glDeleteTextures(1,&id);
 }
 
-unsigned int GlTexture2D::getId()
+unsigned int GlTexture::getId()
 {
 	return id;
 }
@@ -154,6 +162,59 @@ void FileBackedGlTexture2D::bind(){
 	}
 	
 	GlTexture2D::bind();
+}
+
+GlTextureCubeMap::GlTextureCubeMap()
+{
+	type = GL_TEXTURE_CUBE_MAP;
+}
+
+GlTextureCubeMap::GlTextureCubeMap(unsigned int texId)
+{
+	id = texId;
+	type = GL_TEXTURE_CUBE_MAP;
+}
+
+void GlTextureCubeMap::alloc(){
+	allocated=true;
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+	glGenTextures(1,&id);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S,GL_REPEAT );
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_REPEAT );
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_REPEAT );
+	checkGlError("GlTexture2D::alloc()");
+}
+
+void GlTextureCubeMap::dealloc(){
+	glDeleteTextures(1,&id);
+	allocated=false;
+}
+void GlTextureCubeMap::setup(GLint format,ivec2 texSize,GLenum datatype,GLenum face)
+{
+	if(!allocated){
+		alloc();
+	}
+	size = texSize;
+    glBindTexture(type, id);
+    glTexImage2D(face,0,format,size.x,size.y,0,format,datatype,0);
+	checkGlError("GlTexture2D::setup()");
+    backed = true;
+}
+void GlTextureCubeMap::setImage(GLint format,ivec2 texSize,GLenum datatype,GLenum face,void* data)
+{
+	if(data != 0) {
+
+		glBindTexture(type, id);
+		checkGlError("glBindTexture");
+		glTexSubImage2D(face,0,0,0,size.x,size.y,format,datatype,data);
+		checkGlError("glTexSubImage2D");
+		glBindTexture(GL_TEXTURE_2D, 0);
+	} else {
+		//texture is NULL
+	}
 }
 
 } // namespace gl
