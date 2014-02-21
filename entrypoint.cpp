@@ -77,19 +77,23 @@ int main(int argc, char* argv[])
 	int width, height;
 	glfwGetFramebufferSize(window, &width, &height);
 	glViewport(0, 0, width, height);
-	projectionMatrix = glm::perspective(60.f,static_cast<float>(width)/static_cast<float>(height),0.001f,10000.f);
+	projectionMatrix = glm::perspective(60.f,static_cast<float>(width)/static_cast<float>(height),0.00001f,100.f);
 	orthoMatrix = glm::ortho(0.f,static_cast<float>(width),0.f,static_cast<float>(height),-1.f,1.f);
 
 	//Camera setup
 	camera = Camera(); // vec3(0.,2.5,3.0),vec3(0,2.0,0),vec3(0,1.0,0)
-	//camera.SetPosition(vec3(-2.f,-2.f,-2.f));
-	camera.SetPosition(vec3(0.0,0.0,0.0));
+	camera.SetPosition(vec3(-6.f,-6.f,-6.f));
+	//camera.SetPosition(vec3(0.0,0.0,0.0));
 	camera.SetTarget(vec3(1.0,1.0,1.0));
 	camera.SetAspectRatio(static_cast<float>(width)/static_cast<float>(height));
 
 	cout << "generating assets...\n";
 	
 	//Sphere cube(32,vec2(0.0,0.0),vec2(1.0));
+	SkyBox skybox;
+	skybox.init();
+	skybox.download();
+	skybox.setImage("assets/Skybox/skybox",&glPool);
 
 	Cube cube;
 	cube.generate(2,vec3(0));
@@ -99,30 +103,31 @@ int main(int argc, char* argv[])
 
 	cout << "loading models...\n";
 	Model* model = NULL;
-	/*Cube asteroids[27];
-	for(int i=0;i<27;i++){
-		glPool.async([i,&asteroids](){
-			glm::vec3 position(i%3-1,i/3%3-1,i/9-1);
-			position *= 2.0f;
-			asteroids[i].generate(40,position);
-			asteroids[i].ModelMatrix = glm::translate(mat4(),position);
-			auto ptr = &asteroids[i];
+	const unsigned int asteroidCount=0;
+	Cube asteroids[1];
+	for(int q=0;q<asteroidCount;q++){
+		glPool.async([q,&asteroids](){
+			glm::vec3 position(q%3-1,q/3%3-1,q/9-1);
+			position *= 4.0f;
+			asteroids[q].generate(100,position,true);
+			asteroids[q].ModelMatrix = translate(rotate(mat4(),3.14159f*0.25f,glm::vec3(1.f,2.f,3.f)),position);
+			auto ptr = &asteroids[q];
 			glPool.onMain([=](){
 				ptr->init();
 				ptr->download();
 			});
 		});
-	}*/
+	}
 	
-	/*glPool.async([&](){
-		auto ptr = new Model("assets/shuttle.3ds");
+	glPool.async([&](){
+		auto ptr = new Model("assets/fighter ship.obj");
 		auto local = &model;
 		glPool.onMain([=](){
 			ptr->init();
 			ptr->download();
 			*local = ptr;
 		});
-	});*/
+	});
 
 	/*unsigned int patchfactor = 2;
 	vector<Sphere> patches;
@@ -188,7 +193,9 @@ int main(int argc, char* argv[])
 	shader->addAttrib("in_TexCoords",3);
 	shader->attachStage(vs);
 	shader->attachStage(fs);
-	shader->link();
+	if(!shader->link()){
+		DebugBreak();
+	}
 	shader->bind();
 	checkGlError("shader");
 	glUniform1i(shader->getUniformLocation("framedata"), 0);
@@ -205,11 +212,6 @@ int main(int argc, char* argv[])
 	la[3] = 1.f;
 	glUniform4fv(shader->getUniformLocation("light"),1,la);
 
-	SkyBox skybox;
-	skybox.init();
-	skybox.download();
-	skybox.setImage("assets/Skybox/skybox");
-
 	//grab the mouse last so we can do things during load
 	glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_DISABLED);
 
@@ -225,10 +227,9 @@ int main(int argc, char* argv[])
 
 //	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glCullFace(GL_BACK);
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-	float i = 5.f;
 	double time = glfwGetTime();
 	int fpsCount = 60;
 	int counter = 0;
@@ -251,15 +252,14 @@ int main(int argc, char* argv[])
 
 		//process async work
 		//todo: process this while we have time before next draw call
-		glPool.processMainQueueUnit();
+		//glPool.processMainQueueUnit();
 		checkGlError("start main loop");
 		//draw
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		checkGlError("clear screen");
-		glDisable(GL_DEPTH_TEST);
+		
 		skybox.draw(&camera);
-		glEnable(GL_DEPTH_TEST);
-
+		
 		//mat4 projview = projectionMatrix* camera.toMat4();
 		shader->bind();
 		glUniformMatrix4fv(shader->getUniformLocation("viewMatrix"), 1, GL_FALSE, value_ptr(camera.GetViewMatrix()));
@@ -267,21 +267,22 @@ int main(int argc, char* argv[])
 		vec3 pos = camera.GetPosition();
 		glUniform4fv(shader->getUniformLocation("camera"), 1, value_ptr(vec4(camera.GetPosition(),1.0)));
 		glUniform4fv(shader->getUniformLocation("light"), 1, value_ptr(vec4(1.5f,3.0f,3.0f,1.0f)));
-		/*for(int i=0;i<27;i++){
+		checkGlError("setup model shader");
+		for(int i=0;i<asteroidCount;i++){
 			glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(asteroids[i].ModelMatrix));
 			asteroids[i].draw();
-			asteroids[i].ModelMatrix = asteroids[i].ModelMatrix * glm::rotate(mat4(),0.01f*i,vec3(0,1,0));
-		}*/
-		glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(cube.ModelMatrix));
-		checkGlError("setup model shader");
+			asteroids[i].ModelMatrix =  glm::rotate(asteroids[i].ModelMatrix,0.01f,vec3(0,1,0));
+			checkGlError("draw asteroid");
+		}
+		//glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(cube.ModelMatrix));
 		//cube.draw();
 		if(model)
+			//glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(model->ModelMatrix));
 			model->draw();
 		/*for(int index=0;index<patches.size();index++){
 			patches[index].draw();
 		}*/
-		glUniform1f(shader->getUniformLocation("time"),i);
-		i+=0.00001f;
+		glUniform1f(shader->getUniformLocation("time"),time);
 		//bb->draw();
 		textRenderer->draw(orthoMatrix);
 		counter++;
@@ -306,8 +307,8 @@ int main(int argc, char* argv[])
 			fps->addText(ss2.str(),vec2(5,height-(32*3)),vec4(1.0f));
 			ss3 << " (" << cam[3][0] << ", " << cam[3][1] << ", " << cam[3][2] << ", " << cam[3][3] << ")";
 			fps->addText(ss3.str(),vec2(5,height-(32*4)),vec4(1.0f));*/
-			//if(!model)
-				//fps->addText("Loading...",vec2(max(width/2-100,5),height/2),vec4(1.0f));
+			if(glPool.processMainQueueUnit())
+				fps->addText("Loading...",vec2(max(width/2-100,5),height/2),vec4(1.0f));
 		}
 		fps->draw(orthoMatrix);
 		checkGlError("draw text");

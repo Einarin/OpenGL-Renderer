@@ -94,15 +94,17 @@ void ThreadPool::onMain(std::function<void()> workUnit){
 	RELEASE_MUTEX(mainQueueMutex);
 }
 
-void ThreadPool::processMainQueueUnit(){
+bool ThreadPool::processMainQueueUnit(){
 	ACQUIRE_MUTEX(mainQueueMutex);
 	if(!mainQueue.empty()){
 		std::function<void()> workUnit = mainQueue.front();
 		mainQueue.pop();
 		RELEASE_MUTEX(mainQueueMutex);
 		workUnit();
+		return true;
 	} else {
 		RELEASE_MUTEX(mainQueueMutex);
+		return false;
 	}
 }
 

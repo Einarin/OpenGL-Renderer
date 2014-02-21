@@ -4,7 +4,7 @@ uniform float time;
 in vec4 eyevec;
 in vec4 texCoords;
 in vec4 normal;
-in vec4 tan;
+in vec4 tangent;
 in vec4 bitan;
 in vec4 lightvec;
 out vec4 FragColor;
@@ -231,40 +231,32 @@ void cellular(in vec2 P, out vec2 F, out vec4 d1d2) {
 	d1d2 = vec4(d1x.x, d1y.x, d1x.y, d1y.y);
 }
 
-
+float scale;
+float displace(vec3 point){
+	float displacement = 0.0;
+	scale = 0.1;
+	float frequency = 1.0;
+	for(int i=0;i<8;i++){
+		displacement += scale *(snoise(frequency * point));
+		frequency *= 2;
+		scale *= 0.5;
+	}
+	return displacement;
+}
 
 void main( void )
 {
-  vec2 F;
-  vec4 d1d2;
-  //float it = st.x + 1.0;
-  vec2 dt = vec2(time*0.1,0.0);
-  float ft = dt.x*0.05;
-  cellular(8.0*(st+dt), F, d1d2); // Returns vectors to points
-  float pattern = length(F.xy);
-  dt *= 1.5;
-  cellular(16.0*(st+dt), F, d1d2); // Returns vectors to points
-  pattern += 0.5 * length(F.xy);
-  dt *= 1.5;
-  cellular(32.0*(st+dt), F, d1d2); // Returns vectors to points
-  pattern += 0.25 * length(F.xy);
-  dt *= 1.5;
-  cellular(64.0*(st+ft), F, d1d2); // Returns vectors to points
-  pattern += length(sin(dt+(2.0*3.1415*st.x))* F.x);
-  dt *= 1.5;
-  float pattern2 = snoise(vec3(st+dt+ft,50.0));
-  dt *= 1.5;
-  //pattern += snoise(vec3(2.0*st+dt+ft,60.0));
-  
-  
-  // Constant width lines, from the book "Advanced RenderMan"
-  float thresh = 0.05 * (length(d1d2.xy - d1d2.zw))
-    / (F.x + F.y);
-  float f = F.y - F.x;
-  f += (0.5 - cellular(64.0*st).y) * thresh;
-
-  vec4 diffuse = pattern * vec4(0.8,0.25,0.0,0.0) + pattern2*vec4(0.5,0.0,0.0,0.0) + vec4(0.5,0.2,0.0,1.0);
-  diffuse = mix(diffuse,vec4(0.5,0.2,0.0,1.0),10.0*clamp(abs(st.y-0.5)-0.4,0.0,0.1));
+vec4 displacement;
+  displacement.x = displace( texCoords.xyz);
+	
+	float dt = fwidth(displacement.x);//max(dFdx(displacement.x),dFdy(displacement.x));
+	displacement.y = displace( texCoords.xyz+vec3(dt,0.0,0.0));
+	displacement.z = displace( texCoords.xyz+vec3(0.0,dt,0.0));
+	displacement.w = displace( texCoords.xyz+vec3(0.0,0.0,dt));
+	vec3 df = displacement.yzw - displacement.x;
+	df *= 1.0/0.01;
+	
+	vec3 norm = normal.xyz - df;
   
   vec4 specular = vec4(1.0,1.0,0.9,0.0);
   float angle = -dot(normalize(eyevec.xyz),normalize(normal.xyz));
@@ -275,7 +267,8 @@ void main( void )
 	color = vec3(1.,0.,0.);
 	}
 	float maxd = max(length(dFdx(texCoords.rgb)),length(dFdy(texCoords.rgb)));
-	float dc = max(-dot(normalize(normal.xyz),normalize(lightvec.xyz)),0);
-	color = (dc+0.15) * vec3(0.8,0.4,0.8);//vec3(abs(tan.x));//vec3(0.8,0.4,0.8);
+	float dc = max(-dot(normalize(norm),normalize(lightvec.xyz)),0);
+	//float disp = texCoords.w*0.33333;
+	color = (dc+0.15) * (abs(displacement.yzw)+0.3);//vec3(1.0-disp,0.0,disp);//vec3(abs(tan.x));//vec3(0.8,0.4,0.8);
 	FragColor = vec4(color,1.0);//vec3(dc+0.15)//vec4(angle,maxd, 0.5+gl_FragCoord.z,1.0);//vec4(color*vec3(snoise(vec3(texCoords.xy,texCoords.z+time))+1.0)*0.5,1.0);//angle * specular + diffuse;
 }

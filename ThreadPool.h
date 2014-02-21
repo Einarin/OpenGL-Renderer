@@ -235,7 +235,7 @@ public:
 		return result.val();
 	}
 	void onMain(std::function<void()> workUnit);
-	void processMainQueueUnit();
+	bool processMainQueueUnit(); //returns true if work was done
 };
 
 extern ThreadPool glPool;

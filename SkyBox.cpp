@@ -41,7 +41,8 @@ const char* vert =
 	"uniform mat4 projMatrix;\n"
 	"void main(){\n"
 	"position = vec4(in_position,1.0);\n"
-	"gl_Position = projMatrix * viewMatrix * position;\n"
+	"vec4 rotpos = viewMatrix * vec4(in_position,0.0);\n"
+	"gl_Position = projMatrix * vec4(rotpos.xyz,1.0);\n"
 	"}\n";
 
 const char* frag =
@@ -50,12 +51,12 @@ const char* frag =
 	"out vec4 FragColor;\n"
 	"uniform samplerCube cubemap;\n"
 	"void main() {\n"
-	"FragColor = texture(cubemap,position.xyz);\n"
+	"FragColor = 2.0f*(texture(cubemap,position.xyz)-0.5);\n"
 	"}\n";
 
 SkyBox::SkyBox(void):initialized(false),downloaded(false)
 {
-	cube.generate(20,glm::vec3(0));
+	cube.generate(5,glm::vec3(0));
 }
 
 SkyBox::~SkyBox(void)
@@ -113,12 +114,7 @@ void SkyBox::download(){
 	cube.download();
 	downloaded = true;
 }
-
-void SkyBox::setImage(std::string basepngfilename){
-	glm::ivec2 imgSize;
-	char* data;
-	int bufflen;
-	GLenum faces[] = {
+GLenum faces[] = {
 		GL_TEXTURE_CUBE_MAP_POSITIVE_X,
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
 		GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
@@ -126,20 +122,51 @@ void SkyBox::setImage(std::string basepngfilename){
 		GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
 		};
-	char* suffixes[] = {"+x","-x","+y","-y","+z","-z"};
+char* suffixes[] = {"+x","-x","+y","-y","+z","-z"};
+void SkyBox::setImage(std::string basepngfilename, ThreadPool* pool){
+	
 	cubemap.bind();
 	for(int i=0;i<6;i++){
-		bool success = imageDataFromPngFile(
-			basepngfilename+suffixes[i]+".png",
-			&imgSize,&data,&bufflen);
-		cubemap.setup(GL_RGBA,imgSize,GL_UNSIGNED_BYTE,faces[i]);
-		cubemap.setImage(GL_RGBA,imgSize,GL_UNSIGNED_BYTE,faces[i],data);
+		if(pool){//if we have a thread pool do the reading from disk and png decompression off of the main thread
+			pool->async([=](){
+				glm::ivec2 imgSize;
+				char* data;
+				int bufflen;
+				bool success = imageDataFromPngFile(
+				basepngfilename+suffixes[i]+".png",
+				&imgSize,&data,&bufflen);
+				int j = i;
+				glm::ivec2 size = imgSize;
+				GlTextureCubeMap* ptr = &cubemap;
+				pool->onMain([=](){//OpenGL work must be done on GL thread
+					ptr->setup(GL_RGBA,size,GL_UNSIGNED_BYTE,faces[j]);
+					ptr->setImage(GL_RGBA,size,GL_UNSIGNED_BYTE,faces[j],data);
+					free(data);
+				});
+			});
+		} else {
+			glm::ivec2 imgSize;
+			char* data;
+			int bufflen;
+			bool success = imageDataFromPngFile(
+				basepngfilename+suffixes[i]+".png",
+				&imgSize,&data,&bufflen);
+			cubemap.setup(GL_RGBA,imgSize,GL_UNSIGNED_BYTE,faces[i]);
+			cubemap.setImage(GL_RGBA,imgSize,GL_UNSIGNED_BYTE,faces[i],data);
+			free(data);
+		}
 	}
 }
 
 void SkyBox::draw(Camera* c){
 	if(!initialized || !downloaded)
 		return;
+	GLboolean depth;
+	glGetBooleanv(GL_DEPTH_TEST, &depth);
+	glDisable(GL_DEPTH_TEST);
+	GLboolean culling;
+	glGetBooleanv(GL_CULL_FACE, &culling);
+	glDisable(GL_CULL_FACE);
 	checkGlError("start draw");
 	shader->bind();
 	checkGlError("skybox shader");
@@ -154,6 +181,10 @@ void SkyBox::draw(Camera* c){
 	checkGlError("drawelements");
 	glBindVertexArray(0);*/
 	cube.draw();
+	if(depth)
+		glEnable(GL_DEPTH_TEST);
+	if(culling)
+		glEnable(GL_CULL_FACE);
 }
 
 }; //namespace gl

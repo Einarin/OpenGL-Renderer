@@ -88,11 +88,12 @@ namespace gl{
 
 	class Cube : public IndexedGeometry {
 		protected:
-		static void tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indices,glm::ivec3 tesselationFactor, glm::vec3 seed);
+		static void tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indices,glm::ivec3 tesselationFactor, glm::vec3 seed, bool displace);
 		static void calcFaceNormal(std::vector<vertex>& verts,std::vector<unsigned int>& indices, int* pos);
+		bool m_displaced;
 	public:
 		Cube();
-		void generate(unsigned int tesselationFactor, glm::vec3 seed);
+		void generate(unsigned int tesselationFactor, glm::vec3 seed, bool simplexDisplace = false);
 	};
 
 	class PatchSphere : public Sphere {

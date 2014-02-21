@@ -12,7 +12,7 @@ void onResizeWindow(GLFWwindow* window, int w, int h){
 	glViewport(0,0,(GLsizei)w,(GLsizei)h);
 	float aspect = static_cast<float>(w)/static_cast<float>(h);
 	projectionMatrix = glm::perspective(45.f,aspect,-1.f,1.f);
-	camera.SetAspectRatio(w/h);
+	camera.SetAspectRatio(aspect);
 }
 using glm::vec3;
 //menu keys
@@ -82,10 +82,10 @@ void onCursorMoved(GLFWwindow* window, double xpos, double ypos){
 		double dy = oldMouseY-ypos;
 
 		//camera.rotate(-dy,glm::inverse(camera.rot())*glm::vec3(1.f,0.f,0.f));
-		camera.PitchUp(dy*0.01);
+		camera.PitchUp(dy*0.01f);
 		//camera.rotate(dx,vec3(0.,1.,0.));
 		//camera.RotateAround(vec3(0.f,1.f,1.f),-dx*0.01);
-		camera.YawLeft(dx*0.01);
+		camera.YawLeft(dx*0.01f);
 	}
 	oldMouseX = xpos;
 	oldMouseY = ypos;

@@ -294,8 +294,9 @@ int cubeSides[6][3][3] = {
 Cube::Cube(){
 }
 
-void Cube::generate(unsigned int tesselationFactor, glm::vec3 seed){
-	tesselate(verts,indices,ivec3(tesselationFactor), seed);
+void Cube::generate(unsigned int tesselationFactor, glm::vec3 seed, bool simplexDisplace){
+	m_displaced = simplexDisplace;
+	tesselate(verts,indices,ivec3(tesselationFactor), seed,simplexDisplace);
 }
 
 void Cube::calcFaceNormal(std::vector<vertex>& verts,std::vector<unsigned int>& indices, int* pos)
@@ -308,7 +309,7 @@ void Cube::calcFaceNormal(std::vector<vertex>& verts,std::vector<unsigned int>& 
 	}
 }
 
-void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indices,ivec3 tesselationFactor, vec3 seed){
+void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indices,ivec3 tesselationFactor, vec3 seed, bool displace){
 	verts.resize(6*tesselationFactor.x*tesselationFactor.y);
 	indices.resize(6*6*tesselationFactor.x*tesselationFactor.y);
 	Future<bool> futures[6];
@@ -335,15 +336,19 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 				float scale = 0.1f;////clamp(time,0.0,1.0);
 				float frequency = 1.0f;
 				float displacement = 1.0f;
-				/*for(int i=0;i<4;i++){
-					displacement += scale *(snoise(frequency * position.xyz + seed));
-					frequency *=2;
-					scale *= 0.1f;
-				}*/
+				if(displace){
+					int noisefactor = 0;//min(tesselationFactor.x,min(tesselationFactor.y,tesselationFactor.z));
+					for(int i=0;i<(noisefactor/2);i++){
+						//displacement += scale *(snoise(frequency * (position.xyz + seed)));
+						displacement += 0.1f;// * snoise(position.xyz);
+						frequency *=2;
+						scale *= 0.5f;
+					}
+				}
 				verts[vindex].pos = position*displacement;
-				verts[vindex].normal = position;//vec4(0.0f,0.0f,0.0f,1.0f);//vec4(position,1.0f);
+				verts[vindex].normal = position;//vec3(0.0f,0.0f,0.0f);//vec4(position,1.0f);
 				verts[vindex].tan = cross(y,position);
-				verts[vindex].tc = vec3(float(i)/float(tessX-1),float(j)/float(tessY-1),side/6.f);
+				//verts[vindex].tc = vec3(float(i)/float(tessX-1),float(j)/float(tessY-1),side/6.f);
 				vindex++;
 				/*verts[index].pos = vec4(x*(float(2*(i+1)-1)/float(tessX)) + y*(float(2*j-1)/float(tessY))+z,1.0);
 				index++;
@@ -363,7 +368,7 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 					indices[ind++] = indsum + (i+1)*tessX + j;
 					indices[ind++] = indsum + i*tessX + j+1;
 					int pos[3] = {indsum + i*tessX + j, indsum + (i+1)*tessX + j, indsum + i*tessX + j+1};
-					//calcFaceNormal(verts,indices,pos);
+					calcFaceNormal(verts,indices,pos);
 					
 					
 					//triangle 2	 
@@ -371,21 +376,21 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 					indices[ind++] = indsum + (i+1)*tessX + j+1;
 					indices[ind++] = indsum + i*tessX + j+1;
 					int pos2[3] = {indsum + (i+1)*tessX + j, indsum + (i+1)*tessX + j+1, indsum + i*tessX + j+1};
-					//calcFaceNormal(verts,indices,pos2);
+					calcFaceNormal(verts,indices,pos2);
 				} else {
 					//triangle 1
 					indices[ind++] = indsum + i*tessX + j;
 					indices[ind++] = indsum + i*tessX + j+1;
 					indices[ind++] = indsum + (i+1)*tessX + j;
 					int pos[3] = {indsum + i*tessX + j, indsum + i*tessX + j+1, indsum + (i+1)*tessX + j};
-					//calcFaceNormal(verts,indices,pos);
+					calcFaceNormal(verts,indices,pos);
 								 
 					//triangle 2	 
 					indices[ind++] = indsum + (i+1)*tessX + j;
 					indices[ind++] = indsum + i*tessX + j+1;
 					indices[ind++] = indsum + (i+1)*tessX + j+1;
 					int pos2[3] = {indsum + (i+1)*tessX + j, indsum + i*tessX + j+1, indsum + (i+1)*tessX + j+1};
-					//calcFaceNormal(verts,indices,pos2);
+					calcFaceNormal(verts,indices,pos2);
 				}
 			}
 		}

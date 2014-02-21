@@ -3,6 +3,7 @@
 #include "Geometry.h"
 #include "Texture.h"
 #include "Camera.h"
+#include "ThreadPool.h"
 
 namespace gl{
 
@@ -22,7 +23,7 @@ public:
 	~SkyBox(void);
 	void init();
 	void download();
-	void setImage(std::string basepngfilename);
+	void setImage(std::string basepngfilename, ThreadPool* pool=NULL);
 	void draw(Camera* c);
 };
 

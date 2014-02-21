@@ -32,10 +32,10 @@ glm::vec2 TextRenderer::addText(std::string text,glm::vec2 pos,glm::vec4 color){
 				kerning = texture_glyph_get_kerning( glyph, wstr[i-1] );
 			}
 			pos.x += kerning;
-			int x0  = (int)( pos.x + glyph->offset_x );
-			int y0  = (int)( pos.y + glyph->offset_y );
-			int x1  = (int)( x0 + glyph->width );
-			int y1  = (int)( y0 - glyph->height );
+			float x0  = (int)( pos.x + glyph->offset_x );
+			float y0  = (int)( pos.y + glyph->offset_y );
+			float x1  = (int)( x0 + glyph->width );
+			float y1  = (int)( y0 - glyph->height );
 			float s0 = glyph->s0;
 			float t0 = glyph->t0;
 			float s1 = glyph->s1;
@@ -43,10 +43,10 @@ glm::vec2 TextRenderer::addText(std::string text,glm::vec2 pos,glm::vec4 color){
 			GLuint index = ((vertex_buffer_t*)buffer)->vertices->size;
 			GLuint indices[] = {index, index+1, index+2,
 								index, index+2, index+3};
-			vertex_t vertices[] = { { x0,y0,0,  s0,t0,  color.r,color.g,color.b,color.a, 0,1 },
-									{ x0,y1,0,  s0,t1,  color.r,color.g,color.b,color.a, 0,1 },
-									{ x1,y1,0,  s1,t1,  color.r,color.g,color.b,color.a, 0,1 },
-									{ x1,y0,0,  s1,t0,  color.r,color.g,color.b,color.a, 0,1 } };
+			vertex_t vertices[] = { { x0,y0,0.f,  s0,t0,  color.r,color.g,color.b,color.a, 0.f,1.f },
+									{ x0,y1,0.f,  s0,t1,  color.r,color.g,color.b,color.a, 0.f,1.f },
+									{ x1,y1,0.f,  s1,t1,  color.r,color.g,color.b,color.a, 0.f,1.f },
+									{ x1,y0,0.f,  s1,t0,  color.r,color.g,color.b,color.a, 0.f,1.f } };
 			vertex_buffer_push_back_indices( (vertex_buffer_t*)buffer, indices, 6 );
 			vertex_buffer_push_back_vertices( (vertex_buffer_t*)buffer, vertices, 4 );
 			pos.x += glyph->advance_x;

@@ -110,7 +110,7 @@ Model::Model(std::string filename) : filepath(filename){
 		}
 	}
 	if(scene->HasMaterials()){
-		for(int i=0;i<scene->mNumMaterials;i++){
+		for(int i=0;i<(int)scene->mNumMaterials;i++){
 			aiMaterial* assmat = scene->mMaterials[i];
 			aiString name;
 			assmat->Get(AI_MATKEY_NAME,name);
@@ -210,8 +210,8 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 	output.drawCount = aim.mNumFaces;
 	output.indices.clear();
 	output.indices.reserve(aim.mNumFaces*3);
-	for(int i=0;i<aim.mNumFaces;i++){
-		for(int j=0;j<aim.mFaces[j].mNumIndices;j++){
+	for(int i=0;i<(int)aim.mNumFaces;i++){
+		for(int j=0;j<(int)aim.mFaces[j].mNumIndices;j++){
 			output.indices.push_back(aim.mFaces[i].mIndices[j]);
 		}
 	}
@@ -318,7 +318,7 @@ void Model::save(std::string filename){
 		namebuffsize += current->name.size()+1; //+1 for trailing \0
 		childbuffsize += current->children.size();
 		lightindbuffsize += current->lights.size();
-		for(int i=0; i<current->children.size();i++){
+		for(int i=0; i<(int)current->children.size();i++){
 			stack.push_back(&current->children[i]);
 		}
 	}
@@ -356,7 +356,7 @@ void Model::save(std::string filename){
 		namebuffpos += current->name.size()+1;
 
 		m->meshlistoff = meshind;
-		for(int i=0;i<current->meshes.size();i++){
+		for(int i=0;i<(int)current->meshes.size();i++){
 			meshbuffs.push_back(nullptr);
 			uint32 size = current->meshes[i].serialize(&meshbuffs.back());
 			meshoffsets.push_back(meshpos);
@@ -367,7 +367,7 @@ void Model::save(std::string filename){
 		m->meshlistsize = current->meshes.size();
 
 		m->childlistoff = childbuffpos;
-		for(int i=0; i<current->children.size();i++){
+		for(int i=0; i<(int)current->children.size();i++){
 			stack.push_back(&current->children[i]);
 			childbuff[childbuffpos+i] = current->children[i].index;
 		}
@@ -378,7 +378,7 @@ void Model::save(std::string filename){
 	char* combinedmeshes = new char[meshpos];
 	char* compressedmeshes = new char[LZ4_compressBound(meshpos)];
 	uint32 off = 0;
-	for(int i=0;i<meshind;i++){
+	for(int i=0;i<(int)meshind;i++){
 		//file.write(meshbuffs[i],meshbuffsizes[i]);
 		memcpy(combinedmeshes+off,meshbuffs[i],meshbuffsizes[i]);
 		off += meshbuffsizes[i];
@@ -389,7 +389,7 @@ void Model::save(std::string filename){
 	//now we have all our buffers, fill out header and write to disk
 	Header h;
 	//only used compressed data if it succeeded and is smaller than uncompressed
-	h.type = ((compressedsize > 0) && (compressedsize < meshpos)) ? 1 : 0;
+	h.type = ((compressedsize > 0) && (compressedsize < (int)meshpos)) ? 1 : 0;
 	if(h.type){
 		h.compressedmeshsize = compressedsize;
 	} else {
@@ -451,12 +451,12 @@ void Model::loadCache(std::string filename){
 		workstack.pop_back();
 		int i = current->index;
 		current->name = namebuff+flatlist[i].nameoff;
-		for(int j = flatlist[i].meshlistoff;j<flatlist[i].meshlistoff+flatlist[i].meshlistsize;j++){
+		for(int j = flatlist[i].meshlistoff;j<(int)flatlist[i].meshlistoff+flatlist[i].meshlistsize;j++){
 			current->meshes.emplace_back(RenderableMesh());
 			current->meshes.back().deserialize(meshbuff+meshindbuff[j]);
 		}
 		current->localTranform = flatlist[i].localTransform;
-		for(int j= flatlist[i].childlistoff;j<flatlist[i].childlistoff+flatlist[i].childlistsize;j++){
+		for(int j= flatlist[i].childlistoff;j<(int)flatlist[i].childlistoff+flatlist[i].childlistsize;j++){
 			current->children.emplace_back(ModelPart());
 			current->children.back().index = childbuff[j];
 			current->children.back().parent = current;

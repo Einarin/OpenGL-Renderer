@@ -51,8 +51,8 @@ uint32 Mesh::serialize(char** inbuff){
 
 void Mesh::deserialize(char* buff){
 	MeshHeader* head = reinterpret_cast<MeshHeader*>(buff);
-	hasNormals = head->flags & HAS_NORMAL;
-	hasTangents = head->flags & HAS_TANGENT;
+	hasNormals = head->flags & HAS_NORMAL != 0;
+	hasTangents = head->flags & HAS_TANGENT != 0;
 	drawCount = head->drawCount;
 	numVertexColorChannels = head->numVertexColorChannels;
 	numUVChannels = head->numUVChannels;

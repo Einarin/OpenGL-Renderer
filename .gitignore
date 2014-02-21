@@ -2,7 +2,7 @@ bin/
 gen/
 libs/armeabi-v7a/
 libs/x86
-obj/
+
 ipch/
 Debug/
 debug/
@@ -18,4 +18,3 @@ GeneratedFiles/
 *.pdb
 *.orig
 moc_*
-res/raw/resources.zip
