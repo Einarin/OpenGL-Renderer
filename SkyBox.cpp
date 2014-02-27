@@ -51,7 +51,7 @@ const char* frag =
 	"out vec4 FragColor;\n"
 	"uniform samplerCube cubemap;\n"
 	"void main() {\n"
-	"FragColor = 2.0f*(texture(cubemap,position.xyz)-0.5);\n"
+	"FragColor = (1.0f/0.9f)*(texture(cubemap,position.xyz)-0.1);\n"
 	"}\n";
 
 SkyBox::SkyBox(void):initialized(false),downloaded(false)

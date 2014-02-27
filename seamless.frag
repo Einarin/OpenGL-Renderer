@@ -236,7 +236,7 @@ float displace(vec3 point){
 	float displacement = 0.0;
 	scale = 0.1;
 	float frequency = 1.0;
-	for(int i=0;i<8;i++){
+	for(int i=0;i<4;i++){
 		displacement += scale *(snoise(frequency * point));
 		frequency *= 2;
 		scale *= 0.5;
@@ -247,16 +247,16 @@ float displace(vec3 point){
 void main( void )
 {
 vec4 displacement;
-  displacement.x = displace( texCoords.xyz);
+  /*displacement.x = displace( texCoords.xyz);
 	
 	float dt = fwidth(displacement.x);//max(dFdx(displacement.x),dFdy(displacement.x));
 	displacement.y = displace( texCoords.xyz+vec3(dt,0.0,0.0));
 	displacement.z = displace( texCoords.xyz+vec3(0.0,dt,0.0));
 	displacement.w = displace( texCoords.xyz+vec3(0.0,0.0,dt));
 	vec3 df = displacement.yzw - displacement.x;
-	df *= 1.0/0.01;
+	df *= 1.0/0.01;*/
 	
-	vec3 norm = normal.xyz - df;
+	vec3 norm = normal.xyz;// - df;
   
   vec4 specular = vec4(1.0,1.0,0.9,0.0);
   float angle = -dot(normalize(eyevec.xyz),normalize(normal.xyz));
@@ -269,6 +269,6 @@ vec4 displacement;
 	float maxd = max(length(dFdx(texCoords.rgb)),length(dFdy(texCoords.rgb)));
 	float dc = max(-dot(normalize(norm),normalize(lightvec.xyz)),0);
 	//float disp = texCoords.w*0.33333;
-	color = (dc+0.15) * (abs(displacement.yzw)+0.3);//vec3(1.0-disp,0.0,disp);//vec3(abs(tan.x));//vec3(0.8,0.4,0.8);
+	color = (dc+0.15) * vec3(0.3);//vec3(1.0-disp,0.0,disp);//vec3(abs(tan.x));//vec3(0.8,0.4,0.8);
 	FragColor = vec4(color,1.0);//vec3(dc+0.15)//vec4(angle,maxd, 0.5+gl_FragCoord.z,1.0);//vec4(color*vec3(snoise(vec3(texCoords.xy,texCoords.z+time))+1.0)*0.5,1.0);//angle * specular + diffuse;
 }

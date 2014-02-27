@@ -24,6 +24,7 @@ Billboard* bb;
 Camera camera;
 glm::mat4 projectionMatrix;
 glm::mat4 orthoMatrix;
+int levels = 4;
 
 //global threadpool
 ThreadPool glPool(4);
@@ -40,7 +41,7 @@ int main(int argc, char* argv[])
 
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
-	window = glfwCreateWindow(1200, 800, "Game", NULL, NULL);
+	window = glfwCreateWindow(1680, 1050, "Game", glfwGetPrimaryMonitor(), NULL);
 	if (!window)
 	{
 	glfwTerminate();
@@ -82,9 +83,9 @@ int main(int argc, char* argv[])
 
 	//Camera setup
 	camera = Camera(); // vec3(0.,2.5,3.0),vec3(0,2.0,0),vec3(0,1.0,0)
-	camera.SetPosition(vec3(-6.f,-6.f,-6.f));
+	camera.SetPosition(vec3(-2.f,-2.f,-2.f));
 	//camera.SetPosition(vec3(0.0,0.0,0.0));
-	camera.SetTarget(vec3(1.0,1.0,1.0));
+	camera.SetTarget(vec3(-4.f,-4.f,-4.f));
 	camera.SetAspectRatio(static_cast<float>(width)/static_cast<float>(height));
 
 	cout << "generating assets...\n";
@@ -103,19 +104,24 @@ int main(int argc, char* argv[])
 
 	cout << "loading models...\n";
 	Model* model = NULL;
-	const unsigned int asteroidCount=0;
-	Cube asteroids[1];
+	const unsigned int asteroidCount=27;
+	Cube asteroids[asteroidCount];
+	asteroids[0].generate(50,vec3(-1.f,-1.f,-1.f),false);
+	glPool.onMain([&asteroids](){
+				asteroids[0].init();
+				asteroids[0].download();
+			});
 	for(int q=0;q<asteroidCount;q++){
 		glPool.async([q,&asteroids](){
 			glm::vec3 position(q%3-1,q/3%3-1,q/9-1);
 			position *= 4.0f;
-			asteroids[q].generate(100,position,true);
+			//asteroids[q].generate(50,position,false);
 			asteroids[q].ModelMatrix = translate(rotate(mat4(),3.14159f*0.25f,glm::vec3(1.f,2.f,3.f)),position);
-			auto ptr = &asteroids[q];
+			/*auto ptr = &asteroids[q];
 			glPool.onMain([=](){
 				ptr->init();
 				ptr->download();
-			});
+			});*/
 		});
 	}
 	
@@ -231,7 +237,7 @@ int main(int argc, char* argv[])
 	glEnable(GL_BLEND);
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	double time = glfwGetTime();
-	int fpsCount = 60;
+	int fpsCount = 10;
 	int counter = 0;
 	while (!glfwWindowShouldClose(window))
 	{
@@ -248,6 +254,12 @@ int main(int argc, char* argv[])
 		}
 		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_RIGHT)){
 			bb->moveRel(.01f,0.f);
+		}
+		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_PERIOD)){
+			levels++;
+		}
+		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_COMMA)){
+			levels--;
 		}
 
 		//process async work
@@ -267,11 +279,14 @@ int main(int argc, char* argv[])
 		vec3 pos = camera.GetPosition();
 		glUniform4fv(shader->getUniformLocation("camera"), 1, value_ptr(vec4(camera.GetPosition(),1.0)));
 		glUniform4fv(shader->getUniformLocation("light"), 1, value_ptr(vec4(1.5f,3.0f,3.0f,1.0f)));
+		
+		glUniform1i(shader->getUniformLocation("levels"), levels);
 		checkGlError("setup model shader");
 		for(int i=0;i<asteroidCount;i++){
 			glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(asteroids[i].ModelMatrix));
-			asteroids[i].draw();
-			asteroids[i].ModelMatrix =  glm::rotate(asteroids[i].ModelMatrix,0.01f,vec3(0,1,0));
+			glUniform3fv(shader->getUniformLocation("seed"),1,value_ptr(vec3(i%3-1,i/3%3-1,i/9-1)));
+			asteroids[0].draw();
+			asteroids[i].ModelMatrix =  glm::rotate(asteroids[i].ModelMatrix,0.1f,vec3(0,1,0));
 			checkGlError("draw asteroid");
 		}
 		//glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(cube.ModelMatrix));
@@ -298,6 +313,7 @@ int main(int argc, char* argv[])
 			//ss << "   up    (" << cam[1][0] << ", " << cam[1][1] << ", " << cam[1][2] << ")\n";*/
 			ss << double(fpsCount) / (newtime - time);
 			ss << " FPS";
+			ss << " levels=" << levels;
 			time = newtime;
 			fps->addText(ss.str(),vec2(5,height-32),vec4(1.0f));
 			//vec3 pos = camera.pos();
