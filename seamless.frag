@@ -236,7 +236,7 @@ float displace(vec3 point){
 	float displacement = 0.0;
 	scale = 0.1;
 	float frequency = 1.0;
-	for(int i=0;i<8;i++){
+	for(int i=0;i<0;i++){
 		displacement += scale *(snoise(frequency * point));
 		frequency *= 2;
 		scale *= 0.5;

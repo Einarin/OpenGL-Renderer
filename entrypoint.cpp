@@ -25,6 +25,7 @@ Billboard* bb;
 Camera camera;
 glm::mat4 projectionMatrix;
 glm::mat4 orthoMatrix;
+int levels = 12;
 
 //global threadpool
 ThreadPool glPool(4);
@@ -41,7 +42,8 @@ int main(int argc, char* argv[])
 
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
-	window = glfwCreateWindow(1200, 800, "Game", NULL, NULL);
+	window = glfwCreateWindow(1680, 1050, "Game", glfwGetPrimaryMonitor(), NULL);
+	//window = glfwCreateWindow(1280, 800, "Game", NULL/*glfwGetPrimaryMonitor()*/, NULL);
 	if (!window)
 	{
 	glfwTerminate();
@@ -67,6 +69,7 @@ int main(int argc, char* argv[])
 	glfwSetCursorPosCallback(window, onCursorMoved);
 	
 	glClearColor(0.0f,0.0f,0.0f,1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
 	/*{
@@ -83,9 +86,9 @@ int main(int argc, char* argv[])
 
 	//Camera setup
 	camera = Camera(); // vec3(0.,2.5,3.0),vec3(0,2.0,0),vec3(0,1.0,0)
-	camera.SetPosition(vec3(-6.f,-6.f,-6.f));
+	camera.SetPosition(vec3(-2.f,-2.f,-2.f));
 	//camera.SetPosition(vec3(0.0,0.0,0.0));
-	camera.SetTarget(vec3(1.0,1.0,1.0));
+	camera.SetTarget(vec3(-4.f,-4.f,-4.f));
 	camera.SetAspectRatio(static_cast<float>(width)/static_cast<float>(height));
 
 	cout << "generating assets...\n";
@@ -105,18 +108,23 @@ int main(int argc, char* argv[])
 	cout << "loading models...\n";
 	Model* model = NULL;
 	const unsigned int asteroidCount=1;
-	Cube asteroids[1];
+	Cube asteroids[asteroidCount];
+	asteroids[0].generate(200,vec3(-1.f,-1.f,-1.f),false);
+	//glPool.onMain([&asteroids](){
+				asteroids[0].init();
+				asteroids[0].download();
+	//		});
 	for(int q=0;q<asteroidCount;q++){
 		//glPool.async([q,&asteroids](){
 			glm::vec3 position(q%3-1,q/3%3-1,q/9-1);
 			position *= 4.0f;
-			asteroids[q].generate(100,position,true);
+			//asteroids[q].generate(50,position,false);
 			asteroids[q].ModelMatrix = translate(rotate(mat4(),3.14159f*0.25f,glm::vec3(1.f,2.f,3.f)),position);
-			auto ptr = &asteroids[q];
-			//glPool.onMain([=](){
+			/*auto ptr = &asteroids[q];
+			glPool.onMain([=](){
 				ptr->init();
 				ptr->download();
-			//});
+			});*/
 		//});
 	}
 	
@@ -200,41 +208,9 @@ int main(int argc, char* argv[])
 	checkGlError("shader");
 	glUniform1i(shader->getUniformLocation("framedata"), 0);
 
-	auto feedbackvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
-	if(!feedbackvs->compileFromFile("feedbackdisplace.vert"))
-		DebugBreak();
-	auto feedbackShader = Shader::Allocate();
-	feedbackShader->addAttrib("in_Position",0);
-	feedbackShader->addAttrib("in_Normal",1);
-	feedbackShader->addAttrib("in_Tangent",2);
-	feedbackShader->addAttrib("in_TexCoords",3);
-	feedbackShader->attachStage(feedbackvs);
 	
-	const char* feedbackOutput[] = { "position","texCoords","normal","tangent"};
-	feedbackShader->setInterleavedOutput(feedbackOutput, 4);
-	feedbackShader->link();
-	feedbackShader->bind();
-	checkGlError("feedbackShader");
-
-	TransformFeedback tf(GL_TRIANGLES);
-	tf.init();
-	//TEMP
-	unsigned int vao;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, tf.getBuffer());
-	glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(vertex), 0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)12);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)24);
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(3, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)36);
-	glEnableVertexAttribArray(2);
-	glBindVertexArray(0);
-
-
-	TextureManager* texMan = TextureManager::Instance();
+		
+	/*TextureManager* texMan = TextureManager::Instance();
 	TexRef tex = texMan->texFromFile("Hello.png");
 	checkGlError("texFromFile");
 	glActiveTexture(GL_TEXTURE0);
@@ -245,7 +221,7 @@ int main(int argc, char* argv[])
 	la[1] = light.position.y;
 	la[2] = light.position.z;
 	la[3] = 1.f;
-	glUniform4fv(shader->getUniformLocation("light"),1,la);
+	glUniform4fv(shader->getUniformLocation("light"),1,la);*/
 
 	//grab the mouse last so we can do things during load
 	glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_DISABLED);
@@ -266,17 +242,65 @@ int main(int argc, char* argv[])
 	glEnable(GL_BLEND);
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	double time = glfwGetTime();
-	int fpsCount = 60;
+	int fpsCount = 10;
 	int counter = 0;
 
-	/*feedbackShader->bind();
+	auto feedbackvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	if(!feedbackvs->compileFromFile("feedbackdisplace.vert"))
+		DebugBreak();
+	auto feedbackShader = Shader::Allocate();
+	feedbackShader->addAttrib("in_Position",0);
+	feedbackShader->addAttrib("in_Normal",1);
+	feedbackShader->addAttrib("in_Tangent",2);
+	feedbackShader->addAttrib("in_TexCoords",3);
+	feedbackShader->attachStage(feedbackvs);
+	
+	const char* feedbackOutput[] = { "position","normal","tangent","texCoords"};
+	//glTransformFeedbackVaryings(feedbackShader->getId(),4,feedbackOutput,GL_INTERLEAVED_ATTRIBS);
+	feedbackShader->setInterleavedOutput(feedbackOutput, 4);
+	checkGlError("set feedback varyings");
+	feedbackShader->link();
+	feedbackShader->bind();
+	checkGlError("feedbackShader");
+
+	TransformFeedback tf(GL_TRIANGLES);
+	tf.init();
+	//TEMP
+	unsigned int vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	checkGlError("gen/bind vao");
+	glBindBuffer(GL_ARRAY_BUFFER, tf.m_buffer);
+	glBufferData(GL_ARRAY_BUFFER, 500*500*6*2*sizeof(GLfloat)*12,nullptr,GL_STATIC_COPY);
+	checkGlError("bind tf vbo");
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(3);
+	glVertexAttribPointer(0, 4, GL_FLOAT, false, sizeof(GLfloat)*12, 0);
+	glVertexAttribPointer(1, 4, GL_FLOAT, false, sizeof(GLfloat)*12, (const GLvoid*)12);
+	glVertexAttribPointer(2, 4, GL_FLOAT, false, sizeof(GLfloat)*12, (const GLvoid*)24);
+	glVertexAttribPointer(3, 4, GL_FLOAT, false, sizeof(GLfloat)*12, (const GLvoid*)36);
+	checkGlError("vertex attribs");
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	feedbackShader->bind();
+	checkGlError("Bind Transform Feedback shader");
 	tf.enable();
+	checkGlError("Enable Transform Feedback");
+	glUniform1i(feedbackShader->getUniformLocation("levels"), levels);
 	for(int i=0;i<asteroidCount;i++){			
 		glUniformMatrix4fv(feedbackShader->getUniformLocation("transformMatrix"), 1, GL_FALSE, value_ptr(mat4()));
-		asteroids[i].draw();
+		glUniform3fv(feedbackShader->getUniformLocation("seed"),1,value_ptr(vec3(i%3-1,i/3%3-1,i/9-1)));
+		checkGlError("about to draw asteroid transform feedback");
+		asteroids[0].draw();
 		checkGlError("draw asteroid transform feedback");
 	}
-	tf.disable();*/
+	tf.disable();
+	glFinish();
+	uint32 PrimitivesWritten;
+	//glGetQueryObjectuiv(tf.m_queryObject, GL_QUERY_RESULT, &PrimitivesWritten); 
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -293,6 +317,12 @@ int main(int argc, char* argv[])
 		}
 		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_RIGHT)){
 			bb->moveRel(.01f,0.f);
+		}
+		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_PERIOD)){
+			levels++;
+		}
+		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_COMMA)){
+			levels--;
 		}
 
 		//process async work
@@ -312,17 +342,20 @@ int main(int argc, char* argv[])
 		vec3 pos = camera.GetPosition();
 		glUniform4fv(shader->getUniformLocation("camera"), 1, value_ptr(vec4(camera.GetPosition(),1.0)));
 		glUniform4fv(shader->getUniformLocation("light"), 1, value_ptr(vec4(1.5f,3.0f,3.0f,1.0f)));
+		
+		glUniform1i(shader->getUniformLocation("levels"), levels);
 		checkGlError("setup model shader");
 
-		//glBindVertexArray(vao);
+		glBindVertexArray(vao);
 		for(int i=0;i<asteroidCount;i++){
 			glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(asteroids[i].ModelMatrix));
-			//tf.draw();
-			asteroids[i].draw();
-			asteroids[i].ModelMatrix =  glm::rotate(asteroids[i].ModelMatrix,0.01f,vec3(0,1,0));
+			glUniform3fv(shader->getUniformLocation("seed"),1,value_ptr(vec3(i%3-1,i/3%3-1,i/9-1)));
+			//asteroids[0].draw();
+			tf.draw();
+			asteroids[i].ModelMatrix =  glm::rotate(asteroids[i].ModelMatrix,0.1f,vec3(0,1,0));
 			checkGlError("draw asteroid");
 		}
-		//glBindVertexArray(0);
+		glBindVertexArray(0);
 		
 
 		//glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(cube.ModelMatrix));
@@ -333,13 +366,15 @@ int main(int argc, char* argv[])
 		/*for(int index=0;index<patches.size();index++){
 			patches[index].draw();
 		}*/
-		glUniform1f(shader->getUniformLocation("time"),time);
+		//glUniform1f(shader->getUniformLocation("time"),time);
 		//bb->draw();
 		textRenderer->draw(orthoMatrix);
+		checkGlError("draw hello world");
 		counter++;
 		if(counter >= fpsCount){
 			counter = 0;
 			fps->clearText();
+			checkGlError("fps clear text");
 			double newtime = glfwGetTime();
 			stringstream ss, ss1, ss2, ss3;
 			ss.precision(3);
@@ -349,8 +384,10 @@ int main(int argc, char* argv[])
 			//ss << "   up    (" << cam[1][0] << ", " << cam[1][1] << ", " << cam[1][2] << ")\n";*/
 			ss << double(fpsCount) / (newtime - time);
 			ss << " FPS";
+			ss << " levels=" << levels;
 			time = newtime;
 			fps->addText(ss.str(),vec2(5,height-32),vec4(1.0f));
+			checkGlError("fps add text");
 			//vec3 pos = camera.pos();
 			/*ss1 << " (" << cam[1][0] << ", " << cam[1][1] << ", " << cam[1][2] << ", " << cam[1][3] << ")";
 			fps->addText(ss1.str(),vec2(5,height-64),vec4(1.0f));
@@ -360,7 +397,9 @@ int main(int argc, char* argv[])
 			fps->addText(ss3.str(),vec2(5,height-(32*4)),vec4(1.0f));*/
 			if(glPool.processMainQueueUnit())
 				fps->addText("Loading...",vec2(max(width/2-100,5),height/2),vec4(1.0f));
+			checkGlError("fps add loading");
 		}
+		checkGlError("about to draw text");
 		fps->draw(orthoMatrix);
 		checkGlError("draw text");
 		glfwSwapBuffers(window);

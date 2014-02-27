@@ -7,7 +7,7 @@ namespace gl{
 
 class TransformFeedback
 {
-protected:
+public:
 	unsigned int m_primitiveType;
 	unsigned int m_buffer;
 	//only used if we have GL_TRANSFORM_FEEDBACK_2

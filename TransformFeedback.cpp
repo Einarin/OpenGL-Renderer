@@ -17,10 +17,12 @@ void TransformFeedback::init(){
 	} else {
 		glGenQueries(1,&m_queryObject);
 	}
+	checkGlError("Transform Feedback Init");
 }
 
 void TransformFeedback::enable(){
 	glEnable(GL_RASTERIZER_DISCARD);
+	checkGlError("Disable Rasterizer");
 	if(SupportFor(GL_TRANSFORM_FEEDBACK_2)){
 		glBindTransformFeedback(GL_TRANSFORM_FEEDBACK,m_feedbackObject);
 	} else {
@@ -32,13 +34,15 @@ void TransformFeedback::enable(){
 
 void TransformFeedback::disable(){
 	glEndTransformFeedback();
+	checkGlError("End Transform Feedback");
 	if(SupportFor(GL_TRANSFORM_FEEDBACK_2)){
 		glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
 	} else {
-		glEndTransformFeedback();
 		glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
+		checkGlError("End Transform Feedback Query");
 	}
 	glDisable(GL_RASTERIZER_DISCARD);
+	checkGlError("Enable Rasterizer");
 }
 
 bool TransformFeedback::pause(){

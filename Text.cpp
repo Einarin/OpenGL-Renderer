@@ -62,10 +62,13 @@ void TextRenderer::clearText(){
 
 void TextRenderer::draw(glm::mat4 ortho){
 	shader->bind();
+	checkGlError("bind text shader");
 	glUniformMatrix4fv(shader->getUniformLocation("projection"), 1, GL_FALSE, glm::value_ptr(ortho));
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture( GL_TEXTURE_2D, ((texture_atlas_t*)atlas)->id );
+	checkGlError("draw text atlas");
 	vertex_buffer_render( (vertex_buffer_t*)buffer, GL_TRIANGLES );
+	checkGlError("draw text buffer");
 }
 
 TextManager::TextManager() : manager((font_manager_type*)font_manager_new( 512, 512, 1 )),shader(Shader::Allocate())

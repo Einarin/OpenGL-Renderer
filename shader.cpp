@@ -74,6 +74,7 @@ int Shader::getUniformLocation(std::string name){
 
 void Shader::setInterleavedOutput(const char** varyings, int count){
 	glTransformFeedbackVaryings(id,count,varyings,GL_INTERLEAVED_ATTRIBS);
+	checkGlError("set transform feedback varyings");
 }
 
 bool Shader::link(){
@@ -90,10 +91,10 @@ bool Shader::link(){
 	glGetProgramInfoLog(id,length,&length,buff);
 	//do something with error log
 	std::cout << buff << std::endl;
+	delete[] buff;
 	if(linked != GL_TRUE)
 	{
 		//shader failed to link
-		delete[] buff;
 		return false;
 	}
 

@@ -6,23 +6,24 @@ in vec3 in_TexCoords;
 out vec4 texCoords;
 out vec4 normal;
 out vec4 tangent;
+out vec4 bitan;
 out vec4 eyevec;
 out vec4 lightvec;
-
 uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
-uniform mat4 projectionMatrix;
+uniform mat4 projMatrix;
 uniform vec4 camera;
 uniform vec4 light;
 
-void main()
+
+void main(void)
 {
-	mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
-	normal = vec4(normalMatrix * in_Normal,1.0);
-	tangent = vec4(normalMatrix * in_Tangent,1.0);
+	normal = vec4(normalize(transpose(inverse(mat3(modelMatrix))) * in_Normal),1.0);
+	tangent = vec4(normalize(transpose(inverse(mat3(modelMatrix))) * in_Tangent),1.0);
+	bitan = vec4(cross(normal.xyz,tangent.xyz),1.0);
 	texCoords = vec4(in_Position,1.0);
 	vec4 position = modelMatrix * vec4(in_Position.xyz,1.0);
-	eyevec = vec4(camera.xyz - position.xyz,1.0);
-	lightvec = vec4(light.xyz + position.xyz,1.0);
-	gl_Position = projectionMatrix * viewMatrix * position;
+	eyevec = camera - position;
+	lightvec = light + position;
+	gl_Position = projMatrix * viewMatrix * position;
 }

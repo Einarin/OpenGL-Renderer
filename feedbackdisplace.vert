@@ -7,6 +7,9 @@ out vec3 position;
 out vec3 texCoords;
 out vec3 normal;
 out vec3 tangent;
+uniform int levels;
+uniform vec3 seed;
+
 uniform mat4 transformMatrix;
 
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -425,7 +428,7 @@ float displace(vec3 point){
 	float displacement = 0.0;
 	scale = 0.1;
 	float frequency = 1.0;
-	for(int i=0;i<8;i++){
+	for(int i=0;i<levels;i++){
 		displacement += scale *(snoise(frequency * point));
 		frequency *= 2;
 		scale *= 0.5;
@@ -436,12 +439,10 @@ float displace(vec3 point){
 void main(void)
 {
 	//texCoords = in_Position;
-	mat3 normalMatrix = transpose(inverse(mat3(transformMatrix)));
-	normal = normalMatrix * in_Normal;
-	tangent = normalMatrix * in_Tangent;
-	//bitan = vec4(cross(normal.xyz,tangent.xyz),1.0);
+	normal = in_Normal;//normalize(transpose(inverse(mat3(transformMatrix))) * in_Normal);
+	tangent = in_Tangent;//normalize(transpose(inverse(mat3(transformMatrix))) * in_Tangent);
 	texCoords = in_Position;
-	position = (transformMatrix * vec4(in_Position.xyz,1.0)).xyz;
+	vec4 pos = transformMatrix * vec4(in_Position.xyz,1.0);
 	//float scale = 0.1;////clamp(time,0.0,1.0);
 	//float frequency = 1.0;
 	//time *= 0.001;
@@ -456,17 +457,17 @@ void main(void)
 		frequency *= 2;
 		scale *= 0.5;
 	}*/
-	displacement.x = displace( in_Position.xyz);
+	displacement.x = displace( in_Position.xyz+seed);
 	float dt = 0.01;
-	displacement.y = displace( in_Position.xyz+vec3(dt,0.0,0.0));
-	displacement.z = displace( in_Position.xyz+vec3(0.0,dt,0.0));
-	displacement.w = displace( in_Position.xyz+vec3(0.0,0.0,dt));
+	displacement.y = displace( in_Position.xyz+vec3(dt,0.0,0.0)+seed);
+	displacement.z = displace( in_Position.xyz+vec3(0.0,dt,0.0)+seed);
+	displacement.w = displace( in_Position.xyz+vec3(0.0,0.0,dt)+seed);
 	vec3 df = displacement.yzw - displacement.x;
 	df *= 1.0/0.01;
 	//displacement = clamp(displacement,0.1,3.0);
-	position.xyz = position.xyz + (normal.xyz * displacement.x);
+	position = pos.xyz + (normalize(normal.xyz) * displacement.x);
 	//texCoords.xyz = texCoords.yzw;
-	normal.xyz = normal.xyz - df;
+	normal = normal.xyz - df;
 	//texCoords.w = displacement.x;
 	//texCoords.xy = displacement.yz;
 	/*vec3 off1 = (position.xyz+0.01*tan.xyz) * displacement.y;
@@ -476,5 +477,5 @@ void main(void)
 	//normal = viewMatrix * vec4(normalize(in_Normal.xyz),0.0);
 	//normal.xyz = normalize(cross(off1,off2));
 	//position = viewMatrix * position;
-	//position = transformMatrix * position;//modelMatrix * vec4(in_Position.xyz,1.0); 
+	//position = projMatrix * viewMatrix * position;//modelMatrix * vec4(in_Position.xyz,1.0); 
 }
