@@ -15,4 +15,14 @@
 #endif
 int checkGlErrorImpl(std::string step,std::string file,int line);
 
+enum GlFeatures{
+	GL_TRANSFORM_FEEDBACK_2,
+	GL_FEATURES_COUNT
+};
+void SetupSupport();
+extern bool gl_features[GL_FEATURES_COUNT];
+inline bool SupportFor(GlFeatures index){
+	return gl_features[index];
+}
+
 typedef unsigned int uint32;

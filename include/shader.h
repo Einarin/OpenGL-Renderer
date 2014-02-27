@@ -4,6 +4,11 @@
 #include <list>
 #include <memory>
 
+/*namespace glm {
+	class mat4;
+	class vec3;
+}*/
+
 namespace gl
 {
 	class ShaderStage {
@@ -28,6 +33,7 @@ namespace gl
 		void attachStage(std::shared_ptr<ShaderStage> stage);
 		void addAttrib(std::string name, int index);
 		int getUniformLocation(std::string name);
+		void setInterleavedOutput(const char** varyings, int count);
 		bool link();
 		void bind();
 		int getId();

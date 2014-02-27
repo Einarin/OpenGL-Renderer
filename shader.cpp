@@ -72,6 +72,10 @@ int Shader::getUniformLocation(std::string name){
 	return glGetUniformLocation(id, name.c_str());
 }
 
+void Shader::setInterleavedOutput(const char** varyings, int count){
+	glTransformFeedbackVaryings(id,count,varyings,GL_INTERLEAVED_ATTRIBS);
+}
+
 bool Shader::link(){
 	for(auto it = stages.begin(); it != stages.end(); it++){
 		glAttachShader(id,(*it)->getId());

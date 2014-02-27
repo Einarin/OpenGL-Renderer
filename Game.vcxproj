@@ -86,7 +86,7 @@
     <ClCompile Include="entrypoint.cpp" />
     <ClCompile Include="FlatDrawable.cpp" />
     <ClCompile Include="Geometry.cpp" />
-    <ClCompile Include="glDebug.cpp" />
+    <ClCompile Include="glCommon.cpp" />
     <ClCompile Include="callbacks.cpp" />
     <ClCompile Include="ImageLoader.cpp" />
     <ClCompile Include="lz4-r112\lz4.c" />
@@ -101,6 +101,7 @@
     <ClCompile Include="Text.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
+    <ClCompile Include="TransformFeedback.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -125,6 +126,7 @@
     <ClInclude Include="SkyBox.h" />
     <ClInclude Include="Text.h" />
     <ClInclude Include="ThreadPool.h" />
+    <ClInclude Include="TransformFeedback.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <ItemGroup>

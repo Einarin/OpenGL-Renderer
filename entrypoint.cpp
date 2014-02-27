@@ -12,6 +12,7 @@
 #include "Text.h"
 #include "assimp/DefaultLogger.hpp"
 #include "SkyBox.h"
+#include "TransformFeedback.h"
 
 #include "windows.h" //for debugbreak only!
 
@@ -55,8 +56,8 @@ int main(int argc, char* argv[])
 		exit (1);
 	}
 	cout << "Status: Using GLEW " << glewGetString(GLEW_VERSION) << endl;
-	cout << "OpenGL version " << glGetString(GL_VERSION) << " supported" << endl;
-
+	SetupSupport();
+	
 	Assimp::DefaultLogger::create("assimp.log",Assimp::Logger::VERBOSE,aiDefaultLogStream_STDOUT);
 
 	//set glfw callbacks
@@ -103,23 +104,23 @@ int main(int argc, char* argv[])
 
 	cout << "loading models...\n";
 	Model* model = NULL;
-	const unsigned int asteroidCount=0;
+	const unsigned int asteroidCount=1;
 	Cube asteroids[1];
 	for(int q=0;q<asteroidCount;q++){
-		glPool.async([q,&asteroids](){
+		//glPool.async([q,&asteroids](){
 			glm::vec3 position(q%3-1,q/3%3-1,q/9-1);
 			position *= 4.0f;
 			asteroids[q].generate(100,position,true);
 			asteroids[q].ModelMatrix = translate(rotate(mat4(),3.14159f*0.25f,glm::vec3(1.f,2.f,3.f)),position);
 			auto ptr = &asteroids[q];
-			glPool.onMain([=](){
+			//glPool.onMain([=](){
 				ptr->init();
 				ptr->download();
-			});
-		});
+			//});
+		//});
 	}
 	
-	glPool.async([&](){
+	/*glPool.async([&](){
 		auto ptr = new Model("assets/fighter ship.obj");
 		auto local = &model;
 		glPool.onMain([=](){
@@ -127,7 +128,7 @@ int main(int argc, char* argv[])
 			ptr->download();
 			*local = ptr;
 		});
-	});
+	});*/
 
 	/*unsigned int patchfactor = 2;
 	vector<Sphere> patches;
@@ -173,7 +174,7 @@ int main(int argc, char* argv[])
 "	eyevec = normalize(position);\n"
 "	gl_Position = projMatrix * position; \n"
 "}\n");*/
-	if(!vs->compileFromFile("displace.vert"))
+	if(!vs->compileFromFile("mvp.vert"))
 		DebugBreak();
 	std::shared_ptr<ShaderStage> fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
 	/*fs->compile("uniform sampler2D framedata;"
@@ -186,7 +187,6 @@ int main(int argc, char* argv[])
 	if(!fs->compileFromFile("seamless.frag"))
 		DebugBreak();
 	std::shared_ptr<Shader> shader = Shader::Allocate();
-	std::shared_ptr<Shader> shaderCopy(shader);
 	shader->addAttrib("in_Position",0);
 	shader->addAttrib("in_Normal",1);
 	shader->addAttrib("in_Tangent",2);
@@ -199,6 +199,41 @@ int main(int argc, char* argv[])
 	shader->bind();
 	checkGlError("shader");
 	glUniform1i(shader->getUniformLocation("framedata"), 0);
+
+	auto feedbackvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	if(!feedbackvs->compileFromFile("feedbackdisplace.vert"))
+		DebugBreak();
+	auto feedbackShader = Shader::Allocate();
+	feedbackShader->addAttrib("in_Position",0);
+	feedbackShader->addAttrib("in_Normal",1);
+	feedbackShader->addAttrib("in_Tangent",2);
+	feedbackShader->addAttrib("in_TexCoords",3);
+	feedbackShader->attachStage(feedbackvs);
+	
+	const char* feedbackOutput[] = { "position","texCoords","normal","tangent"};
+	feedbackShader->setInterleavedOutput(feedbackOutput, 4);
+	feedbackShader->link();
+	feedbackShader->bind();
+	checkGlError("feedbackShader");
+
+	TransformFeedback tf(GL_TRIANGLES);
+	tf.init();
+	//TEMP
+	unsigned int vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, tf.getBuffer());
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(vertex), 0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)12);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)24);
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(3, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)36);
+	glEnableVertexAttribArray(2);
+	glBindVertexArray(0);
+
+
 	TextureManager* texMan = TextureManager::Instance();
 	TexRef tex = texMan->texFromFile("Hello.png");
 	checkGlError("texFromFile");
@@ -233,6 +268,16 @@ int main(int argc, char* argv[])
 	double time = glfwGetTime();
 	int fpsCount = 60;
 	int counter = 0;
+
+	/*feedbackShader->bind();
+	tf.enable();
+	for(int i=0;i<asteroidCount;i++){			
+		glUniformMatrix4fv(feedbackShader->getUniformLocation("transformMatrix"), 1, GL_FALSE, value_ptr(mat4()));
+		asteroids[i].draw();
+		checkGlError("draw asteroid transform feedback");
+	}
+	tf.disable();*/
+
 	while (!glfwWindowShouldClose(window))
 	{
 		//input handling
@@ -259,7 +304,7 @@ int main(int argc, char* argv[])
 		checkGlError("clear screen");
 		
 		skybox.draw(&camera);
-		
+				
 		//mat4 projview = projectionMatrix* camera.toMat4();
 		shader->bind();
 		glUniformMatrix4fv(shader->getUniformLocation("viewMatrix"), 1, GL_FALSE, value_ptr(camera.GetViewMatrix()));
@@ -268,12 +313,18 @@ int main(int argc, char* argv[])
 		glUniform4fv(shader->getUniformLocation("camera"), 1, value_ptr(vec4(camera.GetPosition(),1.0)));
 		glUniform4fv(shader->getUniformLocation("light"), 1, value_ptr(vec4(1.5f,3.0f,3.0f,1.0f)));
 		checkGlError("setup model shader");
+
+		//glBindVertexArray(vao);
 		for(int i=0;i<asteroidCount;i++){
 			glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(asteroids[i].ModelMatrix));
+			//tf.draw();
 			asteroids[i].draw();
 			asteroids[i].ModelMatrix =  glm::rotate(asteroids[i].ModelMatrix,0.01f,vec3(0,1,0));
 			checkGlError("draw asteroid");
 		}
+		//glBindVertexArray(0);
+		
+
 		//glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(cube.ModelMatrix));
 		//cube.draw();
 		if(model)
