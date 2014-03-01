@@ -25,7 +25,7 @@ Billboard* bb;
 Camera camera;
 glm::mat4 projectionMatrix;
 glm::mat4 orthoMatrix;
-int levels = 8;
+int levels = 0;
 
 //global threadpool
 ThreadPool glPool(4);
@@ -42,8 +42,8 @@ int main(int argc, char* argv[])
 
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
-	window = glfwCreateWindow(1680, 1050, "Game", glfwGetPrimaryMonitor(), NULL);
-	//window = glfwCreateWindow(1280, 800, "Game", NULL/*glfwGetPrimaryMonitor()*/, NULL);
+	//window = glfwCreateWindow(1680, 1050, "Game", glfwGetPrimaryMonitor(), NULL);
+	window = glfwCreateWindow(1280, 800, "Game", NULL/*glfwGetPrimaryMonitor()*/, NULL);
 	if (!window)
 	{
 	glfwTerminate();

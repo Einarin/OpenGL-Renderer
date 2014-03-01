@@ -477,17 +477,17 @@ void main(void)
 		scale *= 0.5;
 	}*/
 	displacement.x = displace( in_Position.xyz+seed);
-	float dt = 0.001;
+	const float dt = 0.001;
 	displacement.y = displace( in_Position.xyz+vec3(dt,0.0,0.0)+seed);
 	displacement.z = displace( in_Position.xyz+vec3(0.0,dt,0.0)+seed);
 	displacement.w = displace( in_Position.xyz+vec3(0.0,0.0,dt)+seed);
 	vec3 df = displacement.yzw - displacement.x;
-	//df *= 1.0/0.01;
-	df = normalize(df);
+	df *= 1.0/dt;
+	//df = normalize(df);
 	//displacement = clamp(displacement,0.1,3.0);
 	position = pos.xyz + (normalize(normal.xyz) * displacement.x);
 	//texCoords.xyz = texCoords.yzw;
-	normal = normal.xyz - df;
+	normal = normalize(normal.xyz - df);
 	//texCoords.w = displacement.x;
 	//texCoords.xy = displacement.yz;
 	/*vec3 off1 = (position.xyz+0.01*tan.xyz) * displacement.y;

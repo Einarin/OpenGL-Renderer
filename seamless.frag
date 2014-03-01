@@ -245,31 +245,25 @@ float displace(vec3 point){
 }
 
 void main( void )
-{
-vec4 displacement;
-  displacement.x = displace( texCoords.xyz);
-	
-	float dt = fwidth(displacement.x);//max(dFdx(displacement.x),dFdy(displacement.x));
-	displacement.y = displace( texCoords.xyz+vec3(dt,0.0,0.0));
-	displacement.z = displace( texCoords.xyz+vec3(0.0,dt,0.0));
-	displacement.w = displace( texCoords.xyz+vec3(0.0,0.0,dt));
-	vec3 df = displacement.yzw - displacement.x;
-	df *= 1.0/0.01;
-	
-	vec3 norm = normalize(normal.xyz) - df;
-  
-  vec4 specular = vec4(1.0,1.0,0.9,0.0);
-  float angle = -dot(normalize(eyevec.xyz),normalize(normal.xyz));
+{	
+	vec3 norm = normalize(normal.xyz);
+	vec3 eye = normalize(eyevec.xyz);
+	vec3 light = normalize(lightvec.xyz);
+  vec3 ambient = vec3(0.15);
+  vec3 diffuse = vec3(0.4,0.3,0.5);
+  vec3 specular = vec3(0.4);
+  float diff = max(-dot(light,norm),0);
+  vec3 reflect = 2* dot(light,norm) * norm - light;
+  float spec = max(pow(-dot(reflect,eye),8),0);
   vec3 color;
   if(gl_FrontFacing){
 	color = vec3(0.,0.,1.);
 }else{
 	color = vec3(1.,0.,0.);
 	}
-	float maxd = max(length(dFdx(texCoords.rgb)),length(dFdy(texCoords.rgb)));
-	float dc = max(-dot(normalize(norm),normalize(lightvec.xyz)),0);
 	//float disp = texCoords.w*0.33333;
 	//abs(dot(normalize(texCoords.rgb),norm))
-	color = (dc+0.15) * vec3(0.4);//vec3(1.0-disp,0.0,disp);//vec3(abs(tan.x));//vec3(0.8,0.4,0.8);
+	
+	color = ambient + diff * diffuse + spec * specular;//vec3(1.0-disp,0.0,disp);//vec3(abs(tan.x));//vec3(0.8,0.4,0.8);
 	FragColor = vec4(color,1.0);//vec3(dc+0.15)//vec4(angle,maxd, 0.5+gl_FragCoord.z,1.0);//vec4(color*vec3(snoise(vec3(texCoords.xy,texCoords.z+time))+1.0)*0.5,1.0);//angle * specular + diffuse;
 }
