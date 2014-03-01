@@ -437,7 +437,7 @@ float craterfunc()
 
 float crater(vec3 point){
 	//vec4 num = FAST32_hash_3D_Cell(floor(point*10.0));
-	return 2.0 * craterfunc();
+	return 4.0 * craterfunc();
 }
 
 float scale;
@@ -458,7 +458,7 @@ float displace(vec3 point){
 void main(void)
 {
 	//texCoords = in_Position;
-	normal = in_Normal;//normalize(transpose(inverse(mat3(transformMatrix))) * in_Normal);
+	vec3 norm = normalize(in_Normal);//normalize(transpose(inverse(mat3(transformMatrix))) * in_Normal);
 	tangent = in_Tangent;//normalize(transpose(inverse(mat3(transformMatrix))) * in_Tangent);
 	texCoords = in_Position;
 	vec4 pos = transformMatrix * vec4(in_Position.xyz,1.0);
@@ -485,9 +485,10 @@ void main(void)
 	df *= 1.0/dt;
 	//df = normalize(df);
 	//displacement = clamp(displacement,0.1,3.0);
-	position = pos.xyz + (normalize(normal.xyz) * displacement.x);
+	position = pos.xyz + (norm * displacement.x);
 	//texCoords.xyz = texCoords.yzw;
-	normal = normalize(normal.xyz - df);
+	vec3 ccn = cross(cross(norm,-df),-df);
+	normal = norm-df;
 	//texCoords.w = displacement.x;
 	//texCoords.xy = displacement.yz;
 	/*vec3 off1 = (position.xyz+0.01*tan.xyz) * displacement.y;

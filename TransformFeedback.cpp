@@ -70,8 +70,14 @@ void TransformFeedback::draw(){
 		glDrawTransformFeedback(m_primitiveType,m_feedbackObject);
 	} else {
 		unsigned int primitivesWritten;
+		//3 vertices per triangle
+		if(m_primitiveType == GL_TRIANGLES)
+			primitivesWritten *= 3;
+		//2 vertices per line
+		if(m_primitiveType == GL_LINES)
+			primitivesWritten *= 2;
 		glGetQueryObjectuiv(m_queryObject,GL_QUERY_RESULT, &primitivesWritten);
-		glDrawArrays(m_primitiveType,0,primitivesWritten*3);
+		glDrawArrays(m_primitiveType,0,primitivesWritten);
 	}
 }
 void TransformFeedback::draw(int count){

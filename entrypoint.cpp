@@ -25,7 +25,7 @@ Billboard* bb;
 Camera camera;
 glm::mat4 projectionMatrix;
 glm::mat4 orthoMatrix;
-int levels = 0;
+int levels = 1;
 
 //global threadpool
 ThreadPool glPool(4);
@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
 	Model* model = NULL;
 	const unsigned int asteroidCount=1;
 	Cube asteroids[asteroidCount];
-	asteroids[0].generate(100,vec3(-1.f,-1.f,-1.f),false);
+	asteroids[0].generate(20,vec3(-1.f,-1.f,-1.f),false);
 	//glPool.onMain([&asteroids](){
 				asteroids[0].init();
 				asteroids[0].download();
@@ -208,7 +208,26 @@ int main(int argc, char* argv[])
 	checkGlError("shader");
 	glUniform1i(shader->getUniformLocation("framedata"), 0);
 
-	
+	auto nvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	if(!nvs->compileFromFile("mvpnorm.vert"))
+		DebugBreak();
+	auto ngs = ShaderStage::Allocate(GL_GEOMETRY_SHADER);
+	if(!ngs->compileFromFile("normals.geom"))
+		DebugBreak();
+	auto cfs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+	if(!cfs->compileFromFile("color.frag"))
+		DebugBreak();
+	auto normShader = Shader::Allocate();
+	normShader->addAttrib("in_Position",0);
+	normShader->addAttrib("in_Normal",1);
+	normShader->attachStage(nvs);
+	normShader->attachStage(ngs);
+	normShader->attachStage(cfs);
+	if(!normShader->link()){
+		DebugBreak();
+	}
+	normShader->bind();
+	checkGlError("normShader");
 		
 	/*TextureManager* texMan = TextureManager::Instance();
 	TexRef tex = texMan->texFromFile("Hello.png");
@@ -354,6 +373,20 @@ int main(int argc, char* argv[])
 			tf.draw();
 			//asteroids[i].ModelMatrix =  glm::rotate(asteroids[i].ModelMatrix,0.1f,vec3(0,1,0));
 			checkGlError("draw asteroid");
+		}
+
+		normShader->bind();
+		glBindVertexArray(vao);
+		glUniform4fv(normShader->getUniformLocation("color"), 1, value_ptr(vec4(0.0,0.0,1.0,1.0)));
+		glUniform1f(normShader->getUniformLocation("normalLength"), 0.05f);
+		glUniformMatrix4fv(normShader->getUniformLocation("viewMatrix"), 1, GL_FALSE, value_ptr(camera.GetViewMatrix()));
+		glUniformMatrix4fv(normShader->getUniformLocation("projMatrix"), 1, GL_FALSE, value_ptr(camera.GetProjectionMatrix()));
+		for(int i=0;i<asteroidCount;i++){
+			glUniformMatrix4fv(normShader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(asteroids[i].ModelMatrix));
+			//asteroids[0].draw();
+			tf.draw();
+			//asteroids[i].ModelMatrix =  glm::rotate(asteroids[i].ModelMatrix,0.1f,vec3(0,1,0));
+			checkGlError("draw asteroid normals");
 		}
 		glBindVertexArray(0);
 		
