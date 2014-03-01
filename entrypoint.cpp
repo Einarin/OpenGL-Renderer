@@ -25,7 +25,7 @@ Billboard* bb;
 Camera camera;
 glm::mat4 projectionMatrix;
 glm::mat4 orthoMatrix;
-int levels = 12;
+int levels = 0;
 
 //global threadpool
 ThreadPool glPool(4);
@@ -42,8 +42,8 @@ int main(int argc, char* argv[])
 
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
-	window = glfwCreateWindow(1680, 1050, "Game", glfwGetPrimaryMonitor(), NULL);
-	//window = glfwCreateWindow(1280, 800, "Game", NULL/*glfwGetPrimaryMonitor()*/, NULL);
+	//window = glfwCreateWindow(1680, 1050, "Game", glfwGetPrimaryMonitor(), NULL);
+	window = glfwCreateWindow(1280, 800, "Game", NULL/*glfwGetPrimaryMonitor()*/, NULL);
 	if (!window)
 	{
 	glfwTerminate();
@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
 	Model* model = NULL;
 	const unsigned int asteroidCount=1;
 	Cube asteroids[asteroidCount];
-	asteroids[0].generate(200,vec3(-1.f,-1.f,-1.f),false);
+	asteroids[0].generate(100,vec3(-1.f,-1.f,-1.f),false);
 	//glPool.onMain([&asteroids](){
 				asteroids[0].init();
 				asteroids[0].download();
@@ -292,7 +292,7 @@ int main(int argc, char* argv[])
 	glUniform1i(feedbackShader->getUniformLocation("levels"), levels);
 	for(int i=0;i<asteroidCount;i++){			
 		glUniformMatrix4fv(feedbackShader->getUniformLocation("transformMatrix"), 1, GL_FALSE, value_ptr(mat4()));
-		glUniform3fv(feedbackShader->getUniformLocation("seed"),1,value_ptr(vec3(i%3-1,i/3%3-1,i/9-1)));
+		glUniform3fv(feedbackShader->getUniformLocation("seed"),1,value_ptr(vec3(0.0)/*vec3(i%3-1,i/3%3-1,i/9-1)*/));
 		checkGlError("about to draw asteroid transform feedback");
 		asteroids[0].draw();
 		checkGlError("draw asteroid transform feedback");
@@ -352,7 +352,7 @@ int main(int argc, char* argv[])
 			glUniform3fv(shader->getUniformLocation("seed"),1,value_ptr(vec3(i%3-1,i/3%3-1,i/9-1)));
 			//asteroids[0].draw();
 			tf.draw();
-			asteroids[i].ModelMatrix =  glm::rotate(asteroids[i].ModelMatrix,0.1f,vec3(0,1,0));
+			//asteroids[i].ModelMatrix =  glm::rotate(asteroids[i].ModelMatrix,0.1f,vec3(0,1,0));
 			checkGlError("draw asteroid");
 		}
 		glBindVertexArray(0);

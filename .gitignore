@@ -2,7 +2,6 @@ bin/
 gen/
 libs/armeabi-v7a/
 libs/x86
-
 ipch/
 Debug/
 debug/
@@ -18,3 +17,6 @@ GeneratedFiles/
 *.pdb
 *.orig
 moc_*
+*.model
+*.blend1
+*.blend2
