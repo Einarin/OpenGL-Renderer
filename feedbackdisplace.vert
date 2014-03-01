@@ -424,15 +424,20 @@ float SimplexPerlin3D(vec3 P)
     return dot( Simplex3D_GetSurfletWeights( v1234_x, v1234_y, v1234_z ), grad_results ) * FINAL_NORMALIZATION;
 }
 
-float craterfunc(float x)
+float craterDist(){
+	float x = 2.0*distance(normalize(vec3(0.5,0.0,0.0)),normalize(in_Position.xyz));
+	return clamp(abs(x),0.0,1.0);
+}
+
+float craterfunc()
 {
-	x = clamp(abs(x),0.0,1.0) * 10.9314;
+	float x = craterDist() * 10.9314;
 	return 0.00001* pow(x,4) - 0.00055 * pow(x,3) + 0.00729*x*x - 0.02252*x - 0.0493;
 }
 
 float crater(vec3 point){
 	//vec4 num = FAST32_hash_3D_Cell(floor(point*10.0));
-	return 2.0 * craterfunc(2.0*distance(normalize(vec3(1.0,1.0,1.0)),normalize(in_Position.xyz)));
+	return 2.0 * craterfunc();
 }
 
 float scale;
@@ -445,7 +450,7 @@ float displace(vec3 point){
 		frequency *= 2;
 		scale *= 0.5;
 	}
-	return displacement + crater(point);
+	return crater(point) + displacement;//,craterDist());
 }
 
 
@@ -472,12 +477,13 @@ void main(void)
 		scale *= 0.5;
 	}*/
 	displacement.x = displace( in_Position.xyz+seed);
-	float dt = 0.01;
+	float dt = 0.001;
 	displacement.y = displace( in_Position.xyz+vec3(dt,0.0,0.0)+seed);
 	displacement.z = displace( in_Position.xyz+vec3(0.0,dt,0.0)+seed);
 	displacement.w = displace( in_Position.xyz+vec3(0.0,0.0,dt)+seed);
 	vec3 df = displacement.yzw - displacement.x;
-	//df *= 1.0/0.001;
+	//df *= 1.0/0.01;
+	df = normalize(df);
 	//displacement = clamp(displacement,0.1,3.0);
 	position = pos.xyz + (normalize(normal.xyz) * displacement.x);
 	//texCoords.xyz = texCoords.yzw;

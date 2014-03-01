@@ -71,7 +71,7 @@ void TransformFeedback::draw(){
 	} else {
 		unsigned int primitivesWritten;
 		glGetQueryObjectuiv(m_queryObject,GL_QUERY_RESULT, &primitivesWritten);
-		glDrawArrays(m_primitiveType,0,primitivesWritten);
+		glDrawArrays(m_primitiveType,0,primitivesWritten*3);
 	}
 }
 void TransformFeedback::draw(int count){
