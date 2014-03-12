@@ -102,6 +102,7 @@
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="TransformFeedback.cpp" />
+    <ClCompile Include="VertexAttribBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -128,6 +129,7 @@
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="TransformFeedback.h" />
     <ClInclude Include="Vertex.h" />
+    <ClInclude Include="VertexAttribBuilder.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="assimp--3.0.1270-source-only\assimp.vcxproj">

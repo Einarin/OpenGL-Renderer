@@ -2,18 +2,18 @@
 #include "glincludes.h"
 #include <assimp/mesh.h>
 
-#define VERTEX_MAX_TEXCOORDS AI_MAX_NUMBER_OF_TEXTURECOORDS
-#define VERTEX_MAX_TEXCOLORS AI_MAX_NUMBER_OF_COLOR_SETS
+#define VERTEX_MAX_TEXCOORDS 1 //AI_MAX_NUMBER_OF_TEXTURECOORDS
+#define VERTEX_MAX_TEXCOLORS 1 //AI_MAX_NUMBER_OF_COLOR_SETS
 
 namespace gl{
+	using glm::vec3;
 	using glm::vec4;
 	class vertex{
 	public:
-		vec4 pos;
-		vec4 norm;
-		vec4 tan;
-		vec4 bitan; //should probably just recalculate this on the fly
-		vec4 tc[VERTEX_MAX_TEXCOORDS];
+		vec3 pos;
+		vec3 tan;
+		vec3 norm;
+		vec3 tc[VERTEX_MAX_TEXCOORDS];
 		vec4 colors[VERTEX_MAX_TEXCOLORS];
 	};
 	/*template<typename numType>

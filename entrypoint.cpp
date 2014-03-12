@@ -13,6 +13,7 @@
 #include "assimp/DefaultLogger.hpp"
 #include "SkyBox.h"
 #include "TransformFeedback.h"
+#include "VertexAttribBuilder.h"
 
 #include "windows.h" //for debugbreak only!
 
@@ -26,6 +27,7 @@ Camera camera;
 glm::mat4 projectionMatrix;
 glm::mat4 orthoMatrix;
 int levels = 1;
+int tessFactor = 50;
 
 //global threadpool
 ThreadPool glPool(4);
@@ -109,7 +111,7 @@ int main(int argc, char* argv[])
 	Model* model = NULL;
 	const unsigned int asteroidCount=1;
 	Cube asteroids[asteroidCount];
-	asteroids[0].generate(20,vec3(-1.f,-1.f,-1.f),false);
+	asteroids[0].generate(tessFactor,vec3(-1.f,-1.f,-1.f),false);
 	//glPool.onMain([&asteroids](){
 				asteroids[0].init();
 				asteroids[0].download();
@@ -128,15 +130,15 @@ int main(int argc, char* argv[])
 		//});
 	}
 	
-	/*glPool.async([&](){
-		auto ptr = new Model("assets/fighter ship.obj");
+	glPool.async([&](){
+		auto ptr = new Model("assets/organic ship.obj");
 		auto local = &model;
 		glPool.onMain([=](){
 			ptr->init();
 			ptr->download();
 			*local = ptr;
 		});
-	});*/
+	});
 
 	/*unsigned int patchfactor = 2;
 	vector<Sphere> patches;
@@ -300,6 +302,7 @@ int main(int argc, char* argv[])
 	glVertexAttribPointer(1, 4, GL_FLOAT, false, sizeof(GLfloat)*12, (const GLvoid*)12);
 	glVertexAttribPointer(2, 4, GL_FLOAT, false, sizeof(GLfloat)*12, (const GLvoid*)24);
 	glVertexAttribPointer(3, 4, GL_FLOAT, false, sizeof(GLfloat)*12, (const GLvoid*)36);
+
 	checkGlError("vertex attribs");
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -375,27 +378,30 @@ int main(int argc, char* argv[])
 			checkGlError("draw asteroid");
 		}
 
+		//if(model)
+			//glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(model->ModelMatrix));
+			//model->draw();
+
 		normShader->bind();
-		glBindVertexArray(vao);
+		//glBindVertexArray(vao);
 		glUniform4fv(normShader->getUniformLocation("color"), 1, value_ptr(vec4(0.0,0.0,1.0,1.0)));
 		glUniform1f(normShader->getUniformLocation("normalLength"), 0.05f);
 		glUniformMatrix4fv(normShader->getUniformLocation("viewMatrix"), 1, GL_FALSE, value_ptr(camera.GetViewMatrix()));
 		glUniformMatrix4fv(normShader->getUniformLocation("projMatrix"), 1, GL_FALSE, value_ptr(camera.GetProjectionMatrix()));
-		for(int i=0;i<asteroidCount;i++){
-			glUniformMatrix4fv(normShader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(asteroids[i].ModelMatrix));
+			glUniformMatrix4fv(normShader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(asteroids[0].ModelMatrix));
 			//asteroids[0].draw();
+			//if(model)
+			//model->draw();
 			tf.draw();
 			//asteroids[i].ModelMatrix =  glm::rotate(asteroids[i].ModelMatrix,0.1f,vec3(0,1,0));
 			checkGlError("draw asteroid normals");
-		}
+		
 		glBindVertexArray(0);
 		
 
 		//glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(cube.ModelMatrix));
 		//cube.draw();
-		if(model)
-			//glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(model->ModelMatrix));
-			model->draw();
+		
 		/*for(int index=0;index<patches.size();index++){
 			patches[index].draw();
 		}*/

@@ -222,13 +222,13 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 	for(unsigned int i=0;i<aim.mNumVertices;i++){
 		vertex& v = output.vertices[i];
 		VEC_COPY(v.pos,aim.mVertices[i]);
-		v.pos.w = 1.f;
+		//v.pos.w = 1.f;
 		if(output.hasNormals){
 			VEC_COPY(v.norm,aim.mNormals[i]);
 		}
 		if(output.hasTangents){
 			VEC_COPY(v.tan,aim.mTangents[i]);
-			VEC_COPY(v.bitan,aim.mBitangents[i]);
+			//VEC_COPY(v.bitan,aim.mBitangents[i]);
 		}
 		for(int j=0;j<AI_MAX_NUMBER_OF_TEXTURECOORDS;j++){
 			if(aim.HasTextureCoords(j)){
@@ -451,12 +451,12 @@ void Model::loadCache(std::string filename){
 		workstack.pop_back();
 		int i = current->index;
 		current->name = namebuff+flatlist[i].nameoff;
-		for(int j = flatlist[i].meshlistoff;j<(int)flatlist[i].meshlistoff+flatlist[i].meshlistsize;j++){
+		for(int j = flatlist[i].meshlistoff;j<(int)(flatlist[i].meshlistoff+flatlist[i].meshlistsize);j++){
 			current->meshes.emplace_back(RenderableMesh());
 			current->meshes.back().deserialize(meshbuff+meshindbuff[j]);
 		}
 		current->localTranform = flatlist[i].localTransform;
-		for(int j= flatlist[i].childlistoff;j<(int)flatlist[i].childlistoff+flatlist[i].childlistsize;j++){
+		for(int j= flatlist[i].childlistoff;j<(int)(flatlist[i].childlistoff+flatlist[i].childlistsize);j++){
 			current->children.emplace_back(ModelPart());
 			current->children.back().index = childbuff[j];
 			current->children.back().parent = current;

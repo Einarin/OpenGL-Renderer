@@ -2,6 +2,7 @@
 #include "Shader.h"
 #include "noise.h"
 #include "ThreadPool.h"
+#include "VertexAttribBuilder.h"
 #include <iostream>
 
 namespace gl{
@@ -244,14 +245,21 @@ void IndexedGeometry::init(){
 	glGenBuffers(1, &ibo);
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(vertex), 0);
+	VertexAttribBuilder b;
+	b.setSize(sizeof(vertex));
+	b.attrib(FLOAT_ATTRIB,3);
+	b.attrib(FLOAT_ATTRIB,3);
+	b.attrib(FLOAT_ATTRIB,3);
+	b.attrib(FLOAT_ATTRIB,3);
+	b.build();
+	/*glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(vertex), 0);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)12);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(2, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)24);
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(3, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)36);
-	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(3);*/
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	glBindVertexArray(0);
 	initialized = true;

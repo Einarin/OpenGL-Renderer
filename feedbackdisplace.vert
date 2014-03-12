@@ -478,9 +478,9 @@ void main(void)
 	}*/
 	displacement.x = displace( in_Position.xyz+seed);
 	const float dt = 0.001;
-	displacement.y = displace( in_Position.xyz+vec3(dt,0.0,0.0)+seed);
-	displacement.z = displace( in_Position.xyz+vec3(0.0,dt,0.0)+seed);
-	displacement.w = displace( in_Position.xyz+vec3(0.0,0.0,dt)+seed);
+	displacement.y = displace( normalize(in_Position.xyz+vec3(dt,0.0,0.0))+seed);
+	displacement.z = displace( normalize(in_Position.xyz+vec3(0.0,dt,0.0))+seed);
+	displacement.w = displace( normalize(in_Position.xyz+vec3(0.0,0.0,dt))+seed);
 	vec3 df = displacement.yzw - displacement.x;
 	df *= 1.0/dt;
 	//df = normalize(df);
