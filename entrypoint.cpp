@@ -14,6 +14,8 @@
 #include "SkyBox.h"
 #include "TransformFeedback.h"
 #include "VertexAttribBuilder.h"
+#include "StarRenderer.h"
+#include "AsteroidRenderer.h"
 
 #include "windows.h" //for debugbreak only!
 
@@ -26,7 +28,7 @@ Billboard* bb;
 Camera camera;
 glm::mat4 projectionMatrix;
 glm::mat4 orthoMatrix;
-int levels = 1;
+int levels = 5;
 int tessFactor = 50;
 
 //global threadpool
@@ -90,7 +92,8 @@ int main(int argc, char* argv[])
 	camera = Camera(); // vec3(0.,2.5,3.0),vec3(0,2.0,0),vec3(0,1.0,0)
 	camera.SetPosition(vec3(-2.f,-2.f,-2.f));
 	//camera.SetPosition(vec3(0.0,0.0,0.0));
-	camera.SetTarget(vec3(-4.f,-4.f,-4.f));
+	//camera.SetTarget(vec3(-4.f,-4.f,-4.f));
+	camera.SetTarget(vec3(0.0,0.0,0.0));
 	camera.SetAspectRatio(static_cast<float>(width)/static_cast<float>(height));
 
 	cout << "generating assets...\n";
@@ -101,6 +104,9 @@ int main(int argc, char* argv[])
 	skybox.download();
 	skybox.setImage("assets/Skybox/skybox",&glPool);
 
+	StarRenderer star;
+	if(!star.load()) DebugBreak();
+
 	Cube cube;
 	cube.generate(2,vec3(0));
 	cube.ModelMatrix = mat4();
@@ -110,7 +116,16 @@ int main(int argc, char* argv[])
 	cout << "loading models...\n";
 	Model* model = NULL;
 	const unsigned int asteroidCount=1;
-	Cube asteroids[asteroidCount];
+	AsteroidRenderer aRenderer;
+	if(!aRenderer.setup()) DebugBreak();
+	int q=0;
+	glm::vec3 position(q%3-1,q/3%3-1,q/9-1);
+	mat4 modelMat = translate(rotate(mat4(),3.14159f*0.25f,glm::vec3(1.f,2.f,3.f)),position);
+	auto result = aRenderer.addAsteroidAsync(modelMat,position);
+	/*while(!result.complete()){
+		glPool.processMainQueueUnit();
+	}*/
+	/*Cube asteroids[asteroidCount];
 	asteroids[0].generate(tessFactor,vec3(-1.f,-1.f,-1.f),false);
 	//glPool.onMain([&asteroids](){
 				asteroids[0].init();
@@ -122,23 +137,23 @@ int main(int argc, char* argv[])
 			position *= 4.0f;
 			//asteroids[q].generate(50,position,false);
 			asteroids[q].ModelMatrix = translate(rotate(mat4(),3.14159f*0.25f,glm::vec3(1.f,2.f,3.f)),position);
-			/*auto ptr = &asteroids[q];
+			auto ptr = &asteroids[q];
 			glPool.onMain([=](){
 				ptr->init();
 				ptr->download();
-			});*/
+			});
 		//});
-	}
+	}*/
 	
 	glPool.async([&](){
-		auto ptr = new Model("assets/organic ship.obj");
+		auto ptr = new Model("assets/angular fighter.obj");
 		auto local = &model;
 		glPool.onMain([=](){
 			ptr->init();
 			ptr->download();
 			*local = ptr;
 		});
-	});
+	});//*/
 
 	/*unsigned int patchfactor = 2;
 	vector<Sphere> patches;
@@ -263,10 +278,11 @@ int main(int argc, char* argv[])
 	glEnable(GL_BLEND);
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	double time = glfwGetTime();
+	double oldtime = time;
 	int fpsCount = 10;
 	int counter = 0;
 
-	auto feedbackvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	/*auto feedbackvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 	if(!feedbackvs->compileFromFile("feedbackdisplace.vert"))
 		DebugBreak();
 	auto feedbackShader = Shader::Allocate();
@@ -287,7 +303,7 @@ int main(int argc, char* argv[])
 	TransformFeedback tf(GL_TRIANGLES);
 	tf.init();
 	//TEMP
-	unsigned int vao;
+	/*unsigned int vao;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	checkGlError("gen/bind vao");
@@ -301,7 +317,13 @@ int main(int argc, char* argv[])
 	glVertexAttribPointer(0, 4, GL_FLOAT, false, sizeof(GLfloat)*12, 0);
 	glVertexAttribPointer(1, 4, GL_FLOAT, false, sizeof(GLfloat)*12, (const GLvoid*)12);
 	glVertexAttribPointer(2, 4, GL_FLOAT, false, sizeof(GLfloat)*12, (const GLvoid*)24);
-	glVertexAttribPointer(3, 4, GL_FLOAT, false, sizeof(GLfloat)*12, (const GLvoid*)36);
+	glVertexAttribPointer(3, 4, GL_FLOAT, false, sizeof(GLfloat)*12, (const GLvoid*)36);*/
+	/*VertexAttribBuilder b;
+	b.attrib(FLOAT_ATTRIB,4);
+	b.attrib(FLOAT_ATTRIB,4);
+	b.attrib(FLOAT_ATTRIB,4);
+	b.attrib(FLOAT_ATTRIB,4);
+	tf.setupVao(4,b);
 
 	checkGlError("vertex attribs");
 	glBindVertexArray(0);
@@ -311,16 +333,16 @@ int main(int argc, char* argv[])
 	checkGlError("Bind Transform Feedback shader");
 	tf.enable();
 	checkGlError("Enable Transform Feedback");
-	glUniform1i(feedbackShader->getUniformLocation("levels"), levels);
+	glUniform1i(feedbackShader->getUniformLocation("levels"), 0);
 	for(int i=0;i<asteroidCount;i++){			
 		glUniformMatrix4fv(feedbackShader->getUniformLocation("transformMatrix"), 1, GL_FALSE, value_ptr(mat4()));
-		glUniform3fv(feedbackShader->getUniformLocation("seed"),1,value_ptr(vec3(0.0)/*vec3(i%3-1,i/3%3-1,i/9-1)*/));
+		glUniform3fv(feedbackShader->getUniformLocation("seed"),1,value_ptr(vec3(0.0)/*vec3(i%3-1,i/3%3-1,i/9-1)));
 		checkGlError("about to draw asteroid transform feedback");
 		asteroids[0].draw();
 		checkGlError("draw asteroid transform feedback");
 	}
 	tf.disable();
-	glFinish();
+	glFinish();*/
 	uint32 PrimitivesWritten;
 	//glGetQueryObjectuiv(tf.m_queryObject, GL_QUERY_RESULT, &PrimitivesWritten); 
 
@@ -356,7 +378,7 @@ int main(int argc, char* argv[])
 		checkGlError("clear screen");
 		
 		skybox.draw(&camera);
-				
+						
 		//mat4 projview = projectionMatrix* camera.toMat4();
 		shader->bind();
 		glUniformMatrix4fv(shader->getUniformLocation("viewMatrix"), 1, GL_FALSE, value_ptr(camera.GetViewMatrix()));
@@ -364,23 +386,32 @@ int main(int argc, char* argv[])
 		vec3 pos = camera.GetPosition();
 		glUniform4fv(shader->getUniformLocation("camera"), 1, value_ptr(vec4(camera.GetPosition(),1.0)));
 		glUniform4fv(shader->getUniformLocation("light"), 1, value_ptr(vec4(1.5f,3.0f,3.0f,1.0f)));
-		
+		glUniform1f(shader->getUniformLocation("time"),time*0.1);
 		glUniform1i(shader->getUniformLocation("levels"), levels);
 		checkGlError("setup model shader");
 
-		glBindVertexArray(vao);
-		for(int i=0;i<asteroidCount;i++){
+		aRenderer.draw(&camera);
+		checkGlError("asteroid renderer");
+
+		//glBindVertexArray(vao);
+		/*for(int i=0;i<asteroidCount;i++){
 			glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(asteroids[i].ModelMatrix));
 			glUniform3fv(shader->getUniformLocation("seed"),1,value_ptr(vec3(i%3-1,i/3%3-1,i/9-1)));
 			//asteroids[0].draw();
-			tf.draw();
+			
+			//glCullFace(GL_FRONT);
+			//tf.draw();
+			//glCullFace(GL_BACK);
 			//asteroids[i].ModelMatrix =  glm::rotate(asteroids[i].ModelMatrix,0.1f,vec3(0,1,0));
 			checkGlError("draw asteroid");
-		}
+		}*/
 
-		//if(model)
-			//glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(model->ModelMatrix));
-			//model->draw();
+		
+
+		/*if(model){
+			glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(mat4()));
+			model->draw();
+		}*/
 
 		normShader->bind();
 		//glBindVertexArray(vao);
@@ -388,11 +419,11 @@ int main(int argc, char* argv[])
 		glUniform1f(normShader->getUniformLocation("normalLength"), 0.05f);
 		glUniformMatrix4fv(normShader->getUniformLocation("viewMatrix"), 1, GL_FALSE, value_ptr(camera.GetViewMatrix()));
 		glUniformMatrix4fv(normShader->getUniformLocation("projMatrix"), 1, GL_FALSE, value_ptr(camera.GetProjectionMatrix()));
-			glUniformMatrix4fv(normShader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(asteroids[0].ModelMatrix));
+			//glUniformMatrix4fv(normShader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(asteroids[0].ModelMatrix));
 			//asteroids[0].draw();
 			//if(model)
 			//model->draw();
-			tf.draw();
+			//tf.draw();
 			//asteroids[i].ModelMatrix =  glm::rotate(asteroids[i].ModelMatrix,0.1f,vec3(0,1,0));
 			checkGlError("draw asteroid normals");
 		
@@ -407,24 +438,28 @@ int main(int argc, char* argv[])
 		}*/
 		//glUniform1f(shader->getUniformLocation("time"),time);
 		//bb->draw();
+		//glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+		star.draw(&camera);
+		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 		textRenderer->draw(orthoMatrix);
 		checkGlError("draw hello world");
 		counter++;
+		time = glfwGetTime();
 		if(counter >= fpsCount){
 			counter = 0;
 			fps->clearText();
 			checkGlError("fps clear text");
-			double newtime = glfwGetTime();
+			double newtime = time;
 			stringstream ss, ss1, ss2, ss3;
 			ss.precision(3);
 			
 			glm::vec3 position = camera.GetPosition();
 			ss << " (" << position[0] << ", " << position[1] << ", " << position[2] << ") ";
 			//ss << "   up    (" << cam[1][0] << ", " << cam[1][1] << ", " << cam[1][2] << ")\n";*/
-			ss << double(fpsCount) / (newtime - time);
+			ss << round(double(fpsCount) / (newtime - oldtime));
 			ss << " FPS";
 			ss << " levels=" << levels;
-			time = newtime;
+			oldtime = newtime;
 			fps->addText(ss.str(),vec2(5,height-32),vec4(1.0f));
 			checkGlError("fps add text");
 			//vec3 pos = camera.pos();

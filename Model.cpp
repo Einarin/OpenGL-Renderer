@@ -134,6 +134,8 @@ Model::Model(std::string filename) : filepath(filename){
 			aiString file;
 			if(AI_SUCCESS == assmat->Get(AI_MATKEY_TEXTURE_DIFFUSE(0),file))
 				std::cout << "Diffuse tex: " << file.C_Str() << std::endl;
+			if(AI_SUCCESS == assmat->Get(AI_MATKEY_TEXTURE_SPECULAR(0),file))
+				std::cout << "Specular tex: " << file.C_Str() << std::endl;
 			if(AI_SUCCESS == assmat->Get(AI_MATKEY_TEXTURE_NORMALS(0),file))
 				std::cout << "Normal tex: " << file.C_Str() << std::endl;
 			if(AI_SUCCESS == assmat->Get(AI_MATKEY_TEXTURE_DISPLACEMENT(0),file))

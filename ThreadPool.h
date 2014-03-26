@@ -235,6 +235,15 @@ public:
 		return result.val();
 	}
 	void onMain(std::function<void()> workUnit);
+	template<typename T>
+	Future<T> onMain(std::function<T()> func){
+		Future<T> f;
+		onMain([f,func]()mutable{
+			f.start();
+			f.set(func());
+		});
+		return f;
+	}
 	bool processMainQueueUnit(); //returns true if work was done
 };
 

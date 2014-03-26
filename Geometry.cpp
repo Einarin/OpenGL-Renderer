@@ -247,10 +247,11 @@ void IndexedGeometry::init(){
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	VertexAttribBuilder b;
 	b.setSize(sizeof(vertex));
-	b.attrib(FLOAT_ATTRIB,3);
-	b.attrib(FLOAT_ATTRIB,3);
-	b.attrib(FLOAT_ATTRIB,3);
-	b.attrib(FLOAT_ATTRIB,3);
+	b.attrib(FLOAT_ATTRIB,4);
+	b.attrib(FLOAT_ATTRIB,4);
+	b.attrib(FLOAT_ATTRIB,4);
+	b.attrib(FLOAT_ATTRIB,4);
+	b.attrib(FLOAT_ATTRIB,4);
 	b.build();
 	/*glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(vertex), 0);
 	glEnableVertexAttribArray(0);
@@ -266,6 +267,8 @@ void IndexedGeometry::init(){
 }
 
 void IndexedGeometry::download(){
+	if(!initialized ||verts.size() == 0 || indices.size() == 0)
+		DebugBreak();
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER,verts.size() * sizeof(vertex),&verts[0],GL_STATIC_DRAW);
 #ifdef _DEBUG

@@ -82,6 +82,7 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AsteroidRenderer.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="entrypoint.cpp" />
     <ClCompile Include="FlatDrawable.cpp" />
@@ -98,6 +99,7 @@
     <ClCompile Include="Quaternion.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="SkyBox.cpp" />
+    <ClCompile Include="StarRenderer.cpp" />
     <ClCompile Include="Text.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
@@ -105,6 +107,7 @@
     <ClCompile Include="VertexAttribBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AsteroidRenderer.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="FlatAssets.h" />
     <ClInclude Include="FlatDrawable.h" />
@@ -124,7 +127,9 @@
     <ClInclude Include="noise.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="Refcounted.h" />
+    <ClInclude Include="Renderer.h" />
     <ClInclude Include="SkyBox.h" />
+    <ClInclude Include="StarRenderer.h" />
     <ClInclude Include="Text.h" />
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="TransformFeedback.h" />

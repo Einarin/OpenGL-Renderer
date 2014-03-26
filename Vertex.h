@@ -10,10 +10,10 @@ namespace gl{
 	using glm::vec4;
 	class vertex{
 	public:
-		vec3 pos;
-		vec3 tan;
-		vec3 norm;
-		vec3 tc[VERTEX_MAX_TEXCOORDS];
+		vec4 pos;
+		vec4 tan;
+		vec4 norm;
+		vec4 tc[VERTEX_MAX_TEXCOORDS];
 		vec4 colors[VERTEX_MAX_TEXCOLORS];
 	};
 	/*template<typename numType>

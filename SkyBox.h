@@ -2,12 +2,14 @@
 #include "glincludes.h"
 #include "Geometry.h"
 #include "Texture.h"
+#include "Renderer.h"
 #include "Camera.h"
 #include "ThreadPool.h"
 
+
 namespace gl{
 
-class SkyBox
+class SkyBox : public Renderer
 {
 protected:
 	bool initialized,downloaded;

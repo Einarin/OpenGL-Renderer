@@ -3,7 +3,7 @@
 
 namespace gl{
 
-TransformFeedback::TransformFeedback(unsigned int primitiveType):m_primitiveType(primitiveType)
+TransformFeedback::TransformFeedback(unsigned int primitiveType):m_primitiveType(primitiveType),m_vao(0)
 {
 }
 
@@ -61,11 +61,29 @@ bool TransformFeedback::resume(){
 	return false;
 }
 
+void TransformFeedback::setupVao(int numVertexAttribArrays,VertexAttribBuilder& b){
+	glGenVertexArrays(1, &m_vao);
+	glBindVertexArray(m_vao);
+	checkGlError("gen/bind transform feedback vao");
+	glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
+	glBufferData(GL_ARRAY_BUFFER, 500*500*6*2*sizeof(GLfloat)*12,nullptr,GL_STATIC_COPY);
+	checkGlError("bind tf vbo");
+	for(int i=0;i<numVertexAttribArrays;i++){
+		glEnableVertexAttribArray(i);
+	}
+	b.build();
+	checkGlError("vertex attribs");
+	glBindVertexArray(0);
+}
+
 unsigned int TransformFeedback::getBuffer(){
 	return m_buffer;
 }
 
 void TransformFeedback::draw(){
+	if(m_vao){
+		glBindVertexArray(m_vao);
+	}
 	if(SupportFor(GL_TRANSFORM_FEEDBACK_2)){
 		glDrawTransformFeedback(m_primitiveType,m_feedbackObject);
 	} else {
@@ -79,6 +97,7 @@ void TransformFeedback::draw(){
 		glGetQueryObjectuiv(m_queryObject,GL_QUERY_RESULT, &primitivesWritten);
 		glDrawArrays(m_primitiveType,0,primitivesWritten);
 	}
+	glBindVertexArray(0);
 }
 void TransformFeedback::draw(int count){
 	glDrawArrays(m_primitiveType,0,count);

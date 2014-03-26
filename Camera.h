@@ -3,6 +3,8 @@
 #include "GLM\glm.hpp"
 #include "Quaternion.h"
 
+namespace gl {
+
 /**
  * A Camera contains all the information about the 
  *    current view, provides methods for modifying the
@@ -91,3 +93,4 @@ protected:
 	float _viewDistance;
 };
 
+}
