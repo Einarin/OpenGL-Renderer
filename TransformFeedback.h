@@ -24,6 +24,7 @@ public:
 	void disable();
 	bool pause(); // requires GL_TRANSFORM_FEEDBACK_2
 	bool resume(); // requires GL_TRANSFORM_FEEDBACK_2
+	void allocateStorage(unsigned int buffersize);
 	void setupVao(int numVertexAttribArrays,VertexAttribBuilder& b);
 	void draw(); //uses transform feedback state to determine how many vertices to draw
 	void draw(int count); //faster if GL_TRANSFORM_FEEDBACK_2 not supported

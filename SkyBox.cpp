@@ -1,5 +1,6 @@
 #include "SkyBox.h"
 #include "ImageLoader.h"
+#include "ThreadPool.h"
 #include <glm/gtc/type_ptr.hpp>
 
 namespace gl{
@@ -123,38 +124,26 @@ GLenum faces[] = {
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
 		};
 char* suffixes[] = {"+x","-x","+y","-y","+z","-z"};
-void SkyBox::setImage(std::string basepngfilename, ThreadPool* pool){
-	
+void SkyBox::setImageAsync(std::string basepngfilename){
 	cubemap.bind();
 	for(int i=0;i<6;i++){
-		if(pool){//if we have a thread pool do the reading from disk and png decompression off of the main thread
-			pool->async([=](){
-				glm::ivec2 imgSize;
-				char* data;
-				int bufflen;
-				bool success = imageDataFromPngFile(
-				basepngfilename+suffixes[i]+".png",
-				&imgSize,&data,&bufflen);
-				int j = i;
-				glm::ivec2 size = imgSize;
-				GlTextureCubeMap* ptr = &cubemap;
-				pool->onMain([=](){//OpenGL work must be done on GL thread
-					ptr->setup(GL_RGBA,size,GL_UNSIGNED_BYTE,faces[j]);
-					ptr->setImage(GL_RGBA,size,GL_UNSIGNED_BYTE,faces[j],data);
-					free(data);
-				});
-			});
-		} else {
+		//do the reading from disk and png decompression off of the main thread
+		IoPool.async([=](){
 			glm::ivec2 imgSize;
 			char* data;
 			int bufflen;
 			bool success = imageDataFromPngFile(
-				basepngfilename+suffixes[i]+".png",
-				&imgSize,&data,&bufflen);
-			cubemap.setup(GL_RGBA,imgSize,GL_UNSIGNED_BYTE,faces[i]);
-			cubemap.setImage(GL_RGBA,imgSize,GL_UNSIGNED_BYTE,faces[i],data);
-			free(data);
-		}
+			basepngfilename+suffixes[i]+".png",
+			&imgSize,&data,&bufflen);
+			int j = i;
+			glm::ivec2 size = imgSize;
+			GlTextureCubeMap* ptr = &cubemap;
+			glQueue.async([=](){//OpenGL work must be done on GL thread
+				ptr->setup(GL_RGBA,size,GL_UNSIGNED_BYTE,faces[j]);
+				ptr->setImage(GL_RGBA,size,GL_UNSIGNED_BYTE,faces[j],data);
+				free(data);
+			});
+		});
 	}
 }
 

@@ -31,9 +31,6 @@ glm::mat4 orthoMatrix;
 int levels = 5;
 int tessFactor = 50;
 
-//global threadpool
-ThreadPool glPool(4);
-
 int main(int argc, char* argv[])
 {
 	//glutInit(&argc, argv);
@@ -102,7 +99,7 @@ int main(int argc, char* argv[])
 	SkyBox skybox;
 	skybox.init();
 	skybox.download();
-	skybox.setImage("assets/Skybox/skybox",&glPool);
+	skybox.setImageAsync("assets/Skybox/skybox");
 
 	StarRenderer star;
 	if(!star.load()) DebugBreak();
@@ -118,10 +115,14 @@ int main(int argc, char* argv[])
 	const unsigned int asteroidCount=1;
 	AsteroidRenderer aRenderer;
 	if(!aRenderer.setup()) DebugBreak();
-	int q=0;
-	glm::vec3 position(q%3-1,q/3%3-1,q/9-1);
-	mat4 modelMat = translate(rotate(mat4(),3.14159f*0.25f,glm::vec3(1.f,2.f,3.f)),position);
-	auto result = aRenderer.addAsteroidAsync(modelMat,position);
+	CpuPool.async([&aRenderer](){
+		for(int q=0;q<27;q++){
+			glm::vec3 position(q%3-1,q/3%3-1,q/9-1);
+			mat4 modelMat = translate(rotate(mat4(),3.14159f*0.25f,glm::vec3(1.f,2.f,3.f)),position);
+			auto result = aRenderer.addAsteroidAsync(modelMat,position);
+			CpuPool.await(result);
+		}
+	});
 	/*while(!result.complete()){
 		glPool.processMainQueueUnit();
 	}*/
@@ -145,10 +146,10 @@ int main(int argc, char* argv[])
 		//});
 	}*/
 	
-	glPool.async([&](){
+	CpuPool.async([&](){
 		auto ptr = new Model("assets/angular fighter.obj");
 		auto local = &model;
-		glPool.onMain([=](){
+		glQueue.async([=](){
 			ptr->init();
 			ptr->download();
 			*local = ptr;
@@ -469,7 +470,7 @@ int main(int argc, char* argv[])
 			fps->addText(ss2.str(),vec2(5,height-(32*3)),vec4(1.0f));
 			ss3 << " (" << cam[3][0] << ", " << cam[3][1] << ", " << cam[3][2] << ", " << cam[3][3] << ")";
 			fps->addText(ss3.str(),vec2(5,height-(32*4)),vec4(1.0f));*/
-			if(glPool.processMainQueueUnit())
+			if(glQueue.processQueueUnit())
 				fps->addText("Loading...",vec2(max(width/2-100,5),height/2),vec4(1.0f));
 			checkGlError("fps add loading");
 		}

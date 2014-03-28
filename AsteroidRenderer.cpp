@@ -51,6 +51,8 @@ bool AsteroidRenderer::setup(){
 	return success;
 }
 
+const unsigned int tessfactor = 100;
+
 //In order to avoid hanging while generating asteroids
 //	this function behaves as asynchronously as possible
 Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3 seed){
@@ -64,7 +66,7 @@ Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3
 		result.set(false);
 		return result;
 	}
-	glPool.async([=](){
+	CpuPool.async([=](){
 		//variables to pass to inner lambdas
 		auto objptr = this;
 		int i = index;
@@ -74,8 +76,8 @@ Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3
 		auto theShader = feedbackShader;
 
 		Cube* pAsteroid = new Cube();
-		pAsteroid->generate(50,s1,false);
-		glPool.onMain([=](){
+		pAsteroid->generate(tessfactor,s1,false);
+		glQueue.async([=](){
 			//variables to pass to inner lambda
 			auto pAst = pAsteroid;
 			int ind = i;
@@ -87,14 +89,15 @@ Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3
 			pAsteroid->init();
 			pAsteroid->download();
 			a->tfGeometry.init();
-			VertexAttribBuilder b;
-			b.attrib(FLOAT_ATTRIB,3);
-			b.attrib(FLOAT_ATTRIB,3);
-			b.attrib(FLOAT_ATTRIB,3);
-			b.attrib(FLOAT_ATTRIB,3);
-			a->tfGeometry.setupVao(4,b);
-			glPool.onMain([=](){
+			glQueue.async([=](){
 				shader->bind();
+				a->tfGeometry.allocateStorage(tessfactor*tessfactor*6*6*2*sizeof(GLfloat)*12);
+				VertexAttribBuilder b;
+				b.attrib(FLOAT_ATTRIB,3);
+				b.attrib(FLOAT_ATTRIB,3);
+				b.attrib(FLOAT_ATTRIB,3);
+				b.attrib(FLOAT_ATTRIB,3);
+				a->tfGeometry.setupVao(4,b);
 				a->tfGeometry.enable();
 				glUniformMatrix4fv(shader->getUniformLocation("transformMatrix"), 1, GL_FALSE, glm::value_ptr(glm::mat4()));
 				glUniform3fv(shader->getUniformLocation("seed"),1,glm::value_ptr(s2));

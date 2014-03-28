@@ -11,8 +11,8 @@ namespace gl{
 	class vertex{
 	public:
 		vec4 pos;
-		vec4 tan;
 		vec4 norm;
+		vec4 tan;
 		vec4 tc[VERTEX_MAX_TEXCOORDS];
 		vec4 colors[VERTEX_MAX_TEXCOLORS];
 	};

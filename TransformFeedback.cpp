@@ -61,12 +61,16 @@ bool TransformFeedback::resume(){
 	return false;
 }
 
+void TransformFeedback::allocateStorage(unsigned int buffersize){
+	glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
+	glBufferData(GL_ARRAY_BUFFER, buffersize,nullptr,GL_STATIC_COPY);
+}
+
 void TransformFeedback::setupVao(int numVertexAttribArrays,VertexAttribBuilder& b){
 	glGenVertexArrays(1, &m_vao);
 	glBindVertexArray(m_vao);
 	checkGlError("gen/bind transform feedback vao");
 	glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
-	glBufferData(GL_ARRAY_BUFFER, 500*500*6*2*sizeof(GLfloat)*12,nullptr,GL_STATIC_COPY);
 	checkGlError("bind tf vbo");
 	for(int i=0;i<numVertexAttribArrays;i++){
 		glEnableVertexAttribArray(i);

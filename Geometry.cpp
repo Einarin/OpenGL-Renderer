@@ -325,7 +325,7 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 	indices.resize(6*6*tesselationFactor.x*tesselationFactor.y);
 	Future<bool> futures[6];
 	for(int side=0;side<6;side++){
-		futures[side] = glPool.async<bool>([=,&verts,&indices]()->bool{
+		futures[side] = CpuPool.async<bool>([=,&verts,&indices]()->bool{
 		int vindex = side*tesselationFactor.x*tesselationFactor.y;
 		int ind = side*6*tesselationFactor.x*tesselationFactor.y;
 		int indsum = side*tesselationFactor.x*tesselationFactor.y;
@@ -412,7 +412,7 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 	}
 	bool success = true;
 	for(int i=0;i<6;i++){
-		success &= glPool.await(futures[i]);
+		success &= CpuPool.await(futures[i]);
 	}
 }
 

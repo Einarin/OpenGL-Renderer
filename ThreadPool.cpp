@@ -1,5 +1,10 @@
 #include "ThreadPool.h"
 
+//global threadpools
+ThreadPool CpuPool;
+ThreadPool IoPool(2);
+WorkQueue glQueue;
+
 DWORD WINAPI DispatchThreadProc(LPVOID lpParameter);
 
 DWORD WINAPI WorkerThreadProc(LPVOID lpParameter){
@@ -55,7 +60,6 @@ ThreadPool::ThreadPool(){
 	
 	//sharedState.dispatchSemaphore = CreateSemaphore(NULL,0,
 	//sharedState.queuingThread = CreateThread(NULL,0,DispatchThreadProc,(LPVOID)&sharedState,0,NULL);
-	mainQueueMutex = NEW_MUTEX;
 }
 
 ThreadPool::ThreadPool(int numberOfThreads){
@@ -78,7 +82,7 @@ ThreadPool::ThreadPool(int numberOfThreads){
 	
 	//sharedState.dispatchSemaphore = CreateSemaphore(NULL,0,
 	//sharedState.queuingThread = CreateThread(NULL,0,DispatchThreadProc,(LPVOID)&sharedState,0,NULL);
-	mainQueueMutex = NEW_MUTEX;
+	
 }
 
 void ThreadPool::async(std::function<void()> workUnit){
@@ -88,22 +92,26 @@ void ThreadPool::async(std::function<void()> workUnit){
 	//ResumeThread(sharedState.queuingThread);
 }
 
-void ThreadPool::onMain(std::function<void()> workUnit){
-	ACQUIRE_MUTEX(mainQueueMutex);
-	mainQueue.push(workUnit);
-	RELEASE_MUTEX(mainQueueMutex);
+WorkQueue::WorkQueue(){
+	queueMutex = NEW_MUTEX;
 }
 
-bool ThreadPool::processMainQueueUnit(){
-	ACQUIRE_MUTEX(mainQueueMutex);
-	if(!mainQueue.empty()){
-		std::function<void()> workUnit = mainQueue.front();
-		mainQueue.pop();
-		RELEASE_MUTEX(mainQueueMutex);
+void WorkQueue::async(std::function<void()> workUnit){
+	ACQUIRE_MUTEX(queueMutex);
+	workQueue.push(workUnit);
+	RELEASE_MUTEX(queueMutex);
+}
+
+bool WorkQueue::processQueueUnit(){
+	ACQUIRE_MUTEX(queueMutex);
+	if(!workQueue.empty()){
+		std::function<void()> workUnit = workQueue.front();
+		workQueue.pop();
+		RELEASE_MUTEX(queueMutex);
 		workUnit();
 		return true;
 	} else {
-		RELEASE_MUTEX(mainQueueMutex);
+		RELEASE_MUTEX(queueMutex);
 		return false;
 	}
 }

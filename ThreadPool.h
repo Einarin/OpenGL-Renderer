@@ -175,8 +175,6 @@ DWORD WINAPI awaitWorkerThreadProc(LPVOID lpParameter){
 class ThreadPool{
 private:
 	DispatchData sharedState;
-	std::queue<std::function<void()>> mainQueue;
-	HANDLE mainQueueMutex;
 public:
 	ThreadPool();
 	ThreadPool(int numberOfThreads);
@@ -234,9 +232,17 @@ public:
 		depth--;
 		return result.val();
 	}
-	void onMain(std::function<void()> workUnit);
+};
+
+class WorkQueue{
+protected:
+	std::queue<std::function<void()>> workQueue;
+	HANDLE queueMutex;
+public:
+	WorkQueue();
+	void async(std::function<void()> workUnit);
 	template<typename T>
-	Future<T> onMain(std::function<T()> func){
+	Future<T> async(std::function<T()> func){
 		Future<T> f;
 		onMain([f,func]()mutable{
 			f.start();
@@ -244,7 +250,9 @@ public:
 		});
 		return f;
 	}
-	bool processMainQueueUnit(); //returns true if work was done
+	bool processQueueUnit(); //returns true if work was done
 };
 
-extern ThreadPool glPool;
+extern ThreadPool CpuPool;
+extern ThreadPool IoPool;
+extern WorkQueue glQueue;
