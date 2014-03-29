@@ -228,7 +228,7 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 		}
 		if(output.hasTangents){
 			VEC_COPY(v.tan,aim.mTangents[i]);
-			VEC_COPY(v.bitan,aim.mBitangents[i]);
+			//VEC_COPY(v.bitan,aim.mBitangents[i]);
 		}
 		for(int j=0;j<AI_MAX_NUMBER_OF_TEXTURECOORDS;j++){
 			if(aim.HasTextureCoords(j)){

@@ -12,7 +12,7 @@ namespace gl{
 		vec4 pos;
 		vec4 norm;
 		vec4 tan;
-		vec4 bitan; //should probably just recalculate this on the fly
+		//vec4 bitan; //should probably just recalculate this on the fly
 		vec4 tc[VERTEX_MAX_TEXCOORDS];
 		vec4 colors[VERTEX_MAX_TEXCOLORS];
 	};
