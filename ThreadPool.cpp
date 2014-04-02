@@ -23,7 +23,8 @@ DWORD WINAPI WorkerThreadProc(LPVOID lpParameter){
 		} else {
 			RELEASE_MUTEX(data->dispatchMutex);
 			//SuspendThread(data->thread);
-			Sleep(0);
+			//Sleep(0);
+			WaitForSingleObject(data->dispatchSemaphore,INFINITE);
 		}
 		
 	}
@@ -44,6 +45,7 @@ ThreadPool::ThreadPool(){
 	sharedState.workerThreads.resize(numberOfThreads);
 
 	sharedState.dispatchMutex = NEW_MUTEX;
+	sharedState.dispatchSemaphore = CreateSemaphore(NULL,0,numberOfThreads,NULL);
 
 	for(int i=0;i<numberOfThreads;i++)
 	{
@@ -66,6 +68,7 @@ ThreadPool::ThreadPool(int numberOfThreads){
 	sharedState.workerThreads.resize(numberOfThreads);
 
 	sharedState.dispatchMutex = NEW_MUTEX;
+	sharedState.dispatchSemaphore = CreateSemaphore(NULL,0,numberOfThreads,NULL);
 
 	for(int i=0;i<numberOfThreads;i++)
 	{
@@ -89,6 +92,7 @@ void ThreadPool::async(std::function<void()> workUnit){
 	ACQUIRE_MUTEX(sharedState.dispatchMutex);
 	sharedState.dispatchQueue.push(workUnit);
 	RELEASE_MUTEX(sharedState.dispatchMutex);
+	ReleaseSemaphore(sharedState.dispatchSemaphore,1,NULL);
 	//ResumeThread(sharedState.queuingThread);
 }
 

@@ -147,7 +147,7 @@ struct DispatchData{
 	std::vector<WorkerThreadData> workerThreads;
 	std::queue<std::function<void()>> dispatchQueue;
 	MUTEX dispatchMutex;
-	//HANDLE dispatchSemaphore;
+	HANDLE dispatchSemaphore;
 	/*HANDLE queuingThread;
 	int roundRobinIndex;*/
 };
