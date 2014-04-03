@@ -46,88 +46,106 @@ template<typename T>
 class Future{
 protected:
 	struct Data{
-	MUTEX m;
-	bool started;
+	HANDLE s;
 	bool complete;
 	T result;
+	Data():complete(false){
+		s = CreateSemaphore(NULL,0,1,NULL);
+	}
+	~Data(){
+		CloseHandle(s);
+	}
 	};
 	std::shared_ptr<Data> data;
 public:
-	Future():data(new Data()){
-		data->m = NEW_MUTEX;
-		data->started = false;
-		data->complete = false;
-	}
-	void start(){
-		ACQUIRE_MUTEX(data->m);
-		data->started = true;
-	}
-	void set(T val){
+	Future():data(new Data())
+	{}
+	inline void set(T val){
 		data->result = val;
 		data->complete = true;
-		RELEASE_MUTEX(data->m);
+		ReleaseSemaphore(data->s,1,NULL);
 	}
-	inline bool complete(){
+	inline T operator=(T val){
+		set(val);
+		return val;
+	}
+	inline bool isDone(){
 		return data->complete;
 	}
-	T val(){
-		for(;;){
-			ACQUIRE_MUTEX(data->m);
-			if(data->complete == true){
-				break;
-			}
-			RELEASE_MUTEX(data->m);
-			Sleep(100);
-		}
-		RELEASE_MUTEX(data->m);
+	inline T wait(){
+		while(0 != WaitForSingleObject(data->s,INFINITE))
+		{}
+		ReleaseSemaphore(data->s,1,NULL);
 		return data->result;
+	}
+	inline operator T(){
+		return wait();
 	}
 };
 
 template<typename T>
 class Future<Future<T>>{
-protected:
-	struct Data{
-	MUTEX m;
-	bool complete;
-	bool hasThen;
-	Future<T> result;
-	};
-	std::shared_ptr<Data> data;
+	HANDLE s;
+	bool m_set;
+	Future<T> child;
 public:
-	Future():data(new Data()),hasThen(false){
-		data->m = NEW_MUTEX;
-		data->complete = false;
+	Future():m_set(false)
+	{
+		s = CreateSemaphore(NULL,0,1,NULL);
 	}
-	void set(T val){
-		data->result = val;
-		data->complete = true;
-		RELEASE_MUTEX(data->m);
+	~Future()
+	{
+		CloseHandle(s);
 	}
-	inline bool complete(){
-		return data->complete && result.complete();
+	inline bool isDone(){
+		return m_set && child->done();
 	}
-	T val(){
-		for(;;){
-			ACQUIRE_MUTEX(data->m);
-			if(data->complete == true){
-				break;
-			}
-			RELEASE_MUTEX(data->m);
-			Sleep(100);
-		}
-		RELEASE_MUTEX(data->m);
-		return result.val();
+	inline void set(Future<T> result)
+	{
+		child = result;
+		m_set = true;
+		ReleaseSemaphore(s,1,NULL);
+	}
+	inline T wait(){
+		while(0 != WaitForSingleObject(data->s,INFINITE))
+		{}
+		ReleaseSemaphore(data->s,1,NULL);
+		return child->wait();
+	}
+	inline operator T(){
+		return wait();
 	}
 };
 
 template<>
 class Future<void>{
+	struct Data{
+	HANDLE s;
+	bool complete;
+	Data():complete(false){
+		s = CreateSemaphore(NULL,0,1,NULL);
+	}
+	~Data(){
+		CloseHandle(s);
+	}
+	};
+	std::shared_ptr<Data> data;
 public:
-	void set(void)
+	Future():data(new Data())
 	{}
-	void val()
-	{}
+	inline bool isDone(){
+		return data->complete;
+	}
+	inline void set(void)
+	{
+		data->complete = true;
+		ReleaseSemaphore(data->s,1,NULL);
+	}
+	inline void wait(){
+		while(0 != WaitForSingleObject(data->s,INFINITE))
+		{}
+		ReleaseSemaphore(data->s,1,NULL);
+	}
 };
 
 struct WorkerThreadData{
@@ -183,17 +201,27 @@ public:
 	Future<T> async(std::function<T()> func){
 		Future<T> f;
 		async([f,func]()mutable{
-			f.start();
 			f.set(func());
+		});
+		return f;
+	}
+	template<>
+	Future<void> async<void>(std::function<void()> func){
+		Future<void> f;
+		async([f,func]()mutable{
+			func();
+			f.set();
 		});
 		return f;
 	}
 	/*template<typename T>
 	Future<Future<T>> async(std::function<Future<T>()> func){
-		Future f;
-		async([&f,func]{
-			f.set(func());
+		Future<T> f;
+		queue([f,func]()mutable{
+			Future<T> result = func();
+			f.set(result);
 		});
+		return f;
 	}*/
 	template<typename T>
 	T await(Future<T> result){
@@ -201,7 +229,7 @@ public:
 		depth++; //track recursion depth
 		//put upper bound on recursion depth to prevent stack overflow
 		if(depth < 100){ 
-			while(!result.complete()){
+			while(!result.isDone()){
 				//do some other work while we wait	
 				if(TRY_MUTEX(sharedState.dispatchMutex)){
 					if(!sharedState.dispatchQueue.empty()){
@@ -215,6 +243,7 @@ public:
 				}
 			}
 		} else {
+			DebugBreak();
 			//spawn a new worker thread so we don't blow out our stack
 			//auto data = make_pair(&sharedState,result);
 			std::pair<DispatchData*,Future<T>>* data = new std::pair<DispatchData*,Future<T>>;
@@ -230,7 +259,8 @@ public:
 			//WaitForSingleObject(thread,INFINITE);
 		}
 		depth--;
-		return result.val();
+		//because result.done() is true it should be done now
+		return result.wait();
 	}
 };
 
@@ -244,9 +274,17 @@ public:
 	template<typename T>
 	Future<T> async(std::function<T()> func){
 		Future<T> f;
-		onMain([f,func]()mutable{
-			f.start();
+		async([f,func]()mutable{
 			f.set(func());
+		});
+		return f;
+	}
+	template<>
+	Future<void> async<void>(std::function<void()> func){
+		Future<void> f;
+		async([f,func]()mutable{
+			func();
+			f.set();
 		});
 		return f;
 	}

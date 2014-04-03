@@ -323,9 +323,9 @@ void Cube::calcFaceNormal(std::vector<vertex>& verts,std::vector<unsigned int>& 
 void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indices,ivec3 tesselationFactor, vec3 seed, bool displace){
 	verts.resize(6*tesselationFactor.x*tesselationFactor.y);
 	indices.resize(6*6*tesselationFactor.x*tesselationFactor.y);
-	Future<bool> futures[6];
+	Future<void> futures[6];
 	for(int side=0;side<6;side++){
-		futures[side] = CpuPool.async<bool>([=,&verts,&indices]()->bool{
+		futures[side] = CpuPool.async<void>([=,&verts,&indices](){
 		int vindex = side*tesselationFactor.x*tesselationFactor.y;
 		int ind = side*6*tesselationFactor.x*tesselationFactor.y;
 		int indsum = side*tesselationFactor.x*tesselationFactor.y;
@@ -407,12 +407,11 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 		}
 		indsum = vindex;
 		std::cout << "side " << side << " ";
-		return true;
 		});
 	}
 	bool success = true;
 	for(int i=0;i<6;i++){
-		success &= CpuPool.await(futures[i]);
+		CpuPool.await(futures[i]);
 	}
 }
 

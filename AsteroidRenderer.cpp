@@ -120,8 +120,8 @@ void AsteroidRenderer::draw(Camera* c){
 	glUniformMatrix4fv(drawShader->getUniformLocation("projMatrix"), 1, GL_FALSE, glm::value_ptr(c->GetProjectionMatrix()));
 	glUniform4fv(drawShader->getUniformLocation("camera"), 1, glm::value_ptr(glm::vec4(c->GetPosition(),1.0)));
 	glUniform4fv(drawShader->getUniformLocation("light"), 1, glm::value_ptr(glm::vec4(1.5f,3.0f,3.0f,1.0f)));
-	float time = glfwGetTime();
-	glUniform1f(drawShader->getUniformLocation("time"),time*0.1);
+	float time = (float)glfwGetTime();
+	glUniform1f(drawShader->getUniformLocation("time"),time*0.1f);
 	for(auto it = m_asteroids.begin(); it != m_asteroids.end();it++){
 		if(it->generated){
 			glUniformMatrix4fv(drawShader->getUniformLocation("modelMatrix"), 1, GL_FALSE, glm::value_ptr(it->modelMatrix));
