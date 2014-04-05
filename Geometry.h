@@ -111,6 +111,13 @@ namespace gl{
 		void generate(unsigned int tesselationFactor, glm::vec3 seed, bool simplexDisplace = false);
 	};
 
+	class PatchCube : public IndexedGeometry {
+	public:
+		void genPatch(int left, int top, int right, int bottom);
+		void genPatch2(int nx, int ny, int px, int py);
+
+	};
+
 	class PatchSphere : public Sphere {
 	protected:
 		struct Patch{

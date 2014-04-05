@@ -289,6 +289,7 @@ void IndexedGeometry::draw(){
 		return;
 	glBindVertexArray(vao);
 	glDrawElements(GL_TRIANGLES,indices.size(),GL_UNSIGNED_INT,(GLvoid*)0);
+	//glDrawArrays(GL_POINTS,0,verts.size());
 	checkGlError("drawelements");
 	glBindVertexArray(0);
 }
@@ -413,6 +414,270 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 	for(int i=0;i<6;i++){
 		CpuPool.await(futures[i]);
 	}
+}
+
+
+void PatchCube::genPatch(int left, int top, int right, int bottom){
+	float fl = 1.f/static_cast<float>(left-1);
+	float ft = 1.f/static_cast<float>(top-1);
+	int size = (top-1)*(left-1) + right + (bottom-1);
+	int isize = 3*(2*(top-2)*(left-2)+(left-1)+(right-1)+(top-1)+(bottom-1));
+	verts.resize(size);
+	indices.resize(isize);
+	//generate main vertex patch at level (left,top)
+	for(int y=0;y<(top-1);y++){
+		for(int x=0;x<(left-1);x++){
+			verts[y*(left-1)+x].pos = vec3(static_cast<float>(x)*fl,static_cast<float>(y)*ft,0.f);
+		}
+	}
+	//calculate indices for main patch
+	int j=0;
+	for(int y=0;y<(top-2);y++){
+		for(int x=0;x<(left-2);x++){
+			int i = x + y * (left-1);
+			//triangle 1
+			indices[j++] = i;
+			indices[j++] = i+(left-1)+1;
+			indices[j++] = i+(left-1);
+			//triangle 2
+			indices[j++] = i;
+			indices[j++] = i+1;
+			indices[j++] = i+(left-1)+1;
+		}
+	}
+	float fr = 1.f/static_cast<float>(right-1);
+	//right side vertices
+	for(int i=0;i<(right-1);i++){
+		verts[(top-1)*(left-1)+i].pos = vec3(1.f,static_cast<float>(i)*fr,0.f);
+	}
+	int shift = top > bottom ? 1 : 0;
+	//outside triangles of right side
+	for(int i=0;i<(bottom-2);i++){
+		indices[j++] = (top-1)*(left-1)+i;
+		indices[j++] = (top-1)*(left-1)+i+1;
+		indices[j++] = (left-2)+(i+shift)*(left-1);
+	}
+	//inside triangles of right side
+	for(int i=1-shift;i<(top-1-shift);i++){
+		indices[j++] = (top-1)*(left-1)+i;
+		indices[j++] = (left-2)+(i+shift)*(left-1);
+		indices[j++] = (left-2)+(i+shift-1)*(left-1);
+	}
+	/*float fb = 1.f/static_cast<float>(bottom-1);
+	//bottom vertices
+	for(int i=0;i<(bottom-1);i++){
+		verts[(top-1)*(left-1)+(right-1)+i].pos = vec3(static_cast<float>(i)*fb,1.f,0.f);
+	}
+	shift = left > right ? 1 : 0;
+	//outside triangles of bottom side
+	for(int i=0;i<(right-2);i++){
+		int edgeIndex = (top-1)*(left-1)+(bottom-1)+i;
+		indices[j++] = edgeIndex+1;
+		indices[j++] = edgeIndex;
+		indices[j++] = (left-2)*(top-1)+i+1;
+	}
+	//inside triangles of bottom side
+	for(int i=1-shift;i<(left-1-shift);i++){
+		indices[j++] = (left-2)*(top-1)+i+1+shift;
+		indices[j++] = (top-1)*(left-1)+(right-1)+i;
+		indices[j++] = (left-2)*(top-1)+i+shift;
+	}
+	//fill in bottom corner
+	verts[size-1].pos = vec3(1.f,1.f,0.f);
+
+	indices[j++] = (top-1)*(left-1) - 1;
+	indices[j++] = (top-1)*(left-1)+(right-1)-1;
+	indices[j++] = (top-1)*(left-1)+(right-1)+(bottom-1);
+
+	indices[j++] = (top-1)*(left-1) - 1;
+	indices[j++] = (top-1)*(left-1)+(right-1)+(bottom-1);
+	indices[j++] = (top-1)*(left-1)+(right-1)+(bottom-1)-1;
+	//*/
+	indices.resize(j);
+}
+
+void PatchCube::genPatch2(int nx, int ny, int px, int py){
+	//convert from subdivisions to vertices
+	int left=nx+1;
+	int top=ny+1;
+	int right=px+1;
+	int bottom=py+1;
+	float fl = 1.f/static_cast<float>(left-1);
+	float ft = 1.f/static_cast<float>(top-1);
+	int size = (top-1)*(left-1) + right + bottom;
+	//int isize = 3*(2*(top-2)*(left-2)+(left-1)+(right-1)+(top-1)+(bottom-1));
+	int isize = 3*(top*left*right*bottom);
+	verts.resize(size);
+	indices.resize(isize);
+	//generate main vertex patch at level (left,top)
+	for(int y=0;y<(top-1);y++){
+		for(int x=0;x<(left-1);x++){
+			verts[y*(left-1)+x].pos = vec3(static_cast<float>(x)*fl,static_cast<float>(y)*ft,0.f);
+		}
+	}
+	//calculate indices for main patch
+	int j=0;
+	for(int y=0;y<(top-2);y++){
+		for(int x=0;x<(left-2);x++){
+			int i = x + y * (left-1);
+			//triangle 1
+			indices[j++] = i;
+			indices[j++] = i+(left-1)+1;
+			indices[j++] = i+(left-1);
+			//triangle 2
+			indices[j++] = i;
+			indices[j++] = i+1;
+			indices[j++] = i+(left-1)+1;
+		}
+	}
+	float fr = 1.f/static_cast<float>(bottom-1);
+	//right side vertices
+	for(int i=0;i<(bottom-1);i++){
+		verts[(top-1)*(left-1)+i].pos = vec3(1.f,static_cast<float>(i)*fr,0.f);
+	}
+	if(bottom > top){
+		for(int i=0;i<top-2;i++){
+			indices[j++] = (top-1)*(left-1) + 2*i;
+			indices[j++] = (top-1)*(left-1) + 2*i+1;
+			indices[j++] = (i)*(left-1)+(left-2);
+
+			indices[j++] = (i+1)*(left-1)+(left-2);
+			indices[j++] = (i)*(left-1)+(left-2);
+			indices[j++] = (top-1)*(left-1) + 2*i+1;
+
+			indices[j++] = (top-1)*(left-1) + 2*i+1;
+			indices[j++] = (top-1)*(left-1) + 2*i+2;
+			indices[j++] = (i+1)*(left-1)+(left-2);
+		}
+		/*indices[j++] = (top-1)*(left-1) + 2*(left-1);
+		indices[j++] = (top-1)*(left-1) + 2*(left-1)+1;
+		indices[j++] = (left-1)*(left-1)+(left-2);*/
+	} else {
+		if(bottom == top){
+			for(int i=0;i<top-2;i++){
+				//triangle 1
+				indices[j++] = (i)*(left-1)+(left-2);
+				indices[j++] = (top-1)*(left-1) + i;
+				indices[j++] = (top-1)*(left-1) + i+1;
+				//triangle 2
+				indices[j++] = (i)*(left-1)+(left-2);
+				indices[j++] = (top-1)*(left-1) + i+1;
+				indices[j++] = (i+1)*(left-1)+(left-2);
+			}
+		} else { // bottom < top
+			for(int i=0;i<bottom-2;i++){
+				indices[j++] = (2*i)*(left-1)+(left-2);
+				indices[j++] = (top-1)*(left-1) + i;
+				indices[j++] = (2*i+1)*(left-1)+(left-2);
+
+				indices[j++] = (top-1)*(left-1) + i;
+				indices[j++] = (top-1)*(left-1) + i+1;
+				indices[j++] = (2*i+1)*(left-1)+(left-2);
+				
+				indices[j++] = (2*i+1)*(left-1)+(left-2);
+				indices[j++] = (top-1)*(left-1) + i+1;
+				indices[j++] = (2*i+2)*(left-1)+(left-2);
+			}
+		}
+	}
+	float fb = 1.f/static_cast<float>(right-1);
+	//bottom vertices
+	for(int i=0;i<(right-1);i++){
+		verts[(top-1)*(left-1)+(bottom-1)+i].pos = vec3(static_cast<float>(i)*fb,1.f,0.f);
+	}
+	if(right > left){
+		for(int i=0;i<left-2;i++){
+			int innerbase = (top-2)*(left-1);
+			int outerbase = (top-1)*(left-1) + (bottom-1);
+			indices[j++] = innerbase + i;
+			indices[j++] = outerbase + 2*i+1;
+			indices[j++] = outerbase + 2*i;
+			
+			indices[j++] = innerbase + i;
+			indices[j++] = innerbase + i+1;
+			indices[j++] = outerbase + 2*i+1;
+
+			indices[j++] = innerbase + i+1;
+			indices[j++] = outerbase + 2*i+2;
+			indices[j++] = outerbase + 2*i+1;
+			
+		}
+	} else {
+		if(right == left){
+			for(int i=0;i<left-2;i++){
+				int innerbase = (top-2)*(left-1);
+				int outerbase = (top-1)*(left-1) + (bottom-1);
+				//triangle 1
+				indices[j++] = innerbase + i;
+				indices[j++] = outerbase + i+1;
+				indices[j++] = outerbase + i;
+				//triangle 2
+				indices[j++] = innerbase + i;
+				indices[j++] = innerbase + i+1;
+				indices[j++] = outerbase + i+1;
+			}
+		} else { // right < left
+			for(int i=0;i<right-2;i++){
+				int innerbase = (top-2)*(left-1);
+				int outerbase = (top-1)*(left-1) + (bottom-1);
+				indices[j++] = innerbase + 2*i;
+				indices[j++] = innerbase + 2*i+1;
+				indices[j++] = outerbase + i;
+
+				indices[j++] = outerbase + i;
+				indices[j++] = innerbase + 2*i+1;
+				indices[j++] = outerbase + i+1;
+				
+				indices[j++] = innerbase + 2*i+1;
+				indices[j++] = innerbase + 2*i+2;
+				indices[j++] = outerbase + i+1;
+			}
+		}
+	}
+	//fill in corner
+	verts[(top-1)*(left-1)+(bottom-1)+(right-1)].pos = vec3(1.0,1.0,0.0);
+	if(bottom >= top){
+		indices[j++] = (top-1)*(left-1) - 1;
+		indices[j++] = (top-1)*(left-1)+(bottom-1)-1;
+		indices[j++] = (top-1)*(left-1)+(right-1)+(bottom-1);
+		if(bottom > top){
+			indices[j++] = (top-1)*(left-1) - 1;
+			indices[j++] = (top-1)*(left-1)+(bottom-1)-2;
+			indices[j++] = (top-1)*(left-1)+(bottom-1)-1;
+		}
+	} else { //bottom < top
+		int i = bottom - 2;
+		indices[j++] = (2*i)*(left-1)+(left-2);
+		indices[j++] = (top-1)*(left-1) + i;
+		indices[j++] = (2*i+1)*(left-1)+(left-2);
+
+		indices[j++] = (top-1)*(left-1) + i;
+		//indices[j++] = (top-1)*(left-1) + i+1;
+		indices[j++] = (top-1)*(left-1)+(bottom-1)+(right-1);
+		indices[j++] = (2*i+1)*(left-1)+(left-2);
+	}
+	if(right >= left){
+		indices[j++] = (top-1)*(left-1) - 1;
+		indices[j++] = (top-1)*(left-1)+(right-1)+(bottom-1);
+		indices[j++] = (top-1)*(left-1)+(right-1)+(bottom-1)-1;
+		if(right > left){
+			indices[j++] = (top-1)*(left-1) - 1;
+			indices[j++] = (top-1)*(left-1)+(right-1)+(bottom-1)-1;
+			indices[j++] = (top-1)*(left-1)+(right-1)+(bottom-1)-2;
+		}
+	} else {//right < left
+		int innerbase = (top-2)*(left-1);
+		int outerbase = (top-1)*(left-1) + (bottom-1);
+		int i = right-2;
+		indices[j++] = innerbase + 2*i;
+		indices[j++] = innerbase + 2*i+1;
+		indices[j++] = outerbase + i;
+
+		indices[j++] = outerbase + i;
+		indices[j++] = innerbase + 2*i+1;
+		indices[j++] = outerbase + i+1;
+	}
+	indices.resize(j);
 }
 
 } //namespace gl
