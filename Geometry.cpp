@@ -2,6 +2,7 @@
 #include "Shader.h"
 #include "noise.h"
 #include "ThreadPool.h"
+#include "VertexAttribBuilder.h"
 #include <iostream>
 
 namespace gl{
@@ -244,20 +245,30 @@ void IndexedGeometry::init(){
 	glGenBuffers(1, &ibo);
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(vertex), 0);
+	VertexAttribBuilder b;
+	b.setSize(sizeof(vertex));
+	b.attrib(FLOAT_ATTRIB,4);
+	b.attrib(FLOAT_ATTRIB,4);
+	b.attrib(FLOAT_ATTRIB,4);
+	b.attrib(FLOAT_ATTRIB,4);
+	b.attrib(FLOAT_ATTRIB,4);
+	b.build();
+	/*glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(vertex), 0);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)12);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(2, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)24);
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(3, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)36);
-	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(3);*/
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	glBindVertexArray(0);
 	initialized = true;
 }
 
 void IndexedGeometry::download(){
+	if(!initialized ||verts.size() == 0 || indices.size() == 0)
+		DebugBreak();
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER,verts.size() * sizeof(vertex),&verts[0],GL_STATIC_DRAW);
 #ifdef _DEBUG
@@ -314,7 +325,7 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 	indices.resize(6*6*tesselationFactor.x*tesselationFactor.y);
 	Future<bool> futures[6];
 	for(int side=0;side<6;side++){
-		futures[side] = glPool.async<bool>([=,&verts,&indices]()->bool{
+		futures[side] = CpuPool.async<bool>([=,&verts,&indices]()->bool{
 		int vindex = side*tesselationFactor.x*tesselationFactor.y;
 		int ind = side*6*tesselationFactor.x*tesselationFactor.y;
 		int indsum = side*tesselationFactor.x*tesselationFactor.y;
@@ -401,7 +412,7 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 	}
 	bool success = true;
 	for(int i=0;i<6;i++){
-		success &= glPool.await(futures[i]);
+		success &= CpuPool.await(futures[i]);
 	}
 }
 

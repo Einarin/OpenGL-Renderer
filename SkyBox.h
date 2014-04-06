@@ -2,12 +2,13 @@
 #include "glincludes.h"
 #include "Geometry.h"
 #include "Texture.h"
+#include "Renderer.h"
 #include "Camera.h"
-#include "ThreadPool.h"
+
 
 namespace gl{
 
-class SkyBox
+class SkyBox : public Renderer
 {
 protected:
 	bool initialized,downloaded;
@@ -23,7 +24,7 @@ public:
 	~SkyBox(void);
 	void init();
 	void download();
-	void setImage(std::string basepngfilename, ThreadPool* pool=NULL);
+	void setImageAsync(std::string basepngfilename);
 	void draw(Camera* c);
 };
 

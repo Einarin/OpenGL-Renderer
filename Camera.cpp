@@ -4,6 +4,7 @@
 #include <sstream>
 #include "MathUtilities.h"
 
+namespace gl {
 /**
 * Constructs a new camera with some defaults
 */
@@ -307,3 +308,4 @@ void Camera::LogLocation() {
 	stream << "\t\tPosition: " << _position.x << ", " << _position.y << ", " << _position.z << std::endl;
 	//Log::Message(stream.str());
 }
+} //namespace gl

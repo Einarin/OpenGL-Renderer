@@ -450,7 +450,7 @@ float displace(vec3 point){
 		frequency *= 2;
 		scale *= 0.5;
 	}
-	return crater(point) + displacement;//,craterDist());
+	return displacement;//crater(point) + displacement;//,craterDist());
 }
 
 
@@ -478,9 +478,9 @@ void main(void)
 	}*/
 	displacement.x = displace( in_Position.xyz+seed);
 	const float dt = 0.001;
-	displacement.y = displace( in_Position.xyz+vec3(dt,0.0,0.0)+seed);
-	displacement.z = displace( in_Position.xyz+vec3(0.0,dt,0.0)+seed);
-	displacement.w = displace( in_Position.xyz+vec3(0.0,0.0,dt)+seed);
+	displacement.y = displace( normalize(in_Position.xyz+vec3(dt,0.0,0.0))+seed);
+	displacement.z = displace( normalize(in_Position.xyz+vec3(0.0,dt,0.0))+seed);
+	displacement.w = displace( normalize(in_Position.xyz+vec3(0.0,0.0,dt))+seed);
 	vec3 df = displacement.yzw - displacement.x;
 	df *= 1.0/dt;
 	//df = normalize(df);
@@ -488,7 +488,7 @@ void main(void)
 	position = pos.xyz + (norm * displacement.x);
 	//texCoords.xyz = texCoords.yzw;
 	vec3 ccn = cross(cross(norm,-df),-df);
-	normal = norm-df;
+	normal = norm;//-df;
 	//texCoords.w = displacement.x;
 	//texCoords.xy = displacement.yz;
 	/*vec3 off1 = (position.xyz+0.01*tan.xyz) * displacement.y;

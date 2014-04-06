@@ -1,4 +1,5 @@
 #include "Mesh.h"
+#include "VertexAttribBuilder.h"
 
 enum flags{
 	HAS_NORMAL = 0x1,
@@ -51,8 +52,8 @@ uint32 Mesh::serialize(char** inbuff){
 
 void Mesh::deserialize(char* buff){
 	MeshHeader* head = reinterpret_cast<MeshHeader*>(buff);
-	hasNormals = head->flags & HAS_NORMAL != 0;
-	hasTangents = head->flags & HAS_TANGENT != 0;
+	hasNormals = (head->flags & HAS_NORMAL) != 0;
+	hasTangents = (head->flags & HAS_TANGENT) != 0;
 	drawCount = head->drawCount;
 	numVertexColorChannels = head->numVertexColorChannels;
 	numUVChannels = head->numUVChannels;
@@ -75,10 +76,12 @@ void RenderableMesh::init(){
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	checkGlError("bind");
-	glVertexAttribPointer(0, 4, GL_FLOAT, false, sizeof(vertex), 0);
+	VertexAttribBuilder b;
+	b.setSize(sizeof(vertex)).attrib(FLOAT_ATTRIB,3).attrib(FLOAT_ATTRIB,3).build();
+	/*glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(vertex), 0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 4, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)16);
-	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)12);
+	glEnableVertexAttribArray(1);*/
 	checkGlError("attribs");
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	glBindVertexArray(0);

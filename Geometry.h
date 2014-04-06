@@ -36,6 +36,21 @@ namespace gl{
 	public:
 		IndexedGeometry():initialized(false),downloaded(false)
 		{}
+		virtual ~IndexedGeometry()
+		{
+			if(vao){
+				glDeleteVertexArrays(1,&vao);
+				vao = 0;
+			}
+			if(vbo){
+				glDeleteBuffers(1,&vbo);
+				vbo = 0;
+			}
+			if(ibo){
+				glDeleteBuffers(1,&ibo);
+				ibo = 0;
+			}
+		}
 		virtual void init();
 		virtual void download();
 		virtual void draw();
