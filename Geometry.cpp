@@ -247,11 +247,11 @@ void IndexedGeometry::init(){
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	VertexAttribBuilder b;
 	b.setSize(sizeof(vertex));
-	b.attrib(FLOAT_ATTRIB,4);
-	b.attrib(FLOAT_ATTRIB,4);
-	b.attrib(FLOAT_ATTRIB,4);
-	b.attrib(FLOAT_ATTRIB,4);
-	b.attrib(FLOAT_ATTRIB,4);
+	b.attrib(FLOAT_ATTRIB,3);
+	b.attrib(FLOAT_ATTRIB,3);
+	b.attrib(FLOAT_ATTRIB,3);
+	b.attrib(FLOAT_ATTRIB,3);
+	//b.attrib(FLOAT_ATTRIB,4);
 	b.build();
 	/*glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(vertex), 0);
 	glEnableVertexAttribArray(0);

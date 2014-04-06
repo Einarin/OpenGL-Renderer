@@ -112,12 +112,12 @@ int main(int argc, char* argv[])
 
 	cout << "loading models...\n";
 	Model* model = NULL;
-	const unsigned int asteroidCount=1;
+	const unsigned int asteroidFactor=5;
 	AsteroidRenderer aRenderer;
 	if(!aRenderer.setup()) DebugBreak();
-	CpuPool.async([&aRenderer](){
-		for(int q=0;q<27;q++){
-			glm::vec3 position(q%3-1,q/3%3-1,q/9-1);
+	CpuPool.async([&aRenderer,asteroidFactor](){
+		for(int q=0;q<asteroidFactor*asteroidFactor*asteroidFactor;q++){
+			glm::vec3 position(q%asteroidFactor,q/asteroidFactor%asteroidFactor,q/(asteroidFactor*asteroidFactor));
 			mat4 modelMat = translate(rotate(mat4(),3.14159f*0.25f,glm::vec3(1.f,2.f,3.f)),position);
 			auto result = aRenderer.addAsteroidAsync(modelMat,position);
 			CpuPool.await(result);
@@ -126,27 +126,8 @@ int main(int argc, char* argv[])
 	/*while(!result.complete()){
 		glPool.processMainQueueUnit();
 	}*/
-	/*Cube asteroids[asteroidCount];
-	asteroids[0].generate(tessFactor,vec3(-1.f,-1.f,-1.f),false);
-	//glPool.onMain([&asteroids](){
-				asteroids[0].init();
-				asteroids[0].download();
-	//		});
-	for(int q=0;q<asteroidCount;q++){
-		//glPool.async([q,&asteroids](){
-			glm::vec3 position(q%3-1,q/3%3-1,q/9-1);
-			position *= 4.0f;
-			//asteroids[q].generate(50,position,false);
-			asteroids[q].ModelMatrix = translate(rotate(mat4(),3.14159f*0.25f,glm::vec3(1.f,2.f,3.f)),position);
-			auto ptr = &asteroids[q];
-			glPool.onMain([=](){
-				ptr->init();
-				ptr->download();
-			});
-		//});
-	}*/
 	
-	CpuPool.async([&](){
+	/*CpuPool.async([&](){
 		auto ptr = new Model("assets/angular fighter.obj");
 		auto local = &model;
 		glQueue.async([=](){
@@ -183,33 +164,9 @@ int main(int argc, char* argv[])
 	cout << "compiling shaders...\n";
 
 	std::shared_ptr<ShaderStage> vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
-	/*vs->compile("attribute vec4 in_Position;\n"
-"attribute vec4 in_texCoords;\n"
-"attribute vec4 in_Normal;\n"
-"varying vec4 texCoords;\n"
-"varying vec4 normal;\n"
-"varying vec4 eyevec;\n"
-"uniform mat4 viewMatrix;\n"
-"uniform mat4 projMatrix;\n"
-"uniform vec4 camera;\n"
-"void main(void)\n"
-"{\n"
-"	texCoords = in_Position;\n"
-"	normal = vec4(normalize(transpose(inverse(mat3(viewMatrix))) * in_Normal.xyz),1.0);\n"
-"	vec4 position = viewMatrix * in_Position;\n"
-"	eyevec = normalize(position);\n"
-"	gl_Position = projMatrix * position; \n"
-"}\n");*/
 	if(!vs->compileFromFile("mvp.vert"))
 		DebugBreak();
 	std::shared_ptr<ShaderStage> fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
-	/*fs->compile("uniform sampler2D framedata;"
-"varying vec4 texCoords;\n"
-"void main(void)\n"
-"{\n"
-"	vec4 sample = texture2D(framedata,texCoords.st);\n"
-"	gl_FragColor = vec4(texCoords.s,texCoords.t,1.-texCoords.s,1.0);\n"
-"}\n");*/
 	if(!fs->compileFromFile("seamless.frag"))
 		DebugBreak();
 	std::shared_ptr<Shader> shader = Shader::Allocate();
@@ -282,70 +239,6 @@ int main(int argc, char* argv[])
 	double oldtime = time;
 	int fpsCount = 10;
 	int counter = 0;
-
-	/*auto feedbackvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
-	if(!feedbackvs->compileFromFile("feedbackdisplace.vert"))
-		DebugBreak();
-	auto feedbackShader = Shader::Allocate();
-	feedbackShader->addAttrib("in_Position",0);
-	feedbackShader->addAttrib("in_Normal",1);
-	feedbackShader->addAttrib("in_Tangent",2);
-	feedbackShader->addAttrib("in_TexCoords",3);
-	feedbackShader->attachStage(feedbackvs);
-	
-	const char* feedbackOutput[] = { "position","normal","tangent","texCoords"};
-	//glTransformFeedbackVaryings(feedbackShader->getId(),4,feedbackOutput,GL_INTERLEAVED_ATTRIBS);
-	feedbackShader->setInterleavedOutput(feedbackOutput, 4);
-	checkGlError("set feedback varyings");
-	feedbackShader->link();
-	feedbackShader->bind();
-	checkGlError("feedbackShader");
-
-	TransformFeedback tf(GL_TRIANGLES);
-	tf.init();
-	//TEMP
-	/*unsigned int vao;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	checkGlError("gen/bind vao");
-	glBindBuffer(GL_ARRAY_BUFFER, tf.m_buffer);
-	glBufferData(GL_ARRAY_BUFFER, 500*500*6*2*sizeof(GLfloat)*12,nullptr,GL_STATIC_COPY);
-	checkGlError("bind tf vbo");
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
-	glEnableVertexAttribArray(3);
-	glVertexAttribPointer(0, 4, GL_FLOAT, false, sizeof(GLfloat)*12, 0);
-	glVertexAttribPointer(1, 4, GL_FLOAT, false, sizeof(GLfloat)*12, (const GLvoid*)12);
-	glVertexAttribPointer(2, 4, GL_FLOAT, false, sizeof(GLfloat)*12, (const GLvoid*)24);
-	glVertexAttribPointer(3, 4, GL_FLOAT, false, sizeof(GLfloat)*12, (const GLvoid*)36);*/
-	/*VertexAttribBuilder b;
-	b.attrib(FLOAT_ATTRIB,4);
-	b.attrib(FLOAT_ATTRIB,4);
-	b.attrib(FLOAT_ATTRIB,4);
-	b.attrib(FLOAT_ATTRIB,4);
-	tf.setupVao(4,b);
-
-	checkGlError("vertex attribs");
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	feedbackShader->bind();
-	checkGlError("Bind Transform Feedback shader");
-	tf.enable();
-	checkGlError("Enable Transform Feedback");
-	glUniform1i(feedbackShader->getUniformLocation("levels"), 0);
-	for(int i=0;i<asteroidCount;i++){			
-		glUniformMatrix4fv(feedbackShader->getUniformLocation("transformMatrix"), 1, GL_FALSE, value_ptr(mat4()));
-		glUniform3fv(feedbackShader->getUniformLocation("seed"),1,value_ptr(vec3(0.0)/*vec3(i%3-1,i/3%3-1,i/9-1)));
-		checkGlError("about to draw asteroid transform feedback");
-		asteroids[0].draw();
-		checkGlError("draw asteroid transform feedback");
-	}
-	tf.disable();
-	glFinish();*/
-	uint32 PrimitivesWritten;
-	//glGetQueryObjectuiv(tf.m_queryObject, GL_QUERY_RESULT, &PrimitivesWritten); 
 
 	while (!glfwWindowShouldClose(window))
 	{

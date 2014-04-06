@@ -23,7 +23,7 @@ DWORD WINAPI WorkerThreadProc(LPVOID lpParameter){
 		} else {
 			RELEASE_MUTEX(data->dispatchMutex);
 			//SuspendThread(data->thread);
-			Sleep(0);
+			Sleep(1000);
 		}
 		
 	}

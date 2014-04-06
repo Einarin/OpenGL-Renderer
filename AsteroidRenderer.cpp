@@ -51,7 +51,7 @@ bool AsteroidRenderer::setup(){
 	return success;
 }
 
-const unsigned int tessfactor = 100;
+const unsigned int tessfactor = 20;
 
 //In order to avoid hanging while generating asteroids
 //	this function behaves as asynchronously as possible
