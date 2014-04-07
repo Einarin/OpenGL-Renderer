@@ -299,7 +299,7 @@ void main( void )
 	//float disp = texCoords.w*0.33333;
 	//abs(dot(normalize(texCoords.rgb),norm))
 	
-	color = ambient + diff * diffuse + spec * specular;//vec3(1.0-disp,0.0,disp);//vec3(abs(tan.x));//vec3(0.8,0.4,0.8);
+	//color = ambient + diff * diffuse + spec * specular;//vec3(1.0-disp,0.0,disp);//vec3(abs(tan.x));//vec3(0.8,0.4,0.8);
 	//color = *vec3();
 	float theta = abs(dot(eye,norm));
 	float noise = 0.0;

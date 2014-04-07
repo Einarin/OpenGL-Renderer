@@ -496,6 +496,33 @@ void PatchCube::genPatch(int left, int top, int right, int bottom){
 	indices.resize(j);
 }
 
+int patchVerts(int nx, int ny, int px, int py){
+	int left=nx+1;
+	int top=ny+1;
+	int right=px+1;
+	int bottom=py+1;
+	return (top-1)*(left-1) + right + bottom-1;
+}
+
+int patchInds(int nx, int ny, int px, int py){
+	int left=nx+1;
+	int top=ny+1;
+	int right=px+1;
+	int bottom=py+1;
+	//first calculate number of triangles
+	//base tesselation factor
+	int isize = 2*(top-2)*(left-2);
+	//right side
+	isize += (bottom > top)?3*(top-2):(bottom == top)? 2*(top-2):3*(bottom-2);
+	//bottom side
+	isize += (right > left)?3*(left-2):(right == left)?2*(left-2):3*(right-2);
+	//last corner
+	isize += (bottom == top)?1:2;
+	isize += (left==right)?1:2;
+	//3 indexes per triangle
+	isize *= 3;
+	return isize;
+}
 void PatchCube::genPatch2(int nx, int ny, int px, int py){
 	//convert from subdivisions to vertices
 	int left=nx+1;
@@ -504,9 +531,8 @@ void PatchCube::genPatch2(int nx, int ny, int px, int py){
 	int bottom=py+1;
 	float fl = 1.f/static_cast<float>(left-1);
 	float ft = 1.f/static_cast<float>(top-1);
-	int size = (top-1)*(left-1) + right + bottom;
-	//int isize = 3*(2*(top-2)*(left-2)+(left-1)+(right-1)+(top-1)+(bottom-1));
-	int isize = 3*(top*left*right*bottom);
+	int size = patchVerts(nx,ny,px,py);
+	int isize = patchInds(nx,ny,px,py);
 	verts.resize(size);
 	indices.resize(isize);
 	//generate main vertex patch at level (left,top)
@@ -677,7 +703,7 @@ void PatchCube::genPatch2(int nx, int ny, int px, int py){
 		indices[j++] = innerbase + 2*i+1;
 		indices[j++] = outerbase + i+1;
 	}
-	indices.resize(j);
+	if(!(j==isize)) DebugBreak();
 }
 
 } //namespace gl

@@ -4,9 +4,9 @@ in vec3 in_Normal;
 in vec3 in_Tangent;
 in vec3 in_TexCoords;
 out vec3 position;
-out vec3 texCoords;
 out vec3 normal;
 out vec3 tangent;
+out vec3 texCoords;
 uniform int levels;
 uniform vec3 seed;
 
@@ -458,8 +458,8 @@ float displace(vec3 point){
 void main(void)
 {
 	//texCoords = in_Position;
-	vec3 norm = normalize(in_Normal);//normalize(transpose(inverse(mat3(transformMatrix))) * in_Normal);
-	tangent = in_Tangent;//normalize(transpose(inverse(mat3(transformMatrix))) * in_Tangent);
+	vec3 norm = normalize(in_Tangent);//normalize(transpose(inverse(mat3(transformMatrix))) * in_Normal);
+	tangent = in_Normal;//normalize(transpose(inverse(mat3(transformMatrix))) * in_Tangent);
 	texCoords = in_Position;
 	vec4 pos = transformMatrix * vec4(in_Position.xyz,1.0);
 	//float scale = 0.1;////clamp(time,0.0,1.0);
