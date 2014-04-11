@@ -1,8 +1,8 @@
 #version 330
-in vec4 in_Position;
-in vec4 in_Normal;
-in vec4 in_Tangent;
-in vec4 in_TexCoords;
+in vec3 in_Position;
+in vec3 in_Normal;
+in vec3 in_Tangent;
+in vec3 in_TexCoords;
 out vec4 texCoords;
 out vec4 normal;
 out vec4 tangent;

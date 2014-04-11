@@ -1,6 +1,7 @@
 #pragma once
 #include "glincludes.h"
 #include <vector>
+#include <functional>
 #include "shader.h"
 namespace gl{
 
@@ -111,14 +112,28 @@ namespace gl{
 		void generate(unsigned int tesselationFactor, glm::vec3 seed, bool simplexDisplace = false);
 	};
 
-	class PatchCube : public IndexedGeometry {
+	class Patch : public IndexedGeometry {
 	public:
-		void genPatch(int left, int top, int right, int bottom);
-		void genPatch2(int nx, int ny, int px, int py);
-
+		void genPatchOld(int left, int top, int right, int bottom);
+		static int patchVerts(int nx, int ny, int px, int py);
+		static int patchInds(int nx, int ny, int px, int py);
+		static void genPatch(int nx, int ny, int px, int py,glm::vec3* verts,unsigned int* indices);
+		void tesselate(int tessFactor[4],std::function<glm::vec3(glm::vec3)> transform);
 	};
 
-	class PatchSphere : public Sphere {
+	class PatchSphere : public Geometry {
+	protected:
+		int m_edgeTessFactors[12];
+		Patch* m_facePatches[6];
+		int m_facePatchCount[6];
+	public:
+		virtual void init();
+		void tesselate(int baseFactor);
+		virtual void download();
+		virtual void draw();
+	};
+	
+	class OldPatchSphere : public Sphere {
 	protected:
 		struct Patch{
 			unsigned int vbo;

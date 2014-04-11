@@ -485,7 +485,7 @@ void main(void)
 	df *= 1.0/dt;
 	//df = normalize(df);
 	//displacement = clamp(displacement,0.1,3.0);
-	position = pos.xyz + (norm * displacement.x);
+	position = pos.xyz + (norm * 2.0 * displacement.x);
 	//texCoords.xyz = texCoords.yzw;
 	vec3 ccn = cross(cross(norm,-df),-df);
 	normal = norm;//-df;

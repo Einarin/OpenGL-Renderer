@@ -247,11 +247,11 @@ void IndexedGeometry::init(){
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	VertexAttribBuilder b;
 	b.setSize(sizeof(vertex));
-	b.attrib(FLOAT_ATTRIB,4);
-	b.attrib(FLOAT_ATTRIB,4);
-	b.attrib(FLOAT_ATTRIB,4);
-	b.attrib(FLOAT_ATTRIB,4);
-	b.attrib(FLOAT_ATTRIB,4);
+	b.attrib(FLOAT_ATTRIB,3);
+	b.attrib(FLOAT_ATTRIB,3);
+	b.attrib(FLOAT_ATTRIB,3);
+	b.attrib(FLOAT_ATTRIB,3);
+	//b.attrib(FLOAT_ATTRIB,4);
 	b.build();
 	/*glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(vertex), 0);
 	glEnableVertexAttribArray(0);
@@ -417,7 +417,7 @@ void Cube::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& indic
 }
 
 
-void PatchCube::genPatch(int left, int top, int right, int bottom){
+void Patch::genPatchOld(int left, int top, int right, int bottom){
 	float fl = 1.f/static_cast<float>(left-1);
 	float ft = 1.f/static_cast<float>(top-1);
 	int size = (top-1)*(left-1) + right + (bottom-1);
@@ -496,7 +496,7 @@ void PatchCube::genPatch(int left, int top, int right, int bottom){
 	indices.resize(j);
 }
 
-int patchVerts(int nx, int ny, int px, int py){
+int Patch::patchVerts(int nx, int ny, int px, int py){
 	int left=nx+1;
 	int top=ny+1;
 	int right=px+1;
@@ -504,7 +504,7 @@ int patchVerts(int nx, int ny, int px, int py){
 	return (top-1)*(left-1) + right + bottom-1;
 }
 
-int patchInds(int nx, int ny, int px, int py){
+int Patch::patchInds(int nx, int ny, int px, int py){
 	int left=nx+1;
 	int top=ny+1;
 	int right=px+1;
@@ -523,7 +523,7 @@ int patchInds(int nx, int ny, int px, int py){
 	isize *= 3;
 	return isize;
 }
-void PatchCube::genPatch2(int nx, int ny, int px, int py){
+void Patch::genPatch(int nx, int ny, int px, int py, glm::vec3* verts,unsigned int* indices){
 	//convert from subdivisions to vertices
 	int left=nx+1;
 	int top=ny+1;
@@ -531,14 +531,14 @@ void PatchCube::genPatch2(int nx, int ny, int px, int py){
 	int bottom=py+1;
 	float fl = 1.f/static_cast<float>(left-1);
 	float ft = 1.f/static_cast<float>(top-1);
-	int size = patchVerts(nx,ny,px,py);
-	int isize = patchInds(nx,ny,px,py);
-	verts.resize(size);
-	indices.resize(isize);
+	//int size = patchVerts(nx,ny,px,py);
+	//int isize = patchInds(nx,ny,px,py);
+	//verts.resize(size);
+	//indices.resize(isize);
 	//generate main vertex patch at level (left,top)
 	for(int y=0;y<(top-1);y++){
 		for(int x=0;x<(left-1);x++){
-			verts[y*(left-1)+x].pos = vec3(static_cast<float>(x)*fl,static_cast<float>(y)*ft,0.f);
+			verts[y*(left-1)+x] = vec3(static_cast<float>(x)*fl,static_cast<float>(y)*ft,0.f);
 		}
 	}
 	//calculate indices for main patch
@@ -559,7 +559,7 @@ void PatchCube::genPatch2(int nx, int ny, int px, int py){
 	float fr = 1.f/static_cast<float>(bottom-1);
 	//right side vertices
 	for(int i=0;i<(bottom-1);i++){
-		verts[(top-1)*(left-1)+i].pos = vec3(1.f,static_cast<float>(i)*fr,0.f);
+		verts[(top-1)*(left-1)+i] = vec3(1.f,static_cast<float>(i)*fr,0.f);
 	}
 	if(bottom > top){
 		for(int i=0;i<top-2;i++){
@@ -609,7 +609,7 @@ void PatchCube::genPatch2(int nx, int ny, int px, int py){
 	float fb = 1.f/static_cast<float>(right-1);
 	//bottom vertices
 	for(int i=0;i<(right-1);i++){
-		verts[(top-1)*(left-1)+(bottom-1)+i].pos = vec3(static_cast<float>(i)*fb,1.f,0.f);
+		verts[(top-1)*(left-1)+(bottom-1)+i] = vec3(static_cast<float>(i)*fb,1.f,0.f);
 	}
 	if(right > left){
 		for(int i=0;i<left-2;i++){
@@ -661,7 +661,7 @@ void PatchCube::genPatch2(int nx, int ny, int px, int py){
 		}
 	}
 	//fill in corner
-	verts[(top-1)*(left-1)+(bottom-1)+(right-1)].pos = vec3(1.0,1.0,0.0);
+	verts[(top-1)*(left-1)+(bottom-1)+(right-1)] = vec3(1.0,1.0,0.0);
 	if(bottom >= top){
 		indices[j++] = (top-1)*(left-1) - 1;
 		indices[j++] = (top-1)*(left-1)+(bottom-1)-1;
@@ -703,7 +703,101 @@ void PatchCube::genPatch2(int nx, int ny, int px, int py){
 		indices[j++] = innerbase + 2*i+1;
 		indices[j++] = outerbase + i+1;
 	}
-	if(!(j==isize)) DebugBreak();
+	//if(!(j==isize)) DebugBreak();
+}
+
+void Patch::tesselate(int tessFactor[4],std::function<vec3(vec3)> transform){
+	int vertCount = patchVerts(tessFactor[0],tessFactor[1],tessFactor[2],tessFactor[3]);
+	int indCount = patchInds(tessFactor[0],tessFactor[1],tessFactor[2],tessFactor[3]);
+	vec3* vs = new vec3[vertCount];
+	//int* is = new int[indCount];
+	verts.resize(vertCount);
+	indices.resize(indCount);
+	genPatch(tessFactor[0],tessFactor[1],tessFactor[2],tessFactor[3],vs,&indices[0]);
+	for(int i=0;i<vertCount;i++){
+		vec3 vpos = transform(vs[i]);
+		verts[i].pos = vpos;
+		verts[i].normal = glm::normalize(vpos);
+		verts[i].tan = verts[i].normal;
+		verts[i].tc = glm::normalize(vpos);
+	}
+	delete[] vs;
+}
+
+void PatchSphere::init(){
+	for(int i=0;i<6;i++){
+		for(int j=0;j<m_facePatchCount[i];j++){
+			m_facePatches[i][j].init();
+		}
+	}
+}
+
+void PatchSphere::download(){
+	for(int i=0;i<6;i++){
+		for(int j=0;j<m_facePatchCount[i];j++){
+			m_facePatches[i][j].download();
+		}
+	}
+}
+static std::function<vec3(vec3)> transform[] = {
+	[](vec3 in)->vec3{
+		return glm::vec3(in.xy,1.f);
+	},
+	[](vec3 in)->vec3{
+		return glm::vec3(-in.x,in.y,-1.f);
+	},
+	[](vec3 in)->vec3{
+		return glm::vec3(-1.f,in.x,-in.y);
+	},
+	[](vec3 in)->vec3{
+		return glm::vec3(1.f,in.xy);
+	},
+	[](vec3 in)->vec3{
+		return glm::vec3(in.x,1.f,-in.y);
+	},
+	[](vec3 in)->vec3{
+		return glm::vec3(in.x,-1.f,in.y);
+	}
+};
+
+static std::function<vec3(vec3)> transform2[] = {
+	[](vec3 in)->vec3{
+		return in;
+	},
+	[](vec3 in)->vec3{
+		return glm::vec3(-in.x,1.f-in.y,in.z);
+	},
+	[](vec3 in)->vec3{
+		return glm::vec3(1.f-in.x,-in.y,in.z);
+	},
+	[](vec3 in)->vec3{
+		return glm::vec3(-in.x,-in.y,in.z);
+	}
+};
+void PatchSphere::tesselate(int tessFactor){
+	for(int i=0;i<12;i++){
+		m_edgeTessFactors[i] = tessFactor;
+	}
+	for(int i=0;i<6;i++){
+		m_facePatches[i] = new Patch[4];
+		m_facePatchCount[i] = 4;
+		for(int j=0;j<4;j++){
+			int tesselationFactor[] = {tessFactor,tessFactor,tessFactor,tessFactor};
+			m_facePatches[i][j].tesselate(tesselationFactor,[=](vec3 in)->vec3{
+				return normalize(transform[i](transform2[j](in)));
+			});
+			//facePatches[i][j].init();
+			//facePatches[i][j].download();
+		}
+	}
+}
+
+void PatchSphere::draw(){
+	for(int i=0;i<6;i++){
+		for(int j=0;j<m_facePatchCount[i];j++){
+			m_facePatches[i][j].draw();
+		}
+	}
 }
 
 } //namespace gl
