@@ -87,10 +87,13 @@ ThreadPool::ThreadPool(){
 		WorkerThreadData& current = sharedState.workerThreads[i];
 		#ifdef WIN32_CONCURRENCY
 			current.thread = CreateThread(NULL,0,WorkerThreadProc,(LPVOID)&sharedState,0,&current.threadId);
+			#ifdef _DEBUG
 			std::stringstream ss;
 			ss << "Thread Pool Worker " << i;
 			std::string tmp = ss.str();
+			
 			SetThreadName(current.threadId,tmp.c_str());
+			#endif
 		#else
 			current.thread = thread(awaitWorkerThreadProc<T>,(LPVOID)data);
 			current.threadId = current.thread.get_id();
