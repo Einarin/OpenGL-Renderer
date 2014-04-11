@@ -2,11 +2,12 @@
 uniform sampler2D framedata;
 uniform float time;
 uniform int levels;
-in vec4 eyevec;
+
 in vec4 texCoords;
 in vec4 normal;
 in vec4 tangent;
 in vec4 bitan;
+in vec4 eyevec;
 in vec4 lightvec;
 out vec4 FragColor;
 

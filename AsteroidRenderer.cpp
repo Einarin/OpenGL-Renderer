@@ -51,7 +51,7 @@ bool AsteroidRenderer::setup(){
 	return success;
 }
 
-const unsigned int tessfactor = 20;
+const unsigned int tessfactor = 32;
 
 //In order to avoid hanging while generating asteroids
 //	this function behaves as asynchronously as possible
@@ -75,8 +75,9 @@ Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3
 		Asteroid* ast = &m_asteroids[i];
 		auto theShader = feedbackShader;
 
-		Cube* pAsteroid = new Cube();
-		pAsteroid->generate(tessfactor,s1,false);
+		PatchSphere* pAsteroid = new PatchSphere();
+		//pAsteroid->generate(tessfactor,s1,false);
+		pAsteroid->tesselate(tessfactor);
 		glQueue.async([=](){
 			//variables to pass to inner lambda
 			auto pAst = pAsteroid;
@@ -91,7 +92,7 @@ Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3
 			a->tfGeometry.init();
 			glQueue.async([=](){
 				shader->bind();
-				a->tfGeometry.allocateStorage(tessfactor*tessfactor*6*6*2*sizeof(GLfloat)*12);
+				a->tfGeometry.allocateStorage(tessfactor*tessfactor*6*6*4*sizeof(GLfloat)*12);
 				VertexAttribBuilder b;
 				b.attrib(FLOAT_ATTRIB,3);
 				b.attrib(FLOAT_ATTRIB,3);
@@ -119,7 +120,7 @@ void AsteroidRenderer::draw(Camera* c){
 	glUniformMatrix4fv(drawShader->getUniformLocation("viewMatrix"), 1, GL_FALSE, glm::value_ptr(c->GetViewMatrix()));
 	glUniformMatrix4fv(drawShader->getUniformLocation("projMatrix"), 1, GL_FALSE, glm::value_ptr(c->GetProjectionMatrix()));
 	glUniform4fv(drawShader->getUniformLocation("camera"), 1, glm::value_ptr(glm::vec4(c->GetPosition(),1.0)));
-	glUniform4fv(drawShader->getUniformLocation("light"), 1, glm::value_ptr(glm::vec4(1.5f,3.0f,3.0f,1.0f)));
+	glUniform4fv(drawShader->getUniformLocation("light"), 1, glm::value_ptr(glm::vec4(-3.0f,-3.0f,-3.0f,1.0f)));
 	float time = (float)glfwGetTime();
 	glUniform1f(drawShader->getUniformLocation("time"),time*0.1f);
 	for(auto it = m_asteroids.begin(); it != m_asteroids.end();it++){

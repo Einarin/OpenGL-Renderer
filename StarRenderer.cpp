@@ -5,7 +5,7 @@
 using namespace glm;
 namespace gl{
 
-StarRenderer::StarRenderer():ready(false)
+StarRenderer::StarRenderer():ready(false),geometry(20)
 {}
 
 
@@ -14,7 +14,7 @@ StarRenderer::~StarRenderer()
 
 bool StarRenderer::load(){
 	bool success = true;
-	geometry.generate(20,vec3(57));
+	//geometry.generate(20,vec3(57));
 	geometry.init();
 	geometry.download();
 
