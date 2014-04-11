@@ -5,6 +5,41 @@ ThreadPool CpuPool;
 ThreadPool IoPool(2);
 WorkQueue glQueue;
 
+//black magic to name threads in Visual Studio
+#ifdef WIN32 
+#ifdef _DEBUG
+#include <sstream>
+const DWORD MS_VC_EXCEPTION=0x406D1388;
+
+#pragma pack(push,8)
+typedef struct tagTHREADNAME_INFO
+{
+   DWORD dwType; // Must be 0x1000.
+   LPCSTR szName; // Pointer to name (in user addr space).
+   DWORD dwThreadID; // Thread ID (-1=caller thread).
+   DWORD dwFlags; // Reserved for future use, must be zero.
+} THREADNAME_INFO;
+#pragma pack(pop)
+
+void SetThreadName( DWORD dwThreadID, const char* threadName)
+{
+   THREADNAME_INFO info;
+   info.dwType = 0x1000;
+   info.szName = threadName;
+   info.dwThreadID = dwThreadID;
+   info.dwFlags = 0;
+
+   __try
+   {
+      RaiseException( MS_VC_EXCEPTION, 0, sizeof(info)/sizeof(ULONG_PTR), (ULONG_PTR*)&info );
+   }
+   __except(EXCEPTION_EXECUTE_HANDLER)
+   {
+   }
+}
+#endif
+#endif
+
 DWORD WINAPI DispatchThreadProc(LPVOID lpParameter);
 
 DWORD WINAPI WorkerThreadProc(LPVOID lpParameter){
@@ -22,8 +57,7 @@ DWORD WINAPI WorkerThreadProc(LPVOID lpParameter){
 			workUnit();
 		} else {
 			RELEASE_MUTEX(data->dispatchMutex);
-			//SuspendThread(data->thread);
-			Sleep(1000);
+			WaitForSingleObject(data->dispatchSemaphore,INFINITE);
 		}
 		
 	}
@@ -44,12 +78,17 @@ ThreadPool::ThreadPool(){
 	sharedState.workerThreads.resize(numberOfThreads);
 
 	sharedState.dispatchMutex = NEW_MUTEX;
+	sharedState.dispatchSemaphore = CreateSemaphore(NULL,0,numberOfThreads,NULL);
 
 	for(int i=0;i<numberOfThreads;i++)
 	{
 		WorkerThreadData& current = sharedState.workerThreads[i];
 		#ifdef WIN32_CONCURRENCY
 			current.thread = CreateThread(NULL,0,WorkerThreadProc,(LPVOID)&sharedState,0,&current.threadId);
+			std::stringstream ss;
+			ss << "Thread Pool Worker " << i;
+			std::string tmp = ss.str();
+			SetThreadName(current.threadId,tmp.c_str());
 		#else
 			current.thread = thread(awaitWorkerThreadProc<T>,(LPVOID)data);
 			current.threadId = current.thread.get_id();
@@ -66,6 +105,7 @@ ThreadPool::ThreadPool(int numberOfThreads){
 	sharedState.workerThreads.resize(numberOfThreads);
 
 	sharedState.dispatchMutex = NEW_MUTEX;
+	sharedState.dispatchSemaphore = CreateSemaphore(NULL,0,numberOfThreads,NULL);
 
 	for(int i=0;i<numberOfThreads;i++)
 	{
@@ -89,6 +129,7 @@ void ThreadPool::async(std::function<void()> workUnit){
 	ACQUIRE_MUTEX(sharedState.dispatchMutex);
 	sharedState.dispatchQueue.push(workUnit);
 	RELEASE_MUTEX(sharedState.dispatchMutex);
+	ReleaseSemaphore(sharedState.dispatchSemaphore,1,NULL);
 	//ResumeThread(sharedState.queuingThread);
 }
 
