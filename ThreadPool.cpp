@@ -10,7 +10,7 @@ WorkQueue glQueue;
 #ifdef _DEBUG
 #include <sstream>
 const DWORD MS_VC_EXCEPTION=0x406D1388;
-
+int workernum = 0;
 #pragma pack(push,8)
 typedef struct tagTHREADNAME_INFO
 {
@@ -89,7 +89,7 @@ ThreadPool::ThreadPool(){
 			current.thread = CreateThread(NULL,0,WorkerThreadProc,(LPVOID)&sharedState,0,&current.threadId);
 			#ifdef _DEBUG
 			std::stringstream ss;
-			ss << "Thread Pool Worker " << i;
+			ss << "Thread Pool Worker " << workernum++;
 			std::string tmp = ss.str();
 			
 			SetThreadName(current.threadId,tmp.c_str());
@@ -117,6 +117,13 @@ ThreadPool::ThreadPool(int numberOfThreads){
 		WorkerThreadData& current = sharedState.workerThreads[i];
 		#ifdef WIN32_CONCURRENCY
 			current.thread = CreateThread(NULL,0,WorkerThreadProc,(LPVOID)&sharedState,0,&current.threadId);
+			#ifdef _DEBUG
+			std::stringstream ss;
+			ss << "Thread Pool Worker " << workernum++;
+			std::string tmp = ss.str();
+			
+			SetThreadName(current.threadId,tmp.c_str());
+			#endif
 		#else
 			current.thread = thread(awaitWorkerThreadProc<T>,(LPVOID)data);
 			current.threadId = current.thread.get_id();

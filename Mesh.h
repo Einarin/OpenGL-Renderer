@@ -22,7 +22,7 @@ namespace gl{
 		void deserialize(char* buf);
 	};
 
-	class RenderableMesh : public Mesh, public Geometry{
+	class RenderableMesh : public Mesh{
 	protected:
 		unsigned int vao;
 		unsigned int vbo;

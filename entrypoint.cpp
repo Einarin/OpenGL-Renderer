@@ -148,12 +148,11 @@ int main(int argc, char* argv[])
 	}*/
 	
 	CpuPool.async([&](){
-		auto ptr = new Model("assets/fighter.obj");
-		auto local = &model;
+		model = new Model("assets/fighter.obj");
+		auto ptr = model;
 		glQueue.async([=](){
 			ptr->init();
 			ptr->download();
-			*local = ptr;
 		});
 	});//*/
 
@@ -472,7 +471,7 @@ int main(int argc, char* argv[])
 
 		
 
-		if(model){
+		if(model && model->ready()){
 			glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(mat4()));
 			model->draw();
 		}
@@ -486,7 +485,7 @@ int main(int argc, char* argv[])
 		glUniformMatrix4fv(normShader->getUniformLocation("projMatrix"), 1, GL_FALSE, value_ptr(camera.GetProjectionMatrix()));
 			//glUniformMatrix4fv(normShader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(asteroids[0].ModelMatrix));
 			//asteroids[0].draw();
-			/*if(model){
+			/*if(model && model->loaded()){
 				glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(mat4()));
 				model->draw();
 			}*/

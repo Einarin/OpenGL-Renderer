@@ -26,6 +26,7 @@ protected:
 	std::vector<TexRef> textures;
 	std::vector<Light> lights;
 	ModelPart rootPart;
+	bool m_loaded,m_downloaded;
 	void loadTextures(const aiScene* scene);
 	void buildFromNode(const aiScene* scene, aiNode* node, glm::mat4 transform,ModelPart* currentPart);
 	void buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& output); //potential optimization, only build each index once
@@ -36,6 +37,9 @@ protected:
 public:
 	Model(std::string filename);
 	void save(std::string filename);
+	bool ready(){
+		return m_loaded && m_downloaded;
+	}
 	virtual void init();
 	virtual void download();
 	virtual void draw();
