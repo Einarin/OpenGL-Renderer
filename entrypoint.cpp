@@ -16,7 +16,8 @@
 #include "VertexAttribBuilder.h"
 #include "StarRenderer.h"
 #include "AsteroidRenderer.h"
-#include "PatchSphereRenderer.h"
+#include "DynamicPatchSphere.h"
+#include "CoreShaders.h"
 
 #include "windows.h" //for debugbreak only!
 
@@ -209,7 +210,7 @@ int main(int argc, char* argv[])
 	ps.init();
 	ps.download();
 
-	PatchSphereRenderer psr;
+	DynamicPatchSphere psr;
 	psr.init(8);
 
 	glPointSize(3.0f);
@@ -219,7 +220,14 @@ int main(int argc, char* argv[])
 
 	cout << "compiling shaders...\n";
 
-	std::shared_ptr<ShaderStage> vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	LightingShader ls;
+	ls.init();
+	MvpShader mls = ls;
+	NormalShader ns;
+	ns.init();
+	MvpShader mns = ns;
+
+	/*std::shared_ptr<ShaderStage> vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 	if(!vs->compileFromFile("mvp.vert"))
 		DebugBreak();
 	std::shared_ptr<ShaderStage> fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
@@ -229,7 +237,7 @@ int main(int argc, char* argv[])
 "{\n"
 "	vec4 sample = texture2D(framedata,texCoords.st);\n"
 "	gl_FragColor = vec4(texCoords.s,texCoords.t,1.-texCoords.s,1.0);\n"
-"}\n");*/
+"}\n");
 	if(!fs->compileFromFile("asteroid.frag"))
 		DebugBreak();
 	std::shared_ptr<Shader> shader = Shader::Allocate();
@@ -265,7 +273,7 @@ int main(int argc, char* argv[])
 		DebugBreak();
 	}
 	normShader->bind();
-	checkGlError("normShader");
+	checkGlError("normShader");*/
 		
 	/*TextureManager* texMan = TextureManager::Instance();
 	TexRef tex = texMan->texFromFile("Hello.png");
@@ -295,7 +303,7 @@ int main(int argc, char* argv[])
 
 //	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glCullFace(GL_BACK);
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	double time = glfwGetTime();
@@ -335,21 +343,31 @@ int main(int argc, char* argv[])
 		checkGlError("clear screen");
 		
 		skybox.draw(&camera);
+		checkGlError("draw skybox");
 						
 		//mat4 projview = projectionMatrix* camera.toMat4();
-		shader->bind();
-		glUniformMatrix4fv(shader->getUniformLocation("viewMatrix"), 1, GL_FALSE, value_ptr(camera.GetViewMatrix()));
-		glUniformMatrix4fv(shader->getUniformLocation("projMatrix"), 1, GL_FALSE, value_ptr(camera.GetProjectionMatrix()));
-		vec3 pos = camera.GetPosition();
-		glUniform4fv(shader->getUniformLocation("camera"), 1, value_ptr(vec4(camera.GetPosition(),1.0)));
-		glUniform4fv(shader->getUniformLocation("light"), 1, value_ptr(vec4(-3.0f,-3.0f,-3.0f,1.0f)));
-		glUniform1f(shader->getUniformLocation("time"),time*0.1);
-		glUniform1i(shader->getUniformLocation("levels"), levels);
+		//shader->bind();
+		//glUniformMatrix4fv(ls->getUniformLocation("viewMatrix"), 1, GL_FALSE, value_ptr(camera.GetViewMatrix()));
+		mls.bind();
+		mls.setView(camera.GetViewMatrix());
+		//glUniformMatrix4fv(shader->getUniformLocation("projMatrix"), 1, GL_FALSE, value_ptr(camera.GetProjectionMatrix()));
+		mls.setProjection(camera.GetProjectionMatrix());
+		checkGlError("set view and projection matrices");
+		ShaderRef s = ls;
+		glUniform4fv(s->getUniformLocation("camera"), 1, value_ptr(vec4(camera.GetPosition(),1.0)));
+		glUniform4fv(s->getUniformLocation("light"), 1, value_ptr(vec4(-3.0f,-3.0f,-3.0f,1.0f)));
+		glUniform1f(s->getUniformLocation("time"),time*0.1);
+		glUniform1i(s->getUniformLocation("levels"), levels);
 		checkGlError("setup model shader");
 
-		aRenderer.draw(&camera);
+		aRenderer.draw(mls);
 		checkGlError("asteroid renderer");
-		glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(mat4()));
+		//glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(mat4()));
+		mns.bind();
+		mns.setView(camera.GetViewMatrix());
+		mns.setProjection(camera.GetProjectionMatrix());
+		aRenderer.draw(mns);
+
 		/*for(int i=0;i<6;i++){
 			pc[i].draw();
 		}*/
@@ -372,11 +390,16 @@ int main(int argc, char* argv[])
 		
 
 		if(model && model->ready()){
-			glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(mat4()));
+			//glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(mat4()));
+			mls.bind();
+			mls.setModel(mat4());
+			model->draw();
+			mns.bind();
+			mns.setModel(mat4());
 			model->draw();
 		}
 
-		normShader->bind();
+		/*normShader->bind();
 		checkGlError("bind normal shader");
 		//glBindVertexArray(vao);
 		glUniform4fv(normShader->getUniformLocation("color"), 1, value_ptr(vec4(0.0,0.0,1.0,1.0)));
@@ -389,14 +412,14 @@ int main(int argc, char* argv[])
 				glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(mat4()));
 				model->draw();
 			}*/
-		glUniformMatrix4fv(normShader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(mat4()));
+		/*glUniformMatrix4fv(normShader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(mat4()));
 		checkGlError("setup normal shader");
 			//ps.draw();
 			//tf.draw();
 			//asteroids[i].ModelMatrix =  glm::rotate(asteroids[i].ModelMatrix,0.1f,vec3(0,1,0));
 			checkGlError("draw asteroid normals");
 		
-		glBindVertexArray(0);
+		glBindVertexArray(0);*/
 		
 		
 		//glUniformMatrix4fv(shader->getUniformLocation("modelMatrix"), 1, GL_FALSE, value_ptr(cube.ModelMatrix));

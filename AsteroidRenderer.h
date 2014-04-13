@@ -6,8 +6,7 @@
 #include <vector>
 
 namespace gl {
-class AsteroidRenderer :
-	public Renderer
+class AsteroidRenderer
 {
 protected:
 	class Asteroid{
@@ -27,7 +26,7 @@ public:
 	~AsteroidRenderer(void);
 	bool setup();
 	Future<bool> addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3 seed);
-	virtual void draw(Camera* c);
+	virtual void draw(MvpShader s);
 };
 
 }

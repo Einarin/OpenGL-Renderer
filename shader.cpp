@@ -2,12 +2,18 @@
 #include "glincludes.h"
 #include <iostream>
 #include <fstream>
+#include <glm/gtc/type_ptr.hpp>
+
+using namespace glm;
 
 namespace gl{
 
 ShaderStage::ShaderStage(int stage)
 {
 	id = glCreateShader(stage);
+}
+ShaderStage::~ShaderStage(){
+	glDeleteShader(id);
 }
 std::shared_ptr<ShaderStage> ShaderStage::Allocate(int stage)
 {
@@ -107,6 +113,20 @@ void Shader::bind(){
 
 int Shader::getId(){
 	return id;
+}
+MvpShader::MvpShader(ShaderRef s):m_shader(s),
+	modelLoc(s->getUniformLocation("modelMatrix")),
+	viewLoc(s->getUniformLocation("viewMatrix")),
+	projLoc(s->getUniformLocation("projMatrix"))
+{}
+void MvpShader::setModel(mat4 modelMatrix){
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(modelMatrix));
+}
+void MvpShader::setView(mat4 viewMatrix){
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, value_ptr(viewMatrix));
+}
+void MvpShader::setProjection(mat4 projectionMatrix){
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, value_ptr(projectionMatrix));
 }
 
 } // namespace gl

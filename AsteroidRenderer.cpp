@@ -31,22 +31,6 @@ bool AsteroidRenderer::setup(){
 	feedbackShader->bind();
 	checkGlError("feedbackShader");
 
-	drawShader = Shader::Allocate();
-	auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
-	auto fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
-	success &= vs->compileFromFile("asteroid.vert");
-	success &= fs->compileFromFile("asteroid.frag");
-	drawShader->addAttrib("in_Position",0);
-	drawShader->addAttrib("in_Normal",1);
-	drawShader->addAttrib("in_Tangent",2);
-	drawShader->addAttrib("in_TexCoords",3);
-	drawShader->attachStage(vs);
-	drawShader->attachStage(fs);
-	success &= drawShader->link();
-	drawShader->bind();
-	checkGlError("drawShader");
-	glUniform1i(drawShader->getUniformLocation("framedata"), 0);
-
 	m_setup = success;
 	return success;
 }
@@ -115,17 +99,10 @@ Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3
 	return result;
 }
 
-void AsteroidRenderer::draw(Camera* c){
-	drawShader->bind();
-	glUniformMatrix4fv(drawShader->getUniformLocation("viewMatrix"), 1, GL_FALSE, glm::value_ptr(c->GetViewMatrix()));
-	glUniformMatrix4fv(drawShader->getUniformLocation("projMatrix"), 1, GL_FALSE, glm::value_ptr(c->GetProjectionMatrix()));
-	glUniform4fv(drawShader->getUniformLocation("camera"), 1, glm::value_ptr(glm::vec4(c->GetPosition(),1.0)));
-	glUniform4fv(drawShader->getUniformLocation("light"), 1, glm::value_ptr(glm::vec4(-3.0f,-3.0f,-3.0f,1.0f)));
-	float time = (float)glfwGetTime();
-	glUniform1f(drawShader->getUniformLocation("time"),time*0.1f);
+void AsteroidRenderer::draw(MvpShader s){
 	for(auto it = m_asteroids.begin(); it != m_asteroids.end();it++){
 		if(it->generated){
-			glUniformMatrix4fv(drawShader->getUniformLocation("modelMatrix"), 1, GL_FALSE, glm::value_ptr(it->modelMatrix));
+			s.setModel(it->modelMatrix);
 			it->tfGeometry.draw();
 		}
 	}

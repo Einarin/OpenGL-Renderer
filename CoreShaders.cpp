@@ -1,18 +1,10 @@
-#include "NormalShader.h"
+#include "CoreShaders.h"
 #include "glincludes.h"
 #include <glm/gtc/type_ptr.hpp>
 
 using namespace glm;
 
 namespace gl{
-NormalShader::NormalShader(void)
-{
-}
-
-
-NormalShader::~NormalShader(void)
-{
-}
 
 bool NormalShader::init(){
 	bool success = true;
@@ -32,6 +24,26 @@ bool NormalShader::init(){
 	m_shader->bind();
 	glUniform4fv(m_shader->getUniformLocation("color"), 1, value_ptr(vec4(0.0,0.0,1.0,1.0)));
 	glUniform1f(m_shader->getUniformLocation("normalLength"), 0.05f);
+	return success;
+}
+
+bool LightingShader::init(){
+	bool success = true;
+	m_shader = Shader::Allocate();
+	auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	auto fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+	success &= vs->compileFromFile("asteroid.vert");
+	success &= fs->compileFromFile("asteroid.frag");
+	m_shader->addAttrib("in_Position",0);
+	m_shader->addAttrib("in_Normal",1);
+	m_shader->addAttrib("in_Tangent",2);
+	m_shader->addAttrib("in_TexCoords",3);
+	m_shader->attachStage(vs);
+	m_shader->attachStage(fs);
+	success &= m_shader->link();
+	m_shader->bind();
+	checkGlError("drawShader");
+	glUniform1i(m_shader->getUniformLocation("framedata"), 0);
 	return success;
 }
 
