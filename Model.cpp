@@ -33,13 +33,14 @@ public:
 	}
 };
 
-Model::Model(std::string filename) : filepath(filename){
+Model::Model(std::string filename) : filepath(filename),m_loaded(false),m_downloaded(false){
 	std::string cachename = filename.substr(0,filename.find_last_of('.'))+".model";
 	std::ifstream cachefile(cachename);
 	if(cachefile.is_open()){
 		std::cout << "loading cached version of " << filename << std::endl;
 		cachefile.close();
 		loadCache(cachename);
+		m_loaded = true;
 		return;
 	}
 	rootPart.name = filename+" root node";
@@ -149,6 +150,7 @@ Model::Model(std::string filename) : filepath(filename){
 	}
 	
 	buildFromNode(scene, scene->mRootNode, glm::mat4(),&rootPart);
+	m_loaded = true;
 	std::cout << "saving optimized representation to disk...\n";
 	save(cachename);
 }
@@ -279,9 +281,12 @@ void Model::init()
 }
 void Model::download(){
 	downloadPart(rootPart);
+	m_downloaded = true;
 }
 void Model::draw(){
-	drawPart(rootPart);
+	if(m_loaded && m_downloaded){
+		drawPart(rootPart);
+	}
 }
 struct FlatModel{
 	uint32 nameoff;
