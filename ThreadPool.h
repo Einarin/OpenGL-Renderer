@@ -153,10 +153,9 @@ public:
 	thread thread;
 	THREAD_ID threadId;
 	MUTEX mutex;
-	bool stop;
 	bool blocked;
 	std::queue<std::function<void()>> workData; 
-	WorkerThreadData(): stop(false),blocked(false),thread(NULL){
+	WorkerThreadData(): blocked(false),thread(NULL){
 		mutex = NEW_MUTEX;
 	}
 };
@@ -166,6 +165,7 @@ struct DispatchData{
 	std::queue<std::function<void()>> dispatchQueue;
 	MUTEX dispatchMutex;
 	HANDLE dispatchSemaphore;
+	bool stop;
 	/*HANDLE queuingThread;
 	int roundRobinIndex;*/
 };
@@ -196,6 +196,7 @@ private:
 public:
 	ThreadPool();
 	ThreadPool(int numberOfThreads);
+	~ThreadPool();
 	void async(std::function<void()> workUnit);
 	template<typename T>
 	Future<T> async(std::function<T()> func){
@@ -229,7 +230,7 @@ public:
 		depth++; //track recursion depth
 		//put upper bound on recursion depth to prevent stack overflow
 		if(depth < 100){ 
-			while(!result.isDone()){
+			while(!result.isDone() && !sharedState.stop){
 				//do some other work while we wait	
 				if(TRY_MUTEX(sharedState.dispatchMutex)){
 					if(!sharedState.dispatchQueue.empty()){

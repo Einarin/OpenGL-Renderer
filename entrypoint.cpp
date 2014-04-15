@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 	}*/
 	
 	CpuPool.async([&](){
-		model = new Model("assets/fighter.obj");
+		model = new Model("assets/organic ship split.obj");
 		auto ptr = model;
 		glQueue.async([=](){
 			ptr->init();
@@ -258,7 +258,7 @@ int main(int argc, char* argv[])
 			fps->addText(ss.str(),vec2(5,height-32),vec4(1.0f));
 			checkGlError("fps add text");
 			//process async work
-			if(glQueue.processQueueUnit())
+			if(glQueue.processQueueUnit() || !(model && model->ready()))
 				fps->addText("Loading...",vec2(max(width/2-100,5),height/2),vec4(1.0f));
 			checkGlError("fps add loading");
 		}

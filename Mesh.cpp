@@ -18,7 +18,7 @@ struct MeshHeader{
 	unsigned int numVertexColorChannels;
 	unsigned int numUVChannels;
 	unsigned int materialIndex;
-	unsigned int numUVComponents[VERTEX_MAX_TEXCOORDS];
+	unsigned int numUVComponents[AI_MAX_NUMBER_OF_TEXTURECOORDS];
 };
 uint32 Mesh::serialize(char** inbuff){
 	uint32 bufflen = sizeof(MeshHeader)
@@ -34,7 +34,7 @@ uint32 Mesh::serialize(char** inbuff){
 	head->numVertexColorChannels = numVertexColorChannels;
 	head->numUVChannels = numUVChannels;
 	head->materialIndex = materialIndex;
-	for(int i=0;i<VERTEX_MAX_TEXCOORDS;i++){
+	for(int i=0;i<AI_MAX_NUMBER_OF_TEXTURECOORDS;i++){
 		head->numUVComponents[i] = numUVComponents[i];
 	}
 	head->nameoff = sizeof(MeshHeader);
@@ -58,7 +58,7 @@ void Mesh::deserialize(char* buff){
 	numVertexColorChannels = head->numVertexColorChannels;
 	numUVChannels = head->numUVChannels;
 	materialIndex = head->materialIndex;
-	for(int i=0;i<VERTEX_MAX_TEXCOORDS;i++){
+	for(int i=0;i<AI_MAX_NUMBER_OF_TEXTURECOORDS;i++){
 		numUVComponents[i] = head->numUVComponents[i];
 	}
 	name = buff+head->nameoff;

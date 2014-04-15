@@ -234,12 +234,12 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 			VEC_COPY(v.tan,aim.mTangents[i]);
 			//VEC_COPY(v.bitan,aim.mBitangents[i]);
 		}
-		for(int j=0;j<AI_MAX_NUMBER_OF_TEXTURECOORDS;j++){
+		for(int j=0;j<VERTEX_MAX_TEXCOORDS;j++){
 			if(aim.HasTextureCoords(j)){
 				VEC_COPY(v.tc[j],aim.mTextureCoords[j][i]);
 			}
 		}
-		for(int j=0;j<AI_MAX_NUMBER_OF_COLOR_SETS;j++){
+		for(int j=0;j<VERTEX_MAX_TEXCOLORS;j++){
 			if(aim.HasVertexColors(j)){
 				RGBA_COPY(v.colors[j],aim.mColors[j][i]);
 			}

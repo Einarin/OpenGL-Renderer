@@ -47,9 +47,7 @@ DWORD WINAPI WorkerThreadProc(LPVOID lpParameter){
 	bool run = true;
 	while(run){
 		ACQUIRE_MUTEX(data->dispatchMutex);
-		/*if(data->stop){
-			run = false;
-		}*/
+		run = !data->stop;
 		if(!data->dispatchQueue.empty()){
 			std::function<void()> workUnit = data->dispatchQueue.front();
 			data->dispatchQueue.pop();
@@ -57,7 +55,9 @@ DWORD WINAPI WorkerThreadProc(LPVOID lpParameter){
 			workUnit();
 		} else {
 			RELEASE_MUTEX(data->dispatchMutex);
-			WaitForSingleObject(data->dispatchSemaphore,INFINITE);
+			if(run){
+				WaitForSingleObject(data->dispatchSemaphore,INFINITE);
+			}
 		}
 		
 	}
@@ -74,7 +74,7 @@ ThreadPool::ThreadPool(){
 	int numberOfThreads = std::thread::hardware_concurrency();
 	numberOfThreads = numberOfThreads == 0 ? 4 : numberOfThreads;
 #endif
-
+	sharedState.stop = false;
 	sharedState.workerThreads.resize(numberOfThreads);
 
 	sharedState.dispatchMutex = NEW_MUTEX;
@@ -105,6 +105,7 @@ ThreadPool::ThreadPool(){
 }
 
 ThreadPool::ThreadPool(int numberOfThreads){
+	sharedState.stop = false;
 	sharedState.workerThreads.resize(numberOfThreads);
 
 	sharedState.dispatchMutex = NEW_MUTEX;
@@ -133,6 +134,30 @@ ThreadPool::ThreadPool(int numberOfThreads){
 	//sharedState.dispatchSemaphore = CreateSemaphore(NULL,0,
 	//sharedState.queuingThread = CreateThread(NULL,0,DispatchThreadProc,(LPVOID)&sharedState,0,NULL);
 	
+}
+
+ThreadPool::~ThreadPool(){
+	int numThreads = sharedState.workerThreads.size();
+	ACQUIRE_MUTEX(sharedState.dispatchMutex);
+	sharedState.stop = true;
+	ReleaseSemaphore(sharedState.dispatchSemaphore,numThreads,NULL);
+	RELEASE_MUTEX(sharedState.dispatchMutex);
+	
+	#ifdef WIN32_CONCURRENCY
+	HANDLE* lpHandles = new HANDLE[numThreads];
+	for(int i=0; i<numThreads;i++){
+		lpHandles[i] = sharedState.workerThreads[i].thread;
+	}
+	//TODO: this doesn't work because of the interaction between multiple thread pools
+	//WaitForMultipleObjects(numThreads,lpHandles,TRUE,INFINITE);
+	for(int i=0; i<numThreads;i++){
+		CloseHandle(lpHandles[i]);
+	}
+	#else
+	for(int i=0; i<numThreads;i++){
+		sharedState.workerThreads[i].thread.join();
+	}
+	#endif
 }
 
 void ThreadPool::async(std::function<void()> workUnit){

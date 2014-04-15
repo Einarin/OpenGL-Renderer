@@ -17,7 +17,7 @@ namespace gl{
 		unsigned int numVertexColorChannels;
 		unsigned int numUVChannels;
 		unsigned int materialIndex;
-		unsigned int numUVComponents[VERTEX_MAX_TEXCOORDS];
+		unsigned int numUVComponents[AI_MAX_NUMBER_OF_TEXTURECOORDS];
 		virtual uint32 serialize(char** inbuff);
 		void deserialize(char* buf);
 	};
