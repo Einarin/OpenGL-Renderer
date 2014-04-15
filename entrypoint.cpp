@@ -110,8 +110,11 @@ int main(int argc, char* argv[])
 		for(int q=0;q<27;q++){
 			glm::vec3 position(q%3-1,q/3%3-1,q/9-1);
 			mat4 modelMat = translate(rotate(mat4(),3.14159f*0.25f,glm::vec3(1.f,2.f,3.f)),position*10.f);
-			auto result = aRenderer.addAsteroidAsync(modelMat,position);
-			CpuPool.await(result);
+			auto tmp = &aRenderer;
+			CpuPool.await<bool>(
+				glQueue.async<Future<bool>>([=]()->Future<bool>{
+					return tmp->addAsteroidAsync(modelMat,position);
+			}));
 		}
 	});
 	/*while(!result.complete()){
@@ -119,7 +122,7 @@ int main(int argc, char* argv[])
 	}*/
 	
 	CpuPool.async([&](){
-		model = new Model("assets/organic ship split.obj");
+		model = new Model("assets/fighter.obj");
 		auto ptr = model;
 		glQueue.async([=](){
 			ptr->init();
@@ -215,7 +218,7 @@ int main(int argc, char* argv[])
 		ShaderRef s = ls;
 		glUniform4fv(s->getUniformLocation("camera"), 1, value_ptr(vec4(camera.GetPosition(),1.0)));
 		glUniform4fv(s->getUniformLocation("light"), 1, value_ptr(vec4(-3.0f,-3.0f,-3.0f,1.0f)));
-		glUniform1f(s->getUniformLocation("time"),time*0.1);
+		glUniform1f(s->getUniformLocation("time"),(float)time*0.1f);
 		glUniform1i(s->getUniformLocation("levels"), levels);
 		checkGlError("setup model shader");
 

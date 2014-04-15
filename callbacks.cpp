@@ -82,10 +82,10 @@ void onCursorMoved(GLFWwindow* window, double xpos, double ypos){
 		double dy = oldMouseY-ypos;
 
 		//camera.rotate(-dy,glm::inverse(camera.rot())*glm::vec3(1.f,0.f,0.f));
-		camera.PitchUp(dy*0.001f);
+		camera.PitchUp((float)dy*0.001f);
 		//camera.rotate(dx,vec3(0.,1.,0.));
 		//camera.RotateAround(vec3(0.f,1.f,1.f),-dx*0.01);
-		camera.YawLeft(dx*0.001f);
+		camera.YawLeft((float)dx*0.001f);
 	}
 	oldMouseX = xpos;
 	oldMouseY = ypos;

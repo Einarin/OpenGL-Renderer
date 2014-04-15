@@ -43,8 +43,8 @@ void StarRenderer::draw(Camera* camera){
 	glUniformMatrix4fv(shader->getUniformLocation("projMatrix"), 1, GL_FALSE, value_ptr(camera->GetProjectionMatrix()));
 	checkGlError("set mats");
 	glUniform4fv(shader->getUniformLocation("camera"), 1, value_ptr(vec4(camera->GetPosition(),1.0)));
-	float time = glfwGetTime();
-	glUniform1f(shader->getUniformLocation("time"),time*0.1);
+	float time = (float)glfwGetTime();
+	glUniform1f(shader->getUniformLocation("time"),time*0.1f);
 	glUniform1i(shader->getUniformLocation("levels"), 2);
 	checkGlError("setup draw");
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE );

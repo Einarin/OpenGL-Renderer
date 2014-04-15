@@ -85,36 +85,42 @@ public:
 
 template<typename T>
 class Future<Future<T>>{
-	HANDLE s;
-	bool m_set;
-	Future<T> child;
-public:
-	Future():m_set(false)
-	{
+	struct Data{
+		HANDLE s;
+		bool m_set;
+		Future<T> child;
+		Data():m_set(false){
 		s = CreateSemaphore(NULL,0,1,NULL);
-	}
-	~Future()
-	{
-		CloseHandle(s);
-	}
+		}
+		~Data(){
+			CloseHandle(s);
+		}
+	};
+	std::shared_ptr<Data> data;
+public:
+	Future():data(new Data)
+	{}
 	inline bool isDone(){
-		return m_set && child->done();
+		return data->m_set && data->child.isDone();
 	}
 	inline void set(Future<T> result)
 	{
-		child = result;
-		m_set = true;
-		ReleaseSemaphore(s,1,NULL);
+		data->child = result;
+		data->m_set = true;
+		ReleaseSemaphore(data->s,1,NULL);
 	}
-	inline T wait(){
+	inline Future<T> wait(){
 		while(0 != WaitForSingleObject(data->s,INFINITE))
 		{}
 		ReleaseSemaphore(data->s,1,NULL);
-		return child->wait();
+		return data->child;
 	}
-	inline operator T(){
+	inline operator Future<T>(){
 		return wait();
 	}
+	/*inline operator T(){
+		return wait();
+	}*/
 };
 
 template<>

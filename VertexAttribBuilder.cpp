@@ -33,7 +33,7 @@ VertexAttribBuilder& VertexAttribBuilder::setSize(unsigned int size){
 
 void VertexAttribBuilder::build(){
 	int offset = 0;
-	for(int i=0; i< _attribs.size();i++){
+	for(int i=0; i<(int)_attribs.size();i++){
 		glVertexAttribPointer(i,_attribs[i].count,_attribs[i].type,false,_size,(const GLvoid*)offset);
 		glEnableVertexAttribArray(i);
 		offset += _attribs[i].size;

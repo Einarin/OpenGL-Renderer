@@ -100,10 +100,10 @@ Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3
 }
 
 void AsteroidRenderer::draw(MvpShader s){
-	for(int i=0; i < m_asteroids.size();i++){
-		if(m_asteroids[i].generated){
-			s.setModel(m_asteroids[i].modelMatrix);
-			m_asteroids[i].tfGeometry.draw();
+	for(auto it = m_asteroids.begin(); it != m_asteroids.end();it++){
+		if(it->generated){
+			s.setModel(it->modelMatrix);
+			it->tfGeometry.draw();
 		}
 	}
 }
