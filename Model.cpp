@@ -8,8 +8,37 @@
 #include <assimp/ProgressHandler.hpp>
 #include <iostream>
 #include <fstream>
+#include <cstdint>
+//for file modification
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 
 namespace gl {
+
+//returns file modification date or 0 if file doesn't exist/can't be accessed
+uint64_t fileModificationTime(std::string filename){
+	uint64_t result = 0;
+#ifdef _WIN32
+	HANDLE h = CreateFileA(filename.c_str(),
+		GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
+		NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+	if(h != INVALID_HANDLE_VALUE){
+		FILETIME mt;
+		if(GetFileTime(h,NULL,NULL,&mt)){
+			result = mt.dwHighDateTime;
+			result = result << 32;
+			result += mt.dwLowDateTime;
+		}
+		CloseHandle(h);
+	}
+	return result;
+#else
+#error "TODO: Implement!"
+return 0;
+#endif
+}
+
 using namespace Assimp;
 
 #define VEC_COPY(v1,v2) v1.x=v2.x;v1.y=v2.y;v1.z=v2.z;
@@ -35,13 +64,27 @@ public:
 
 Model::Model(std::string filename) : filepath(filename),m_loaded(false),m_downloaded(false){
 	std::string cachename = filename.substr(0,filename.find_last_of('.'))+".model";
-	std::ifstream cachefile(cachename);
+	/*std::ifstream cachefile(cachename);
 	if(cachefile.is_open()){
 		std::cout << "loading cached version of " << filename << std::endl;
 		cachefile.close();
 		loadCache(cachename);
 		m_loaded = true;
 		return;
+	}*/
+	uint64_t fileTime = fileModificationTime(filename);
+	uint64_t cacheTime = fileModificationTime(cachename);
+	if(cacheTime > fileTime){
+		std::cout << "loading cached version of " << filename << std::endl;
+		loadCache(cachename);
+		m_loaded = true;
+		return;
+	} else {
+		if(cacheTime > 0){
+			std::cout << "cached version of " << filename << "out of date" << std::endl;
+		} else {
+			std::cout << "no available cached version of " << filename << std::endl;
+		}
 	}
 	rootPart.name = filename+" root node";
 	Assimp::Importer importer;
