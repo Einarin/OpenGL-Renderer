@@ -63,7 +63,7 @@ public:
 };
 
 Model::Model(std::string filename) : filepath(filename),m_loaded(false),m_downloaded(false){
-	std::string cachename = filename.substr(0,filename.find_last_of('.'))+".model";
+	std::string cachename = filename+".mcache";
 	/*std::ifstream cachefile(cachename);
 	if(cachefile.is_open()){
 		std::cout << "loading cached version of " << filename << std::endl;

@@ -235,7 +235,7 @@ int main(int argc, char* argv[])
 			model->draw();
 			mns.bind();
 			mns.setModel(mat4());
-			model->draw();
+			//model->draw();
 		}
 
 		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
