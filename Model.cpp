@@ -350,11 +350,14 @@ void Model::downloadPart(ModelPart& part)
 		downloadPart(*c);
 	}
 }
-void Model::drawPart(ModelPart& part,DiffuseTexMvpShader& s)
+void Model::drawPart(ModelPart& part,LitTexMvpShader& s)
 {
 	s.setModel(part.localTranform);
 	for(auto m = part.meshes.begin();m != part.meshes.end();m++){
 		s.setDiffuseTex(materials[m->materialIndex].diffuseTex);
+		s.setAmbient(materials[m->materialIndex].ambient);
+		s.setSpecular(materials[m->materialIndex].specular);
+		s.setShininess(materials[m->materialIndex].shininess);
 		m->draw();
 	}
 	for(auto c = part.children.begin();c != part.children.end();c++){
@@ -376,7 +379,7 @@ void Model::download(){
 	downloadPart(rootPart);
 	m_downloaded = true;
 }
-void Model::draw(DiffuseTexMvpShader& s){
+void Model::draw(LitTexMvpShader& s){
 	if(m_loaded && m_downloaded){
 		drawPart(rootPart,s);
 	}

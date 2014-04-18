@@ -14,8 +14,8 @@ operator ShaderRef(){
 operator MvpShader(){
 	return MvpShader(m_shader);
 }
-operator DiffuseTexMvpShader(){
-	return DiffuseTexMvpShader(m_shader);
+operator LitTexMvpShader(){
+	return LitTexMvpShader(m_shader);
 }
 };
 

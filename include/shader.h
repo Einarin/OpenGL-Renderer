@@ -5,6 +5,7 @@
 #include <list>
 #include <memory>
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace gl
 {
@@ -56,14 +57,26 @@ namespace gl
 		void setProjection(glm::mat4 projectionMatrix);
 	};
 
-	class DiffuseTexMvpShader : public MvpShader {
+	class LitTexMvpShader : public MvpShader {
 	protected:
 		int diffuseTex;
+		int ambientLocation;
+		int specularLocation;
+		int shininessLocation;
 	public:
-		DiffuseTexMvpShader(ShaderRef s);
+		LitTexMvpShader(ShaderRef s);
 		inline void setDiffuseTex(TexRef tex){
 			glActiveTexture(GL_TEXTURE0);
 			tex->bind();
+		}
+		inline void setAmbient(glm::vec3 ambient){
+			glUniform3fv(ambientLocation,1,glm::value_ptr(ambient));
+		}
+		inline void setSpecular(glm::vec3 specular){
+			glUniform3fv(specularLocation,1,glm::value_ptr(specular));
+		}
+		inline void setShininess(float shininess){
+			glUniform1f(shininessLocation,shininess);
 		}
 	};
 

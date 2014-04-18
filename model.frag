@@ -1,5 +1,8 @@
 #version 330
 uniform sampler2D diffuseTex;
+uniform vec3 ambient;
+uniform vec3 specular;
+uniform float shininess;
 
 in vec4 texCoords;
 in vec4 normal;
@@ -14,12 +17,12 @@ void main( void )
 	vec3 norm = normalize(normal.xyz);
 	vec3 eye = normalize(eyevec.xyz);
 	vec3 light = normalize(lightvec.xyz);
-  vec3 ambient = vec3(0.1);
+  //vec3 ambient = vec3(0.1);
   vec3 diffuse = texture2D(diffuseTex,vec2(texCoords.s,1.0-texCoords.t)).rgb;
-  vec3 specular = vec3(0.8);
+  //vec3 specular = vec3(0.8);
   float diff = max(-dot(light,norm),0);
   vec3 reflect = 2* dot(light,norm) * norm - light;
-  float spec = max(pow(-dot(reflect,eye),8),0);
+  float spec = max(pow(-dot(reflect,eye),shininess),0);
   vec3 color;
   if(gl_FrontFacing){
 	color = vec3(0.,0.,1.);

@@ -242,7 +242,7 @@ int main(int argc, char* argv[])
 		if(model && model->ready()){
 			((ShaderRef)ts)->bind();
 			glUniform4fv(((ShaderRef)ts)->getUniformLocation("light"), 1, value_ptr(vec4(-1.0f,-5.0f,10.0f,1.0f)));
-			DiffuseTexMvpShader dts = ts;
+			LitTexMvpShader dts = ts;
 			dts.setView(camera.GetViewMatrix());
 			dts.setProjection(camera.GetProjectionMatrix());
 			checkGlError("create DiffuseTexMvpShader");
@@ -254,7 +254,7 @@ int main(int argc, char* argv[])
 			if(drawNormals){
 				mns.bind();
 				mns.setModel(mat4());
-				DiffuseTexMvpShader dns = ns;
+				LitTexMvpShader dns = ns;
 				model->draw(dns);
 			}
 		}

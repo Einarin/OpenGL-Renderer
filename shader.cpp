@@ -2,7 +2,6 @@
 #include "glincludes.h"
 #include <iostream>
 #include <fstream>
-#include <glm/gtc/type_ptr.hpp>
 
 using namespace glm;
 
@@ -129,8 +128,11 @@ void MvpShader::setProjection(mat4 projectionMatrix){
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, value_ptr(projectionMatrix));
 }
 
-DiffuseTexMvpShader::DiffuseTexMvpShader(ShaderRef s):MvpShader(s),
-	diffuseTex(s->getUniformLocation("diffuseTex"))
+LitTexMvpShader::LitTexMvpShader(ShaderRef s):MvpShader(s),
+	diffuseTex(s->getUniformLocation("diffuseTex")),
+	ambientLocation(s->getUniformLocation("ambient")),
+	specularLocation(s->getUniformLocation("specular")),
+	shininessLocation(s->getUniformLocation("shininess"))
 {
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(diffuseTex,0);

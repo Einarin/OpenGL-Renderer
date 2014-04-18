@@ -88,7 +88,7 @@ protected:
 	void buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& output); //potential optimization, only build each index once
 	void initPart(ModelPart& part);
 	void downloadPart(ModelPart& part);
-	void drawPart(ModelPart& part,DiffuseTexMvpShader& s);
+	void drawPart(ModelPart& part,LitTexMvpShader& s);
 	bool loadCache(std::string cachefile);
 	unsigned int typenum();
 public:
@@ -100,6 +100,6 @@ public:
 	}
 	virtual void init();
 	virtual void download();
-	virtual void draw(DiffuseTexMvpShader& s);
+	virtual void draw(LitTexMvpShader& s);
 };
 }
