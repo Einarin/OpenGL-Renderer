@@ -3,7 +3,8 @@
 
 namespace gl {
 enum AttribDataTypes{
-	FLOAT_ATTRIB
+	FLOAT_ATTRIB,
+	PADDING_ATTRIB
 };
 
 class VertexAttribBuilder
@@ -20,6 +21,7 @@ private:
 public:
 	VertexAttribBuilder(void);
 	VertexAttribBuilder& attrib(AttribDataTypes type, int count);
+	VertexAttribBuilder& pad(int bytes);
 	VertexAttribBuilder& setSize(unsigned int size);
 	void build();
 	~VertexAttribBuilder(void);

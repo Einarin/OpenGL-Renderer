@@ -1,29 +1,15 @@
 #pragma once
 #include "glincludes.h"
 #include <string>
+#include <memory>
 
 namespace gl
 {
-class TexRef;
-
-class Texture {
-	friend class TexRef;
+class Texture {\
 protected:
 	bool allocated;
-	bool valid;
-	unsigned int refcount;
-	virtual void unreferenced()=0;
-	inline void retain()
-	{
-		refcount++;
-	}
-	inline void release()
-	{
-		refcount--;
-		unreferenced();
-	}
 public:
-	Texture():refcount(1),allocated(false),valid(false)
+	Texture():allocated(false)
 	{}
 	virtual void init()=0;
 	virtual void alloc()=0;
@@ -32,8 +18,11 @@ public:
 	virtual void unbind()=0;
 	virtual void dealloc()
 	{}
-	void linearInterpolation();
-	void nearestInterpolation();
+	virtual void linearInterpolation()=0;
+	virtual void nearestInterpolation()=0;
+	virtual void wrap()=0;
+	virtual void clamp()=0;
+	virtual void mirror()=0;
 	virtual ~Texture(){
 		if(allocated){
 			dealloc();
@@ -42,41 +31,7 @@ public:
 	}
 };
 
-class TexRef {
-	friend class GlTextureManager;
-private:
-	Texture* texture;
-protected:
-	TexRef(Texture* tex) : texture(tex)
-	{
-		tex->retain();
-	}
-public:
-	TexRef(const TexRef& other)
-	{
-		other.texture->retain();
-		texture = other.texture;
-	}
-	~TexRef()
-	{
-		texture->release();
-	}
-	const TexRef& operator=(const TexRef& other)
-	{
-		other.texture->retain();
-		texture->release();
-		texture = other.texture;
-		return other;
-	}
-	const inline Texture* operator->() const
-	{
-		return texture;
-	}
-	inline Texture* operator->()
-	{
-		return texture;
-	}
-};
+typedef std::shared_ptr<Texture> TexRef;
 
 class TextureManager {
 protected:
@@ -102,9 +57,12 @@ public:
 class GlTexture : public Texture {
 protected:
 	unsigned int id;
-	bool initialized;
     bool backed;
 	GLenum type;
+	GLenum mapMode;
+	GLenum interpolation;
+	void setInterpolation();
+	void setMapping();
 public:
 	GlTexture();
 	virtual ~GlTexture();
@@ -112,6 +70,11 @@ public:
 	unsigned int getId();
 	virtual void bind();
 	virtual void unbind();
+	virtual void linearInterpolation();
+	virtual void nearestInterpolation();
+	virtual void wrap();
+	virtual void clamp();
+	virtual void mirror();
 	virtual void alloc()=0;
 	virtual void dealloc()=0;
 };
@@ -154,6 +117,7 @@ public:
 class FileBackedGlTexture2D : public GlTexture2D {
 public:
 	std::string filename;
+	virtual void init();
 	virtual void bind();
 };
 

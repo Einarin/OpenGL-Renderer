@@ -156,6 +156,10 @@ int main(int argc, char* argv[])
 	NormalShader ns;
 	ns.init();
 	MvpShader mns = ns;
+	TexturedShader ts;
+	if(!ts.init())
+		DebugBreak();
+
 	
 	//grab the mouse last so we can do things during load
 	glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_DISABLED);
@@ -179,6 +183,7 @@ int main(int argc, char* argv[])
 	double oldtime = time;
 	int fpsCount = 10;
 	int counter = 0;
+	bool drawNormals = false;
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -202,6 +207,9 @@ int main(int argc, char* argv[])
 		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_COMMA)){
 			levels--;
 		}
+		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_N)){
+			drawNormals = !drawNormals;
+		}
 
 		checkGlError("start main loop");
 		//draw
@@ -224,18 +232,31 @@ int main(int argc, char* argv[])
 
 		aRenderer.draw(mls);
 		checkGlError("asteroid renderer");
-		mns.bind();
-		mns.setView(camera.GetViewMatrix());
-		mns.setProjection(camera.GetProjectionMatrix());
-		aRenderer.draw(mns);
+		if(drawNormals){
+			mns.bind();
+			mns.setView(camera.GetViewMatrix());
+			mns.setProjection(camera.GetProjectionMatrix());
+			aRenderer.draw(mns);
+		}
 
 		if(model && model->ready()){
-			mls.bind();
+			((ShaderRef)ts)->bind();
+			glUniform4fv(((ShaderRef)ts)->getUniformLocation("light"), 1, value_ptr(vec4(-1.0f,-5.0f,10.0f,1.0f)));
+			DiffuseTexMvpShader dts = ts;
+			dts.setView(camera.GetViewMatrix());
+			dts.setProjection(camera.GetProjectionMatrix());
+			checkGlError("create DiffuseTexMvpShader");
+			dts.bind();
+			model->draw(dts);
+			/*mls.bind();
 			mls.setModel(mat4());
-			model->draw();
-			mns.bind();
-			mns.setModel(mat4());
-			//model->draw();
+			model->draw();*/
+			if(drawNormals){
+				mns.bind();
+				mns.setModel(mat4());
+				DiffuseTexMvpShader dns = ns;
+				model->draw(dns);
+			}
 		}
 
 		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );

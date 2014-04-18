@@ -7,23 +7,37 @@ namespace gl {
 
 using glm::ivec2;
 
-GlTextureManager* manager = NULL;
+//TODO: DirectX support?
+GlTextureManager manager;
 
-void Texture::linearInterpolation()
+void GlTexture::setInterpolation(){
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, interpolation);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, interpolation);
+}
+void GlTexture::setMapping(){
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mapMode );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mapMode );
+}
+void GlTexture::linearInterpolation()
 {
-	bind();
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	interpolation = GL_LINEAR;
+	if(allocated){
+		bind();
+		setInterpolation();
+	}
 }
 
-void Texture::nearestInterpolation()
+void GlTexture::nearestInterpolation()
 {
-	bind();
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	interpolation = GL_NEAREST;
+	if(allocated){
+		bind();
+		setInterpolation();
+	}
 }
 
-GlTexture::GlTexture():id(0),initialized(false),backed(false)
+GlTexture::GlTexture():id(0),backed(false),
+	interpolation(GL_LINEAR),mapMode(GL_CLAMP)
 {}
 
 GlTexture2D::GlTexture2D()
@@ -40,11 +54,9 @@ GlTexture2D::GlTexture2D(unsigned int texId)
 void GlTexture2D::alloc(){
 	allocated=true;
 	glGenTextures(1,&id);
-	glBindTexture(GL_TEXTURE_2D, id);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+	bind();
+	setInterpolation();
+	setMapping();
 	checkGlError("GlTexture2D::alloc()");
 }
 
@@ -59,7 +71,7 @@ void GlTexture::init()
 	{
 		alloc();
 	}
-	initialized = true;
+	setInterpolation();
 	backed = false;
 }
 void GlTexture::bind()
@@ -69,6 +81,15 @@ void GlTexture::bind()
 void GlTexture::unbind()
 {
     glBindTexture(type, 0);
+}
+void GlTexture::wrap(){
+	mapMode=GL_REPEAT;
+}
+void GlTexture::clamp(){
+	mapMode=GL_CLAMP;
+}
+void GlTexture::mirror(){
+	mapMode=GL_MIRRORED_REPEAT;
 }
 void GlTexture2D::setup(GLint format,ivec2 texSize,GLenum datatype)
 {
@@ -119,11 +140,7 @@ unsigned int GlTexture::getId()
 TextureManager* TextureManager::Instance()
 {
 	//TODO: DirectX support?
-	//TODO: make threadsafe
-	if(manager == NULL){
-		manager = new GlTextureManager();
-	}
-	return manager;
+	return &manager;
 }
 
 void GlTexture2D::unreferenced(){
@@ -154,14 +171,20 @@ TexRef GlTextureManager::texFromRGBA8888(char* buff, glm::ivec2 size){
 	tex->setImage(GL_RGBA8,size,GL_UNSIGNED_BYTE,(void*)buff);
 	return TexRef(tex);
 }
-void FileBackedGlTexture2D::bind(){
+void FileBackedGlTexture2D::init(){
+	GlTexture2D::init();
 	if(!backed){
 		if(!loadPngToGlTex2D(filename,(GlTexture2D*)this))
 			std::cout << "Loading " << filename << " failed\n";
 		checkGlError("loadPngToGlTex2D");
 	}
-	
+}
+void FileBackedGlTexture2D::bind(){
+	if(!allocated || !backed){
+		init();
+	}
 	GlTexture2D::bind();
+	checkGlError("binding texture "+filename);
 }
 
 GlTextureCubeMap::GlTextureCubeMap()

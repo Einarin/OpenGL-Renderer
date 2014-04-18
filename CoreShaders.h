@@ -14,6 +14,9 @@ operator ShaderRef(){
 operator MvpShader(){
 	return MvpShader(m_shader);
 }
+operator DiffuseTexMvpShader(){
+	return DiffuseTexMvpShader(m_shader);
+}
 };
 
 class NormalShader : public CoreShader
@@ -25,6 +28,12 @@ public:
 class LightingShader : public CoreShader
 {
 public:
+	bool init();
+};
+
+class TexturedShader : public CoreShader
+{
+	public:
 	bool init();
 };
 

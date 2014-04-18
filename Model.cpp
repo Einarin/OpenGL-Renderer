@@ -39,6 +39,11 @@ return 0;
 #endif
 }
 
+static std::vector<std::function<void(Model*)>> sProcessSteps;
+void Model::addProcessing(std::function<void(Model*)> f){
+	sProcessSteps.push_back(f);
+}
+
 using namespace Assimp;
 
 #define VEC_COPY(v1,v2) v1.x=v2.x;v1.y=v2.y;v1.z=v2.z;
@@ -64,6 +69,10 @@ public:
 
 Model::Model(std::string filename) : filepath(filename),m_loaded(false),m_downloaded(false){
 	std::string cachename = filename+".mcache";
+	auto slash = filename.find_last_of('/');
+	auto bslash = filename.find_last_of('\\');
+	auto pos = slash != std::string::npos?slash:bslash;
+	std::string dirname = filename.substr(0,pos);
 	/*std::ifstream cachefile(cachename);
 	if(cachefile.is_open()){
 		std::cout << "loading cached version of " << filename << std::endl;
@@ -76,9 +85,13 @@ Model::Model(std::string filename) : filepath(filename),m_loaded(false),m_downlo
 	uint64_t cacheTime = fileModificationTime(cachename);
 	if(cacheTime > fileTime){
 		std::cout << "loading cached version of " << filename << std::endl;
-		loadCache(cachename);
-		m_loaded = true;
-		return;
+		
+		m_loaded = loadCache(cachename);
+		if(m_loaded){
+			return;
+		} else {
+			std::cout << "loading cached version of " << filename << "failed" << std::endl;
+		}
 	} else {
 		if(cacheTime > 0){
 			std::cout << "cached version of " << filename << "out of date" << std::endl;
@@ -154,11 +167,14 @@ Model::Model(std::string filename) : filepath(filename),m_loaded(false),m_downlo
 		}
 	}
 	if(scene->HasMaterials()){
+		materials.resize(scene->mNumMaterials);
 		for(int i=0;i<(int)scene->mNumMaterials;i++){
 			aiMaterial* assmat = scene->mMaterials[i];
+			Material& m = materials[i];
 			aiString name;
 			assmat->Get(AI_MATKEY_NAME,name);
 			std::cout << "material " << name.C_Str() << std::endl;
+			m.name = name.C_Str();
 			int shadingModel;
 			assmat->Get(AI_MATKEY_SHADING_MODEL,shadingModel);
 			std::cout << "\tshading model is ";
@@ -176,23 +192,49 @@ Model::Model(std::string filename) : filepath(filename),m_loaded(false),m_downlo
 				std::cout << "advanced...\n";
 			}
 			aiString file;
-			if(AI_SUCCESS == assmat->Get(AI_MATKEY_TEXTURE_DIFFUSE(0),file))
+			if(AI_SUCCESS == assmat->Get(AI_MATKEY_TEXTURE_DIFFUSE(0),file)){
 				std::cout << "Diffuse tex: " << file.C_Str() << std::endl;
-			if(AI_SUCCESS == assmat->Get(AI_MATKEY_TEXTURE_SPECULAR(0),file))
+				m.diffuseFile = dirname+'/'+file.C_Str();
+			}
+			if(AI_SUCCESS == assmat->Get(AI_MATKEY_TEXTURE_SPECULAR(0),file)){
 				std::cout << "Specular tex: " << file.C_Str() << std::endl;
-			if(AI_SUCCESS == assmat->Get(AI_MATKEY_TEXTURE_NORMALS(0),file))
+				m.specularFile = dirname+'/'+file.C_Str();
+			}
+			if(AI_SUCCESS == assmat->Get(AI_MATKEY_TEXTURE_NORMALS(0),file)){
 				std::cout << "Normal tex: " << file.C_Str() << std::endl;
-			if(AI_SUCCESS == assmat->Get(AI_MATKEY_TEXTURE_DISPLACEMENT(0),file))
-				std::cout << "Diffuse tex: " << file.C_Str() << std::endl;
-
+				m.normalFile = dirname+'/'+file.C_Str();
+			}
+			if(AI_SUCCESS == assmat->Get(AI_MATKEY_TEXTURE_DISPLACEMENT(0),file)){
+				std::cout << "Displacement tex: " << file.C_Str() << std::endl;
+				m.displacementFile = dirname+'/'+file.C_Str();
+			}
+			m.setupTextures();
+			
+			aiColor3D color;
+			if(AI_SUCCESS == assmat->Get(AI_MATKEY_COLOR_AMBIENT,color)){
+				COLOR_COPY(m.ambient,color);
+			}
+			if(AI_SUCCESS == assmat->Get(AI_MATKEY_COLOR_DIFFUSE,color)){
+				COLOR_COPY(m.diffuse,color);
+			}
+			if(AI_SUCCESS == assmat->Get(AI_MATKEY_COLOR_SPECULAR,color)){
+				COLOR_COPY(m.specular,color);
+			}
+			if(AI_SUCCESS == assmat->Get(AI_MATKEY_COLOR_EMISSIVE,color)){
+				COLOR_COPY(m.emissive,color);
+			}
 			/*std::cout << "\tproperty key dump:\n";
 			for(int j=0;j<assmat->mNumProperties;j++){
 				std::cout <<"\t"<< assmat->mProperties[j]->mKey.C_Str() << " ";
 			}*/
+			
 		}
 	}
 	
 	buildFromNode(scene, scene->mRootNode, glm::mat4(),&rootPart);
+	for(auto it = sProcessSteps.begin();it != sProcessSteps.end();it++){
+		(*it)(this);
+	}
 	m_loaded = true;
 	std::cout << "saving optimized representation to disk...\n";
 	save(cachename);
@@ -284,7 +326,7 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 		}
 		for(int j=0;j<VERTEX_MAX_TEXCOLORS;j++){
 			if(aim.HasVertexColors(j)){
-				RGBA_COPY(v.colors[j],aim.mColors[j][i]);
+				//RGBA_COPY(v.colors[j],aim.mColors[j][i]);
 			}
 		}
 	}
@@ -308,29 +350,38 @@ void Model::downloadPart(ModelPart& part)
 		downloadPart(*c);
 	}
 }
-void Model::drawPart(ModelPart& part)
+void Model::drawPart(ModelPart& part,DiffuseTexMvpShader& s)
 {
+	s.setModel(part.localTranform);
 	for(auto m = part.meshes.begin();m != part.meshes.end();m++){
+		s.setDiffuseTex(materials[m->materialIndex].diffuseTex);
 		m->draw();
 	}
 	for(auto c = part.children.begin();c != part.children.end();c++){
-		drawPart(*c);
+		drawPart(*c,s);
 	}
 }
 
 void Model::init()
 {
+	for(auto it = textures.begin();it != textures.end();it++){
+		(*it)->init();
+	}
+	for(auto it = materials.begin();it != materials.end();it++){
+		it->init();
+	}
 	initPart(rootPart);
 }
 void Model::download(){
 	downloadPart(rootPart);
 	m_downloaded = true;
 }
-void Model::draw(){
+void Model::draw(DiffuseTexMvpShader& s){
 	if(m_loaded && m_downloaded){
-		drawPart(rootPart);
+		drawPart(rootPart,s);
 	}
 }
+//serialization stuff
 struct FlatModel{
 	uint32 nameoff;
 	uint32 parentind;
@@ -342,17 +393,41 @@ struct FlatModel{
 	uint32 lightlistoff;
 	uint32 lightlistsize;
 };
+struct FlatMaterial{
+	glm::vec3 ambient;
+	glm::vec3 diffuse;
+	glm::vec3 specular;
+	glm::vec3 emissive;
+	float shininess;
+	float shininessStrength;
+	float opacity;
+	uint32 nameoff;
+	uint32 diffuseFileOff;
+	uint32 specularFileOff;
+	uint32 normalFileOff;
+	uint32 displacementFileOff;
+};
 struct Header{
 	uint32 type;
 	uint32 filesize;
 	uint32 flatlistoff;
 	uint32 flatlistsize;
+	uint32 flatmatoff;
+	uint32 flatmatsize;
 	uint32 namebuffoff;
 	uint32 childbuffoff;
 	uint32 meshindoff;
 	uint32 meshbuffoff;
 	uint32 compressedmeshsize;
 };
+//calculate the sum of the type sizes to use as a magic number for cache format changes
+unsigned int Model::typenum(){
+	unsigned int typesize = 0;
+	typesize += sizeof(Header);
+	typesize += sizeof(FlatModel);
+	typesize += sizeof(FlatMaterial);
+	return typesize;
+}
 void Model::save(std::string filename){
 	//first walk the tree to assign indexes to nodes and determine buffer sizes
 	std::vector<ModelPart*> stack; //used as temp stack
@@ -361,6 +436,7 @@ void Model::save(std::string filename){
 	uint32 namebuffsize = 0;
 	uint32 childbuffsize = 0;
 	uint32 lightindbuffsize = 0;
+	uint32 materialbuffsize = materials.size();
 	while(stack.size() > 0){
 		ModelPart* current = stack.back();
 		stack.pop_back();
@@ -372,6 +448,29 @@ void Model::save(std::string filename){
 			stack.push_back(&current->children[i]);
 		}
 	}
+	//allocate material array first since we're going to loop over it anyway
+	FlatMaterial* flatmat = new FlatMaterial[materialbuffsize];
+	//allocate space in the namebuff for material strings and build material buffer
+	for(int i = 0;i < materialbuffsize; i++){
+		flatmat[i].nameoff = namebuffsize;
+		namebuffsize += materials[i].name.size()+1;
+		flatmat[i].diffuseFileOff = namebuffsize;
+		namebuffsize += materials[i].diffuseFile.size()+1;
+		flatmat[i].specularFileOff = namebuffsize;
+		namebuffsize += materials[i].specularFile.size()+1;
+		flatmat[i].normalFileOff = namebuffsize;
+		namebuffsize += materials[i].normalFile.size()+1;
+		flatmat[i].displacementFileOff = namebuffsize;
+		namebuffsize += materials[i].displacementFile.size()+1;
+		//material properties stored by value
+		flatmat[i].ambient = materials[i].ambient;
+		flatmat[i].diffuse = materials[i].diffuse;
+		flatmat[i].specular = materials[i].specular;
+		flatmat[i].emissive = materials[i].emissive;
+		flatmat[i].shininess = materials[i].shininess;
+		flatmat[i].shininessStrength = materials[i].shininessStrength;
+		flatmat[i].opacity = materials[i].opacity;
+	}
 	//now we have enough information to allocate arrays
 	FlatModel* flatlist = new FlatModel[nodecount];
 	char* namebuff = new char[namebuffsize];
@@ -380,6 +479,15 @@ void Model::save(std::string filename){
 	uint32 namebuffpos = 0;
 	uint32 childbuffpos = 0;
 	//uint32 lightindbuffpos = 0;
+
+	//loop over materials again to store strings
+	for(int i = 0;i < materials.size(); i++){
+		strcpy(namebuff+flatmat[i].nameoff,materials[i].name.c_str());
+		strcpy(namebuff+flatmat[i].diffuseFileOff,materials[i].diffuseFile.c_str());
+		strcpy(namebuff+flatmat[i].specularFileOff,materials[i].specularFile.c_str());
+		strcpy(namebuff+flatmat[i].normalFileOff,materials[i].normalFile.c_str());
+		strcpy(namebuff+flatmat[i].displacementFileOff,materials[i].displacementFile.c_str());
+	}
 
 	//we build the mesh collection lazily
 	uint32 meshpos = 0;
@@ -445,17 +553,26 @@ void Model::save(std::string filename){
 	} else {
 		h.compressedmeshsize = 0;
 	}
+	
+	//put in the type member starting at bit 2 (bit 1 indicates compression)
+	h.type += typenum() << 1;
+
 	h.flatlistoff = sizeof(Header);
 	h.flatlistsize = nodecount;
-	h.namebuffoff = h.flatlistoff + nodecount * sizeof(FlatModel);
+	h.flatmatoff = h.flatlistoff + nodecount * sizeof(FlatModel);
+	h.flatmatsize = materialbuffsize;
+	h.namebuffoff = h.flatmatoff + materialbuffsize * sizeof(FlatMaterial);
 	h.childbuffoff = h.namebuffoff + namebuffsize * sizeof(char);
 	h.meshindoff = h.childbuffoff + childbuffsize * sizeof(uint32);
 	h.meshbuffoff = h.meshindoff + meshoffsets.size() * sizeof(uint32 );
 	h.filesize = h.meshbuffoff + meshpos;
+	//open file and write to disk
 	std::ofstream file(filename,std::ofstream::binary);
 	file.write(reinterpret_cast<const char*>(&h),sizeof(Header));
 	file.write(reinterpret_cast<const char*>(flatlist),nodecount* sizeof(FlatModel));
 	delete[] flatlist;
+	file.write(reinterpret_cast<const char*>(flatmat),materialbuffsize * sizeof(FlatMaterial));
+	delete[] flatmat;
 	file.write(namebuff,namebuffsize);
 	delete[] namebuff;
 	file.write(reinterpret_cast<const char*>(childbuff),childbuffsize * sizeof(uint32));
@@ -470,12 +587,21 @@ void Model::save(std::string filename){
 	file.close();
 }
 
-void Model::loadCache(std::string filename){
+bool Model::loadCache(std::string filename){
 	std::ifstream file(filename, std::ifstream::binary);
 	Header h;
+	std::vector<ModelPart*> workstack;
+	bool status = true;
 	file.read(reinterpret_cast<char*>(&h),sizeof(Header));
-	char* flatbuff = new char[h.namebuffoff - h.flatlistoff];
-	file.read(flatbuff,h.namebuffoff - h.flatlistoff);
+	//calculate the sum of the type sizes to use as a check for cache format changes
+	if(typenum() != h.type >> 1){
+		//cache format has changed, abort
+		return false;
+	}
+	char* flatbuff = new char[h.flatmatoff - h.flatlistoff];
+	file.read(flatbuff,h.flatmatoff - h.flatlistoff);
+	char* matbuff = new char[h.namebuffoff - h.flatmatoff];
+	file.read(matbuff,h.namebuffoff - h.flatmatoff);
 	char* namebuff = new char[h.childbuffoff - h.namebuffoff];
 	file.read(namebuff,h.childbuffoff - h.namebuffoff);
 	uint32* childbuff = reinterpret_cast<uint32*>(new char[h.meshindoff - h.childbuffoff]);
@@ -486,14 +612,37 @@ void Model::loadCache(std::string filename){
 	if(h.type){
 		char* compressedbuff = new char[h.compressedmeshsize];
 		file.read(compressedbuff,h.compressedmeshsize);
-		LZ4_decompress_fast(compressedbuff,meshbuff,h.filesize - h.meshbuffoff);
+		int res = LZ4_decompress_fast(compressedbuff,meshbuff,h.filesize - h.meshbuffoff);
+		delete[] compressedbuff;
+		if(res < 0){ //decompressing failed, bail out!
+			status = false;
+			goto cleanup;
+		}
 	} else {
 		file.read(meshbuff,h.filesize - h.meshbuffoff);
 	}
 	file.close();
+	FlatMaterial* flatmat = reinterpret_cast<FlatMaterial*>(matbuff);
+	//build materials
+	materials.resize(h.flatmatsize);
+	for(int i=0;i<h.flatmatsize;i++){
+		materials[i].ambient = flatmat[i].ambient;
+		materials[i].diffuse = flatmat[i].diffuse;
+		materials[i].specular = flatmat[i].specular;
+		materials[i].emissive = flatmat[i].emissive;
+		materials[i].shininess = flatmat[i].shininess;
+		materials[i].shininessStrength = flatmat[i].shininessStrength;
+		materials[i].opacity = flatmat[i].opacity;
+		materials[i].name = namebuff+flatmat[i].nameoff;
+		materials[i].diffuseFile = namebuff+flatmat[i].diffuseFileOff;
+		materials[i].specularFile = namebuff+flatmat[i].specularFileOff;
+		materials[i].normalFile = namebuff+flatmat[i].normalFileOff;
+		materials[i].displacementFile = namebuff+flatmat[i].displacementFileOff;
+		materials[i].setupTextures();
+	}
+
 	FlatModel* flatlist = reinterpret_cast<FlatModel*>(flatbuff);
 	//build graph from flatlist
-	std::vector<ModelPart*> workstack;
 	workstack.push_back(&rootPart);
 	rootPart.index = 0;
 	while(workstack.size() > 0){
@@ -513,6 +662,13 @@ void Model::loadCache(std::string filename){
 			workstack.push_back(&current->children.back());
 		}
 	}
+	cleanup:
+	delete[] flatbuff;
+	delete[] matbuff;
+	delete[] namebuff;
+	delete[] childbuff;
+	delete[] meshindbuff;
+	return status;
 }
 
 } //namespace gl

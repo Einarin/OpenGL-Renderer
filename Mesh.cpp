@@ -77,7 +77,14 @@ void RenderableMesh::init(){
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	checkGlError("bind");
 	VertexAttribBuilder b;
-	b.setSize(sizeof(vertex)).attrib(FLOAT_ATTRIB,3).attrib(FLOAT_ATTRIB,3).build();
+	b.setSize(sizeof(vertex))
+		.attrib(FLOAT_ATTRIB,3)
+		.pad(4)
+		.attrib(FLOAT_ATTRIB,3)
+		.pad(4)
+		.attrib(FLOAT_ATTRIB,3)
+		.pad(4)
+		.attrib(FLOAT_ATTRIB,3).build();
 	/*glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(vertex), 0);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)12);

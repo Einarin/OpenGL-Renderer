@@ -47,4 +47,23 @@ bool LightingShader::init(){
 	return success;
 }
 
+bool TexturedShader::init(){
+	bool success = true;
+	m_shader = Shader::Allocate();
+	auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	auto fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+	success &= vs->compileFromFile("model.vert");
+	success &= fs->compileFromFile("model.frag");
+	m_shader->addAttrib("in_Position",0);
+	m_shader->addAttrib("in_Normal",1);
+	m_shader->addAttrib("in_Tangent",2);
+	m_shader->addAttrib("in_TexCoords",3);
+	m_shader->attachStage(vs);
+	m_shader->attachStage(fs);
+	success &= m_shader->link();
+	m_shader->bind();
+	checkGlError("drawShader");
+	return success;
+}
+
 } //namespace gl

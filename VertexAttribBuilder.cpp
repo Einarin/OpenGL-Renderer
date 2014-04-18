@@ -25,6 +25,17 @@ VertexAttribBuilder& VertexAttribBuilder::attrib(AttribDataTypes type, int count
 	return *this;
 }
 
+VertexAttribBuilder& VertexAttribBuilder::pad(int bytes){
+	Attrib a;
+	a.type = PADDING_ATTRIB;
+	a.size = bytes;
+	_attribs.push_back(a);
+	if(!_manualSize){
+		_size += a.size;
+	}
+	return *this;
+}
+
 VertexAttribBuilder& VertexAttribBuilder::setSize(unsigned int size){
 	_manualSize = true;
 	_size = size;
@@ -33,9 +44,13 @@ VertexAttribBuilder& VertexAttribBuilder::setSize(unsigned int size){
 
 void VertexAttribBuilder::build(){
 	int offset = 0;
+	int ind = 0;
 	for(int i=0; i<(int)_attribs.size();i++){
-		glVertexAttribPointer(i,_attribs[i].count,_attribs[i].type,false,_size,(const GLvoid*)offset);
-		glEnableVertexAttribArray(i);
+		if(_attribs[i].type != PADDING_ATTRIB){
+			glVertexAttribPointer(ind,_attribs[i].count,_attribs[i].type,false,_size,(const GLvoid*)offset);
+			glEnableVertexAttribArray(ind);
+			ind++;
+		}
 		offset += _attribs[i].size;
 	}
 }

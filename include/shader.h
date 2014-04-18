@@ -1,5 +1,6 @@
 #pragma once
 #include "Refcounted.h"
+#include "Texture.h"
 #include <string>
 #include <list>
 #include <memory>
@@ -53,6 +54,17 @@ namespace gl
 		void setModel(glm::mat4 modelMatrix);
 		void setView(glm::mat4 viewMatrix);
 		void setProjection(glm::mat4 projectionMatrix);
+	};
+
+	class DiffuseTexMvpShader : public MvpShader {
+	protected:
+		int diffuseTex;
+	public:
+		DiffuseTexMvpShader(ShaderRef s);
+		inline void setDiffuseTex(TexRef tex){
+			glActiveTexture(GL_TEXTURE0);
+			tex->bind();
+		}
 	};
 
 }//namespace gl
