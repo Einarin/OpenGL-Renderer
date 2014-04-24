@@ -90,6 +90,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="entrypoint.cpp" />
     <ClCompile Include="FlatDrawable.cpp" />
+    <ClCompile Include="FrameBufferObject.cpp" />
     <ClCompile Include="Geometry.cpp" />
     <ClCompile Include="glCommon.cpp" />
     <ClCompile Include="callbacks.cpp" />
@@ -103,6 +104,7 @@
     <ClCompile Include="CoreShaders.cpp" />
     <ClCompile Include="DynamicPatchSphere.cpp" />
     <ClCompile Include="Quaternion.cpp" />
+    <ClCompile Include="RenderBufferObject.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="SkyBox.cpp" />
     <ClCompile Include="StarRenderer.cpp" />
@@ -117,6 +119,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="FlatAssets.h" />
     <ClInclude Include="FlatDrawable.h" />
+    <ClInclude Include="FrameBufferObject.h" />
     <ClInclude Include="Geometry.h" />
     <ClInclude Include="glincludes.h" />
     <ClInclude Include="ImageLoader.h" />
@@ -135,6 +138,7 @@
     <ClInclude Include="DynamicPatchSphere.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="Refcounted.h" />
+    <ClInclude Include="RenderBufferObject.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="SkyBox.h" />
     <ClInclude Include="StarRenderer.h" />

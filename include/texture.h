@@ -8,6 +8,7 @@ namespace gl
 class Texture {\
 protected:
 	bool allocated;
+	unsigned int type;
 public:
 	Texture():allocated(false)
 	{}
@@ -23,6 +24,10 @@ public:
 	virtual void wrap()=0;
 	virtual void clamp()=0;
 	virtual void mirror()=0;
+	#ifdef _DEBUG
+	//liable to be slow, intended for debugging only!
+	virtual void draw()=0;
+	#endif
 	virtual ~Texture(){
 		if(allocated){
 			dealloc();
@@ -41,7 +46,8 @@ public:
 	virtual TexRef texFromFile(std::string image)=0;
 	virtual TexRef texFromPngBytestream(char* buff, int bytes)=0;
 	virtual TexRef texFromRGBA8888(char* buff, glm::ivec2 size)=0;
-	virtual TexRef unbackedTex(glm::ivec2 size)=0;
+	virtual TexRef unbackedTex()=0;
+	virtual TexRef backedTex(unsigned int format,glm::ivec2 size, unsigned int datatype)=0;
 	virtual void contextLost()=0;
 };
 
@@ -50,7 +56,8 @@ public:
 	virtual TexRef texFromFile(std::string image);
 	virtual TexRef texFromPngBytestream(char* buff, int bytes);
 	virtual TexRef texFromRGBA8888(char* buff, glm::ivec2 size);
-	virtual TexRef unbackedTex(glm::ivec2 size);
+	virtual TexRef unbackedTex();
+	virtual TexRef backedTex(unsigned int format,glm::ivec2 size, unsigned int datatype);
 	virtual void contextLost();
 };
 
@@ -68,6 +75,9 @@ public:
 	virtual ~GlTexture();
 	virtual void init();
 	unsigned int getId();
+	GLenum getType(){
+		return type;
+	}
 	virtual void bind();
 	virtual void unbind();
 	virtual void linearInterpolation();
@@ -92,9 +102,12 @@ public:
 	virtual void alloc();
 	virtual void dealloc();
 	virtual void unreferenced();
-	void setImage(GLint format,glm::ivec2 size,GLenum datatype,void* data);
-protected:
 	void setup(GLint format,glm::ivec2 size,GLenum datatype);
+	void setImage(GLint format,glm::ivec2 size,GLenum datatype,void* data);
+#ifdef _DEBUG
+	void draw();
+#endif
+	protected:
 	glm::ivec2 size;
 };
 
@@ -112,6 +125,11 @@ public:
 	virtual void dealloc();
 	void setup(GLint format,glm::ivec2 texSize,GLenum datatype,GLenum face);
 	void setImage(GLint format,glm::ivec2 size,GLenum datatype,GLenum face,void* data);
+#ifdef _DEBUG
+	void draw(){
+	//TODO: unimplemented
+	}
+#endif
 };
 
 class FileBackedGlTexture2D : public GlTexture2D {

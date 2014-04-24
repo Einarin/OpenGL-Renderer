@@ -56,3 +56,11 @@ void SetupSupport(){
 	}
 
 }
+
+int MaxFboColorAttachments(){
+	static int numAttachments;
+	if(!numAttachments){
+		glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS,&numAttachments);
+	}
+	return numAttachments;
+}

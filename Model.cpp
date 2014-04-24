@@ -90,7 +90,7 @@ Model::Model(std::string filename) : filepath(filename),m_loaded(false),m_downlo
 		if(m_loaded){
 			return;
 		} else {
-			std::cout << "loading cached version of " << filename << "failed" << std::endl;
+			std::cout << "loading cached version of " << filename << " failed!" << std::endl;
 		}
 	} else {
 		if(cacheTime > 0){
@@ -253,7 +253,7 @@ void Model::loadTextures(const aiScene* scene){
 				std::cout << "Model file " << filepath
 					<< " contains unsupported compressed texture type " << tex->achFormatHint << std::endl;
 				//we push back an empty texture here anyway so the array indices are correct
-				textures.push_back(texMan->unbackedTex(glm::ivec2(0)));
+				textures.push_back(texMan->unbackedTex());
 			}
 		}
 	}

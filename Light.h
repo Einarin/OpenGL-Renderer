@@ -1,9 +1,9 @@
 #pragma once
 #include <string>
 #include "glincludes.h"
+#include "glm/glm.hpp"
 
 namespace gl{
-	using glm::vec3;
 
 	class Light{
 	public:
@@ -14,11 +14,11 @@ namespace gl{
 			Spot=4
 		};
 
-		vec3 position;
-		vec3 direction;
-		vec3 ambient;
-		vec3 diffuse;
-		vec3 specular;
+		glm::vec3 position;
+		glm::vec3 direction;
+		glm::vec3 ambient;
+		glm::vec3 diffuse;
+		glm::vec3 specular;
 		float attenuationConstant;
 		float attenuationLinear;
 		float attenuationQuadratic;

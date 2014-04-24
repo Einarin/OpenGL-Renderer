@@ -198,7 +198,7 @@ DWORD WINAPI awaitWorkerThreadProc(LPVOID lpParameter){
 
 class ThreadPool{
 private:
-	DispatchData sharedState;
+	std::shared_ptr<DispatchData> sharedState;
 public:
 	ThreadPool();
 	ThreadPool(int numberOfThreads);
@@ -236,16 +236,16 @@ public:
 		depth++; //track recursion depth
 		//put upper bound on recursion depth to prevent stack overflow
 		if(depth < 100){ 
-			while(!result.isDone() && !sharedState.stop){
+			while(!result.isDone() && !sharedState->stop){
 				//do some other work while we wait	
-				if(TRY_MUTEX(sharedState.dispatchMutex)){
-					if(!sharedState.dispatchQueue.empty()){
-						std::function<void()> workUnit = sharedState.dispatchQueue.front();
-						sharedState.dispatchQueue.pop();
-						RELEASE_MUTEX(sharedState.dispatchMutex);
+				if(TRY_MUTEX(sharedState->dispatchMutex)){
+					if(!sharedState->dispatchQueue.empty()){
+						std::function<void()> workUnit = sharedState->dispatchQueue.front();
+						sharedState->dispatchQueue.pop();
+						RELEASE_MUTEX(sharedState->dispatchMutex);
 						workUnit();
 					} else {
-						RELEASE_MUTEX(sharedState.dispatchMutex);
+						RELEASE_MUTEX(sharedState->dispatchMutex);
 					}
 				}
 			}
@@ -254,7 +254,7 @@ public:
 			//spawn a new worker thread so we don't blow out our stack
 			//auto data = make_pair(&sharedState,result);
 			std::pair<DispatchData*,Future<T>>* data = new std::pair<DispatchData*,Future<T>>;
-			data->first = &sharedState;
+			data->first = &*sharedState;
 			data->second = result;
 			#ifdef WIN32_CONCURRENCY
 				thread worker = CreateThread(NULL,0,awaitWorkerThreadProc<T>,(LPVOID)data,0,NULL);

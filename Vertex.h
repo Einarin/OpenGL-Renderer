@@ -6,15 +6,14 @@
 #define VERTEX_MAX_TEXCOLORS 1 //AI_MAX_NUMBER_OF_COLOR_SETS
 
 namespace gl{
-	using glm::vec3;
-	using glm::vec4;
+
 	class vertex{
 	public:
-		vec4 pos;
-		vec4 norm;
-		vec4 tan;
-		vec4 tc[VERTEX_MAX_TEXCOORDS];
-		vec4 colors[VERTEX_MAX_TEXCOLORS];
+		glm::vec4 pos;
+		glm::vec4 norm;
+		glm::vec4 tan;
+		glm::vec4 tc[VERTEX_MAX_TEXCOORDS];
+		glm::vec4 colors[VERTEX_MAX_TEXCOLORS];
 	};
 	/*template<typename numType>
 	class SmartVertexBuffer{

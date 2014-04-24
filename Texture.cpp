@@ -2,6 +2,10 @@
 #include "Texture.h"
 #include "ImageLoader.h"
 #include <iostream>
+#ifdef _DEBUG
+#include "shader.h"
+#include "Geometry.h"
+#endif
 
 namespace gl {
 
@@ -127,6 +131,45 @@ void GlTexture2D::setImage(GLint format,ivec2 texSize,GLenum datatype,void* data
 	}
 }
 
+void GlTexture2D::draw(){
+	static int setup;
+	static Billboard bb;
+	static ShaderRef shader;
+	if(setup){
+		shader->bind();
+	} else {
+		shader = Shader::Allocate();
+		auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+		auto fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+		vs->compile("#version 330\n"
+					"in vec2 position;\n"
+					"out vec2 texCoord;\n"
+					"void main(void){\n"
+					"texCoord = 0.5*(position+1.0);\n"
+					"gl_Position = vec4(position,0.0,1.0);\n"
+					"}\n");
+		fs->compile("#version 330\n"
+			"in vec2 texCoord;\n"
+			"out vec4 FragColor;\n"
+			"uniform sampler2D tex;\n"
+			"void main(void){\n"
+			"vec4 frag = texture2D(tex,texCoord);\n"
+			"FragColor = vec4(frag.rgb,frag.a);\n"
+			"}\n");
+		shader->attachStage(vs);
+		shader->attachStage(fs);
+		shader->link();
+		shader->bind();
+		glUniform1i(shader->getUniformLocation("tex"),0);
+		bb.init();
+		bb.download();
+		setup = 1;
+	}
+	glActiveTexture(GL_TEXTURE0);
+	bind();
+	bb.draw();
+}
+
 GlTexture::~GlTexture() {
 	if(getId() > 0) //If id is zero we never allocated anything in OpenGL, don't print anything
 	glDeleteTextures(1,&id);
@@ -152,8 +195,14 @@ TexRef GlTextureManager::texFromFile(std::string file){
 	tex->filename = file;
 	return TexRef(tex);
 }
-TexRef GlTextureManager::unbackedTex(glm::ivec2 size){
+TexRef GlTextureManager::unbackedTex(){
 	return TexRef(new GlTexture2D());
+}
+TexRef GlTextureManager::backedTex(unsigned int format,glm::ivec2 size, unsigned int datatype){
+	auto ptr = new GlTexture2D();
+	ptr->init();
+	ptr->setup(format,size,datatype);
+	return TexRef(ptr);
 }
 void GlTextureManager::contextLost()
 {

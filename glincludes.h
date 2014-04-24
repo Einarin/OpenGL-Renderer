@@ -20,6 +20,7 @@ enum GlFeatures{
 	GL_FEATURES_COUNT
 };
 void SetupSupport();
+int MaxFboColorAttachments();
 extern bool gl_features[GL_FEATURES_COUNT];
 inline bool SupportFor(GlFeatures index){
 	return gl_features[index];
