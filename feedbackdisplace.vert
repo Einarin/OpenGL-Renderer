@@ -443,13 +443,13 @@ float crater(vec3 point){
 float scale;
 float displace(vec3 point){
 	float displacement = 0.0;
-	scale = 0.1;
+	/*scale = 0.1;
 	float frequency = 1.0;
 	for(int i=0;i<levels;i++){
 		displacement += scale *(snoise(frequency * point));
 		frequency *= 2;
 		scale *= 0.5;
-	}
+	}*/
 	return displacement;//crater(point) + displacement;//,craterDist());
 }
 
@@ -458,8 +458,8 @@ float displace(vec3 point){
 void main(void)
 {
 	//texCoords = in_Position;
-	vec3 norm = normalize(in_Tangent);//normalize(transpose(inverse(mat3(transformMatrix))) * in_Normal);
-	tangent = in_Normal;//normalize(transpose(inverse(mat3(transformMatrix))) * in_Tangent);
+	vec3 norm = normalize(in_Normal);//normalize(transpose(inverse(mat3(transformMatrix))) * in_Normal);
+	tangent = in_Tangent;//normalize(transpose(inverse(mat3(transformMatrix))) * in_Tangent);
 	texCoords = in_Position;
 	vec4 pos = transformMatrix * vec4(in_Position.xyz,1.0);
 	//float scale = 0.1;////clamp(time,0.0,1.0);

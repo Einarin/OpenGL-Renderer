@@ -13,10 +13,11 @@ bool NormalShader::init(){
 	auto ngs = ShaderStage::Allocate(GL_GEOMETRY_SHADER);
 	success &= ngs->compileFromFile("normals.geom");
 	auto cfs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
-	success &= cfs->compileFromFile("color.frag");
+	success &= cfs->compileFromFile("attribColor.frag");
 	m_shader = Shader::Allocate();
 	m_shader->addAttrib("in_Position",0);
 	m_shader->addAttrib("in_Normal",1);
+	m_shader->addAttrib("in_Tangent",2);
 	m_shader->attachStage(nvs);
 	m_shader->attachStage(ngs);
 	m_shader->attachStage(cfs);

@@ -718,7 +718,11 @@ void Patch::tesselate(int tessFactor[4],std::function<vec3(vec3)> transform){
 		vec3 vpos = transform(vs[i]);
 		verts[i].pos = vpos;
 		verts[i].normal = glm::normalize(vpos);
-		verts[i].tan = verts[i].normal;
+		if(abs(verts[i].normal) != vec3(0.0f,1.0f,0.0f)){
+			verts[i].tan = glm::cross(vec3(0.0f,1.0f,0.0f),verts[i].normal);
+		} else {
+			verts[i].tan = vec3(1.0f,0.f,0.f);
+		}
 		verts[i].tc = glm::normalize(vpos);
 	}
 	delete[] vs;

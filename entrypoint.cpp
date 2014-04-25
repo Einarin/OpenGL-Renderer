@@ -18,6 +18,7 @@
 #include "AsteroidRenderer.h"
 #include "DynamicPatchSphere.h"
 #include "CoreShaders.h"
+#include "FrameBufferObject.h"
 
 #include "windows.h" //for debugbreak only!
 
@@ -78,7 +79,7 @@ int main(int argc, char* argv[])
 
 	//Camera setup
 	camera = Camera(); // vec3(0.,2.5,3.0),vec3(0,2.0,0),vec3(0,1.0,0)
-	camera.SetPosition(vec3(0.f,2.f,-10.f));
+	camera.SetPosition(vec3(0.f,2.f,-2.f));
 	//camera.SetPosition(vec3(0.0,0.0,0.0));
 	//camera.SetTarget(vec3(-4.f,-4.f,-4.f));
 	camera.SetTarget(vec3(0.0,0.0,0.0));
@@ -109,6 +110,8 @@ int main(int argc, char* argv[])
 	CpuPool.async([&aRenderer](){
 		for(int q=0;q<27;q++){
 			glm::vec3 position(q%3-1,q/3%3-1,q/9-1);
+			if(position != vec3(0.f,0.f,0.f))
+				continue;
 			mat4 modelMat = translate(rotate(mat4(),3.14159f*0.25f,glm::vec3(1.f,2.f,3.f)),position*10.f);
 			auto tmp = &aRenderer;
 			CpuPool.await<bool>(
@@ -121,7 +124,7 @@ int main(int argc, char* argv[])
 		glPool.processMainQueueUnit();
 	}*/
 	
-	CpuPool.async([&](){
+	/*CpuPool.async([&](){
 		model = new Model("assets/fighter.obj");
 		auto ptr = model;
 		glQueue.async([=](){
@@ -174,6 +177,18 @@ int main(int argc, char* argv[])
 
 	checkGlError("setup text");
 
+	FramebufferObject fbo;
+	fbo.init();
+	fbo.Size = ivec2(1280,800);
+	//TexRef tex = TextureManager::Instance()->texFromFile("Hello.png");
+	TexRef tex = TextureManager::Instance()->backedTex(GL_RGBA,fbo.Size,GL_UNSIGNED_BYTE);
+	fbo.attachTexture(GL_DRAW_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,tex);
+	fbo.attachDepthStencilRenderbuffer(GL_DEPTH24_STENCIL8);
+	if(!fbo.isComplete(GL_DRAW_FRAMEBUFFER)){
+		DebugBreak();
+	}
+	FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);
+
 //	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glCullFace(GL_BACK);
 	glEnable(GL_CULL_FACE);
@@ -184,6 +199,7 @@ int main(int argc, char* argv[])
 	int fpsCount = 10;
 	int counter = 0;
 	bool drawNormals = false;
+	bool changingNormals = false;
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -208,16 +224,27 @@ int main(int argc, char* argv[])
 			levels--;
 		}
 		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_N)){
-			drawNormals = !drawNormals;
+			if(!changingNormals){
+				drawNormals = !drawNormals;
+			}
+			changingNormals = true;
+		} else {
+			changingNormals = false;
 		}
 
 		checkGlError("start main loop");
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//fbo.bind(GL_DRAW_FRAMEBUFFER);
+		
 		//draw
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		checkGlError("clear screen");
 		
 		skybox.draw(&camera);
 		checkGlError("draw skybox");
+		glEnable(GL_DEPTH_TEST);
+
+		vec4 lightpos = vec4(-1.0f,-5.0f,10.0f,1.0f);
 
 		mls.bind();
 		mls.setView(camera.GetViewMatrix());
@@ -225,7 +252,7 @@ int main(int argc, char* argv[])
 		checkGlError("set view and projection matrices");
 		ShaderRef s = ls;
 		glUniform4fv(s->getUniformLocation("camera"), 1, value_ptr(vec4(camera.GetPosition(),1.0)));
-		glUniform4fv(s->getUniformLocation("light"), 1, value_ptr(vec4(-3.0f,-3.0f,-3.0f,1.0f)));
+		glUniform4fv(s->getUniformLocation("light"), 1, value_ptr(lightpos));
 		glUniform1f(s->getUniformLocation("time"),(float)time*0.1f);
 		glUniform1i(s->getUniformLocation("levels"), levels);
 		checkGlError("setup model shader");
@@ -241,7 +268,7 @@ int main(int argc, char* argv[])
 
 		if(model && model->ready()){
 			((ShaderRef)ts)->bind();
-			glUniform4fv(((ShaderRef)ts)->getUniformLocation("light"), 1, value_ptr(vec4(-1.0f,-5.0f,10.0f,1.0f)));
+			glUniform4fv(((ShaderRef)ts)->getUniformLocation("light"), 1, value_ptr(lightpos));
 			LitTexMvpShader dts = ts;
 			dts.setView(camera.GetViewMatrix());
 			dts.setProjection(camera.GetProjectionMatrix());
@@ -258,6 +285,12 @@ int main(int argc, char* argv[])
 				model->draw(dns);
 			}
 		}
+
+		star.modelMatrix = translate(mat4(),-(vec3)lightpos.xyz);
+		star.draw(&camera);
+		FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);
+		glDisable(GL_DEPTH_TEST);
+		tex->draw();
 
 		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 		textRenderer->draw(orthoMatrix);
@@ -283,7 +316,7 @@ int main(int argc, char* argv[])
 			checkGlError("fps add text");
 			//process async work
 			if(glQueue.processQueueUnit() || !(model && model->ready()))
-				fps->addText("Loading...",vec2(max(width/2-100,5),height/2),vec4(1.0f));
+				fps->addText("Loading...",vec2(glm::max(width/2-100,5),height/2),vec4(1.0f));
 			checkGlError("fps add loading");
 		}
 		checkGlError("about to draw text");
