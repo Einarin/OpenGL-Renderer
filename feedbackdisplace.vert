@@ -441,15 +441,16 @@ float crater(vec3 point){
 }
 
 float scale;
-float displace(vec3 point){
-	float displacement = 0.0;
-	/*scale = 0.1;
+vec4 displace(vec3 point){
+	vec4 displacement = vec4(0.0);
+	scale = 0.1;
 	float frequency = 1.0;
 	for(int i=0;i<levels;i++){
-		displacement += scale *(snoise(frequency * point));
+		vec4 result = SimplexPerlin3D_Deriv(frequency * point);
+		displacement += scale * result;
 		frequency *= 2;
 		scale *= 0.5;
-	}*/
+	}
 	return displacement;//crater(point) + displacement;//,craterDist());
 }
 
@@ -459,9 +460,12 @@ void main(void)
 {
 	//texCoords = in_Position;
 	vec3 norm = normalize(in_Normal);//normalize(transpose(inverse(mat3(transformMatrix))) * in_Normal);
-	tangent = in_Tangent;//normalize(transpose(inverse(mat3(transformMatrix))) * in_Tangent);
+	tangent = normalize(in_Tangent);//normalize(transpose(inverse(mat3(transformMatrix))) * in_Tangent);
+	vec3 bitan = normalize(cross(norm,tangent));
 	texCoords = in_Position;
+	mat3 tbn = transpose(mat3(tangent,bitan,norm));
 	vec4 pos = transformMatrix * vec4(in_Position.xyz,1.0);
+	position = in_Position;
 	//float scale = 0.1;////clamp(time,0.0,1.0);
 	//float frequency = 1.0;
 	//time *= 0.001;
@@ -476,19 +480,41 @@ void main(void)
 		frequency *= 2;
 		scale *= 0.5;
 	}*/
-	displacement.x = displace( in_Position.xyz+seed);
-	const float dt = 0.001;
-	displacement.y = displace( normalize(in_Position.xyz+vec3(dt,0.0,0.0))+seed);
-	displacement.z = displace( normalize(in_Position.xyz+vec3(0.0,dt,0.0))+seed);
-	displacement.w = displace( normalize(in_Position.xyz+vec3(0.0,0.0,dt))+seed);
-	vec3 df = displacement.yzw - displacement.x;
-	df *= 1.0/dt;
+	displacement = displace( in_Position.xyz+seed);
+	const float dt = 0.000001;
+	vec4 disptangent = displace( normalize(in_Position.xyz+dt*tangent)+seed);
+	vec4 dispbitan = displace( normalize(in_Position.xyz+dt*bitan)+seed);
+	vec4 dispnorm = displace( normalize(in_Position.xyz+dt*norm)+seed);
+	
+	//vec3 df = vec3(disptangent.x,dispbitan.x,dispnorm.x)- displacement.x;
+	
+	//displacement.y = displace( normalize(in_Position.xyz+vec3(dt,0.0,0.0))+seed);
+	//displacement.z = displace( normalize(in_Position.xyz+vec3(0.0,dt,0.0))+seed);
+	//displacement.w = displace( normalize(in_Position.xyz+vec3(0.0,0.0,dt))+seed);
+	//vec3 df = displacement.yzw - displacement.x;
+	//df *= 1.0/dt;
 	//df = normalize(df);
 	//displacement = clamp(displacement,0.1,3.0);
+	float localX = dot(tangent,displacement.yzw);
+	float localY = dot(bitan,displacement.yzw);
+	float localZ = dot(norm,displacement.yzw);
+	vec3 df = normalize(vec3(localX,localY,localZ));
 	position = pos.xyz + (norm * 2.0 * displacement.x);
+	vec3 tanpos = (transformMatrix * vec4(normalize(in_Position.xyz+dt*tangent),1.0)).xyz+ (norm * 2.0 * disptangent.x);
+	vec3 bitanpos = (transformMatrix * vec4(normalize(in_Position.xyz+dt*bitan),1.0)).xyz+ (norm * 2.0 * dispbitan.x);
+	vec3 dtp = tanpos.xyz - position.xyz;
+	vec3 dbp = bitanpos.xyz - position.xyz;
+	//vec3 dtp = vec3(dt,0.0,disptangent.x - displacement.x);
+	//vec3 dbp = vec3(0.0,dt,dispbitan.x - displacement.x);
+	normal = normalize(cross(dtp,dbp));
+	//normal = dot(normal,norm) > 0.0?normal:dot(normal,norm) < 0.0?-normal:norm;
 	//texCoords.xyz = texCoords.yzw;
-	vec3 ccn = cross(cross(norm,-df),-df);
-	normal = norm;//-df;
+	//vec3 ccn = cross(cross(norm,-df),-df);
+	//normal = tbn * displacement.yzw;//-df;
+	//float x2 = pow(localX.x+localX.y+localX.z,2);
+	//float y2 = pow(localY.x+localY.y+localY.z,2);
+	//float z2 = max(1.0-x2-y2,0.0);
+	//normal = sign(length(norm))*sqrt(vec3(x2,y2,z2));
 	//texCoords.w = displacement.x;
 	//texCoords.xy = displacement.yz;
 	/*vec3 off1 = (position.xyz+0.01*tan.xyz) * displacement.y;

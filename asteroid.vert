@@ -31,9 +31,10 @@ void main(void)
 	normal = vec4(normalize(transpose(inverse(mat3(modelMatrix))) * in_Normal.xyz),1.0);
 	tangent = vec4(normalize(transpose(inverse(mat3(modelMatrix))) * in_Tangent.xyz),1.0);
 	bitan = vec4(cross(normal.xyz,tangent.xyz),1.0);
-	texCoords = vec4(in_TexCoords.xyz,1.0);
+	//texCoords = vec4(in_TexCoords.xyz,1.0);
 	vec4 position = modelMatrix * vec4(in_Position.xyz,1.0);
 	//position += normal * crater(in_TexCoords);
+	texCoords = position;
 	eyevec = camera - position;
 	lightvec = light + position;
 	gl_Position = projMatrix * viewMatrix * position;

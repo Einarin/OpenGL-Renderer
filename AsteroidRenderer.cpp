@@ -35,7 +35,7 @@ bool AsteroidRenderer::setup(){
 	return success;
 }
 
-const unsigned int tessfactor = 5;
+const unsigned int tessfactor = 32;
 
 //In order to avoid hanging while generating asteroids
 //	this function behaves as asynchronously as possible
@@ -86,7 +86,7 @@ Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3
 				a->tfGeometry.enable();
 				glUniformMatrix4fv(shader->getUniformLocation("transformMatrix"), 1, GL_FALSE, glm::value_ptr(glm::mat4()));
 				glUniform3fv(shader->getUniformLocation("seed"),1,glm::value_ptr(s2));
-				glUniform1i(shader->getUniformLocation("levels"), 12);
+				glUniform1i(shader->getUniformLocation("levels"), 3);
 				pAst->draw();
 				a->tfGeometry.disable();
 				delete pAst;

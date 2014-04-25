@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 
 	//Camera setup
 	camera = Camera(); // vec3(0.,2.5,3.0),vec3(0,2.0,0),vec3(0,1.0,0)
-	camera.SetPosition(vec3(0.f,2.f,-2.f));
+	camera.SetPosition(vec3(0.f,2.f,-10.f));
 	//camera.SetPosition(vec3(0.0,0.0,0.0));
 	//camera.SetTarget(vec3(-4.f,-4.f,-4.f));
 	camera.SetTarget(vec3(0.0,0.0,0.0));
@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
 	cube.ModelMatrix = mat4();
 	cube.init();
 	cube.download();
-
+	
 	cout << "loading models...\n";
 	Model* model = NULL;
 	const unsigned int asteroidFactor=5;
@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
 	CpuPool.async([&aRenderer](){
 		for(int q=0;q<27;q++){
 			glm::vec3 position(q%3-1,q/3%3-1,q/9-1);
-			if(position != vec3(0.f,0.f,0.f))
+			if(position == vec3(0.f,0.f,0.f))
 				continue;
 			mat4 modelMat = translate(rotate(mat4(),3.14159f*0.25f,glm::vec3(1.f,2.f,3.f)),position*10.f);
 			auto tmp = &aRenderer;
@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
 		glPool.processMainQueueUnit();
 	}*/
 	
-	/*CpuPool.async([&](){
+	CpuPool.async([&](){
 		model = new Model("assets/fighter.obj");
 		auto ptr = model;
 		glQueue.async([=](){
@@ -258,12 +258,16 @@ int main(int argc, char* argv[])
 		checkGlError("setup model shader");
 
 		aRenderer.draw(mls);
+		//mls.setModel(mat4());
+		//ps.draw();
 		checkGlError("asteroid renderer");
 		if(drawNormals){
 			mns.bind();
 			mns.setView(camera.GetViewMatrix());
 			mns.setProjection(camera.GetProjectionMatrix());
 			aRenderer.draw(mns);
+			//mns.setModel(mat4());
+			//ps.draw();
 		}
 
 		if(model && model->ready()){
