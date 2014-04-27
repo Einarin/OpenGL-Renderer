@@ -8,7 +8,7 @@ class StarRenderer :
 	public Renderer
 {
 protected:
-	Sphere geometry;
+	PatchSphere geometry;
 	std::shared_ptr<Shader> shader;
 	bool ready;
 public:

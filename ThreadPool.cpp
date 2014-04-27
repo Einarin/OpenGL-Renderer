@@ -155,6 +155,7 @@ ThreadPool::~ThreadPool(){
 	for(int i=0; i<numThreads;i++){
 		CloseHandle(lpHandles[i]);
 	}
+	delete[] lpHandles;
 	#else
 	for(int i=0; i<numThreads;i++){
 		sharedState.workerThreads[i].thread.join();

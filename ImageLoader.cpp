@@ -20,6 +20,7 @@ bool loadPngToGlTex2D(std::string filepath, gl::GlTexture2D* tex) {
                0/*row_stride*/, NULL/*colormap*/))
          {
 			 tex->setImage(GL_RGBA,glm::ivec2(image.width,image.height),GL_UNSIGNED_BYTE,buffer);
+			 free(buffer);
 			 return true;
 		 }
 		 else

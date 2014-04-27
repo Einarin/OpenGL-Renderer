@@ -3,7 +3,9 @@
 
 namespace gl{
 
-TransformFeedback::TransformFeedback(unsigned int primitiveType):m_primitiveType(primitiveType),m_vao(0)
+TransformFeedback::TransformFeedback(unsigned int primitiveType):
+	m_primitiveType(primitiveType),m_vao(0),m_buffer(0),
+		m_feedbackObject(0),m_queryObject(0)
 {
 }
 
@@ -109,6 +111,18 @@ void TransformFeedback::draw(int count){
 
 TransformFeedback::~TransformFeedback(void)
 {
+	if(m_vao){
+		glDeleteVertexArrays(1,&m_vao);
+	}
+	if(m_buffer){
+		glDeleteBuffers(1,&m_buffer);
+	}
+	if(m_feedbackObject){
+		glDeleteTransformFeedbacks(1,&m_feedbackObject);
+	}
+	if(m_queryObject){
+		glDeleteQueries(1,&m_queryObject);
+	}
 }
 
 } //namespace gl

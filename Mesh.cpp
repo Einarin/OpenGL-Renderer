@@ -7,19 +7,6 @@ enum flags{
 };
 
 namespace gl{
-struct MeshHeader{
-	unsigned int nameoff;
-	unsigned int vertoff;
-	unsigned int vertsize;
-	unsigned int indoff;
-	unsigned int indsize;
-	unsigned int flags;
-	unsigned int drawCount;
-	unsigned int numVertexColorChannels;
-	unsigned int numUVChannels;
-	unsigned int materialIndex;
-	unsigned int numUVComponents[AI_MAX_NUMBER_OF_TEXTURECOORDS];
-};
 uint32 Mesh::serialize(char** inbuff){
 	uint32 bufflen = sizeof(MeshHeader)
 			  + (name.size()+1)*sizeof(char)

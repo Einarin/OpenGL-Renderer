@@ -1,6 +1,7 @@
 #include "glincludes.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <random>
 #include "callbacks.h"
 #include <iostream>
 #include <sstream>
@@ -33,6 +34,7 @@ glm::mat4 projectionMatrix;
 glm::mat4 orthoMatrix;
 int levels = 5;
 int tessFactor = 50;
+double fpsTarget = 60.0;
 
 int main(int argc, char* argv[])
 {
@@ -77,6 +79,21 @@ int main(int argc, char* argv[])
 	glViewport(0, 0, width, height);
 	orthoMatrix = glm::ortho(0.f,static_cast<float>(width),0.f,static_cast<float>(height),-1.f,1.f);
 
+	//setup the text renderer so we can draw Loading...
+	TextManager textMan;
+	textMan.init();
+	TextRenderer* fps = textMan.getTextRenderer("DejaVuSans.ttf",32);
+	fps->loadAscii();
+	//draw a frame right away so we don't look frozen
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glEnable(GL_BLEND); //text is alpha blended
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+	fps->addText("Loading...",vec2(glm::max(width/2-100,5),height/2),vec4(1.0f));
+	fps->draw(orthoMatrix);
+	glfwSwapBuffers(window);
+
+	// BEGIN LOADING!
+
 	//Camera setup
 	camera = Camera(); // vec3(0.,2.5,3.0),vec3(0,2.0,0),vec3(0,1.0,0)
 	camera.SetPosition(vec3(0.f,2.f,-10.f));
@@ -107,25 +124,32 @@ int main(int argc, char* argv[])
 	const unsigned int asteroidFactor=5;
 	AsteroidRenderer aRenderer;
 	if(!aRenderer.setup()) DebugBreak();
-	CpuPool.async([&aRenderer](){
-		for(int q=0;q<27;q++){
-			glm::vec3 position(q%3-1,q/3%3-1,q/9-1);
-			if(position == vec3(0.f,0.f,0.f))
+	Future<bool> asteroidsGenerated;
+	CpuPool.async([&aRenderer,asteroidsGenerated]() mutable{
+		std::mt19937 mtgen;
+		std::uniform_real_distribution<float> dist(1.f,2.f);
+		for(int q=0;q<500;q++){
+			glm::vec3 position(dist(mtgen)-1.5f,dist(mtgen)-1.5f,dist(mtgen)-1.5f);
+			if(length(position) < 0.1f) //we don't want asteroids at the origin
 				continue;
-			mat4 modelMat = translate(rotate(mat4(),3.14159f*0.25f,glm::vec3(1.f,2.f,3.f)),position*10.f);
+			position *= 100.f;
+			float uniformScale = dist(mtgen);
+			mat4 modelMat = scale(mat4(),uniformScale*vec3(dist(mtgen),dist(mtgen),dist(mtgen)));
+			modelMat = translate(rotate(modelMat,3.14159f*0.5f*dist(mtgen),glm::vec3(dist(mtgen),dist(mtgen),dist(mtgen))),position);
 			auto tmp = &aRenderer;
-			CpuPool.await<bool>(
+			//CpuPool.await<bool>(
 				glQueue.async<Future<bool>>([=]()->Future<bool>{
 					return tmp->addAsteroidAsync(modelMat,position);
-			}));
+			});//);
 		}
+		asteroidsGenerated.set(true);
 	});
 	/*while(!result.complete()){
 		glPool.processMainQueueUnit();
 	}*/
 	
 	CpuPool.async([&](){
-		model = new Model("assets/fighter.obj");
+		model = new Model("assets/missile.obj");
 		auto ptr = model;
 		glQueue.async([=](){
 			ptr->init();
@@ -163,16 +187,8 @@ int main(int argc, char* argv[])
 	if(!ts.init())
 		DebugBreak();
 
-	
-	//grab the mouse last so we can do things during load
-	glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_DISABLED);
-
-	TextManager textMan;
-	textMan.init();
 	TextRenderer* textRenderer = textMan.getTextRenderer("DejaVuSans.ttf",24);
 	textRenderer->loadAscii();
-	TextRenderer* fps = textMan.getTextRenderer("DejaVuSans.ttf",32);
-	fps->loadAscii();
 	vec2 end = textRenderer->addText("Hello World!",vec2(5,5),vec4(1.0,1.0,1.0,1.0));
 
 	checkGlError("setup text");
@@ -192,18 +208,30 @@ int main(int argc, char* argv[])
 //	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glCullFace(GL_BACK);
 	glEnable(GL_CULL_FACE);
-	glEnable(GL_BLEND);
-	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	double time = glfwGetTime();
-	double oldtime = time;
+	double fpstime = time;
 	int fpsCount = 10;
+	int lastruns = 0;
 	int counter = 0;
+	float loadingVal = 2.f;
 	bool drawNormals = false;
 	bool changingNormals = false;
 
+	//finish loading before we jump into the main loop
+	if(glQueue.processQueueUnit() || !asteroidsGenerated.isDone())
+	{
+		glfwPollEvents();
+	}
+	//grab the mouse last so we can do things during load
+	glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_DISABLED);
+
 	while (!glfwWindowShouldClose(window))
 	{
+		//know when we got to the top of the render loop
+		glfwSetTime(0.0);
+		//time = glfwGetTime();
 		//input handling
+		glfwPollEvents();
 		handleKeys(window);
 		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_UP)){
 			bb->moveRel(0.f,.01f);
@@ -222,6 +250,10 @@ int main(int argc, char* argv[])
 		}
 		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_COMMA)){
 			levels--;
+		}
+		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_P)){
+			aRenderer.reset();
+			asteroidsGenerated=true;
 		}
 		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_N)){
 			if(!changingNormals){
@@ -300,37 +332,111 @@ int main(int argc, char* argv[])
 		textRenderer->draw(orthoMatrix);
 		checkGlError("draw hello world");
 		counter++;
-		time = glfwGetTime();
-		if(counter >= fpsCount){
+		
+		//if(counter >= fpsCount){
 			counter = 0;
 			fps->clearText();
 			checkGlError("fps clear text");
-			double newtime = time;
-			stringstream ss, ss1, ss2, ss3;
+			stringstream ss, ss1, ss2;
 			ss.precision(3);
+
+			int runs=0;
+			//process async work
+			if(glQueue.processQueueUnit() || !(model && model->ready())){
+				runs++;
+				loadingVal = 2.f;
+			}
+			if(loadingVal > 0.f){
+				fps->addText("Loading...",vec2(glm::max(width/2-100,5),height/2),vec4(1.0f,1.f,1.f,loadingVal));
+				checkGlError("fps add loading");
+				loadingVal -= 0.01f;
+			}
+			//let's see if we have time left over
+			time = glfwGetTime();
+			double targetTime = 0.9 * 1.0/fpsTarget;
+			while(time < targetTime){
+				if(glQueue.processQueueUnit() || !(model && model->ready())){
+					runs++;
+				} else {
+					//do we have enough time to sleep?
+					int dt = static_cast<int>(500.0 *(targetTime-time));
+					if(dt > 0){
+						//We have time left over to meet our frame target
+						//	and no queued work to do
+						//do we have GPU memory?
+						int mem[] = {0,0,0,0};
+						glGetIntegerv(0x9049,mem);
+						glGetIntegerv(0x87FB,mem);
+						glGetError();
+						//Obviously we need MOAR ASTEROIDS!
+						if(mem[0] > 100000 && asteroidsGenerated.isDone() && asteroidsGenerated){
+							const int count = 5;
+							cout << "Generating " << count << " asteroids with " << mem[0] << " bytes available" << endl;
+							CpuPool.async([&aRenderer,asteroidsGenerated,count,time]() mutable{
+								static std::mt19937 mtgen(1000.0*time);
+								static std::uniform_real_distribution<float> dist(1.f,2.f);
+								Future<bool> futs[5];
+								for(int q=0;q<count;q++){
+									glm::vec3 position(dist(mtgen)-1.5f,dist(mtgen)-1.5f,dist(mtgen)-1.5f);
+									if(length(position) < 0.1f) //we don't want asteroids at the origin
+										continue;
+									position *= 100.f;
+									float uniformScale = dist(mtgen);
+									mat4 modelMat = scale(mat4(),uniformScale*vec3(dist(mtgen),dist(mtgen),dist(mtgen)));
+									modelMat = translate(rotate(modelMat,3.14159f*0.5f*dist(mtgen),glm::vec3(dist(mtgen),dist(mtgen),dist(mtgen))),position);
+									auto tmp = &aRenderer;
+									//CpuPool.await<bool>(
+									futs[q] = glQueue.async<Future<bool>>([=]()->Future<bool>{
+											return tmp->addAsteroidAsync(modelMat,position);
+									});//);
+								}
+								bool success = true;
+								for(int q=0;q<count;q++){
+									success &= CpuPool.await(futs[q]);
+								}
+								asteroidsGenerated.set(success);
+							});
+						} else {
+							if(dt > 5){ //lets not oversleep!
+								cout << "s " << dt << " ";
+								Sleep(dt);
+							}
+						}
+					}
+					break;
+				}
+				time = glfwGetTime();
+			}
+			if(runs > 0 || loadingVal > 0.f){
+				if(runs > 0) lastruns = runs;
+				ss1 << "ran " << lastruns << " tasks";
+				fps->addText(ss1.str(),vec2(5,height-96),vec4(1.f,1.f,1.f,loadingVal));
+			}
 			
 			glm::vec3 position = camera.GetPosition();
-			ss << " (" << position[0] << ", " << position[1] << ", " << position[2] << ") ";
+			ss << "(" << position[0] << ", " << position[1] << ", " << position[2] << ") ";
 			//ss << "   up    (" << cam[1][0] << ", " << cam[1][1] << ", " << cam[1][2] << ")\n";*/
-			ss << round(double(fpsCount) / (newtime - oldtime));
-			ss << " FPS";
+			ss2 << round(1.0 / fpstime);
+			ss2 << " FPS";
 			//ss << " levels=" << levels;
-			oldtime = newtime;
 			fps->addText(ss.str(),vec2(5,height-32),vec4(1.0f));
+			fps->addText(ss2.str(),vec2(5,height-64),vec4(1.0f));
 			checkGlError("fps add text");
-			//process async work
-			if(glQueue.processQueueUnit() || !(model && model->ready()))
-				fps->addText("Loading...",vec2(glm::max(width/2-100,5),height/2),vec4(1.0f));
-			checkGlError("fps add loading");
-		}
+		//}
 		checkGlError("about to draw text");
 		fps->draw(orthoMatrix);
 		checkGlError("draw text");
 		glfwSwapBuffers(window);
-		glfwPollEvents();
+		fpstime = glfwGetTime();
 	}
-
+	//close window and shutdown glfw
 	glfwDestroyWindow(window);
 	glfwTerminate();
+
+	//delete dynamic allocations
+	delete fps;
+	delete textRenderer;
+	delete model;
+	
 	return 0;
 }

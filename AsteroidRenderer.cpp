@@ -35,14 +35,18 @@ bool AsteroidRenderer::setup(){
 	return success;
 }
 
-const unsigned int tessfactor = 32;
+void AsteroidRenderer::reset(){
+	m_asteroids.clear();
+}
+
+const unsigned int tessfactor = 16;
 
 //In order to avoid hanging while generating asteroids
 //	this function behaves as asynchronously as possible
 Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3 seed){
-	Asteroid asteroid;
-	asteroid.modelMatrix = modelMatrix;
-	m_asteroids.emplace_back(asteroid);
+	Asteroid* asteroid = new Asteroid();
+	asteroid->modelMatrix = modelMatrix;
+	m_asteroids.emplace_back(std::unique_ptr<Asteroid>(asteroid));
 	int index = m_asteroids.size()-1;
 	Future<bool> result;
 	if(!m_setup){
@@ -56,7 +60,7 @@ Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3
 		int i = index;
 		auto retval = result;
 		auto s1 = seed;
-		Asteroid* ast = &m_asteroids[i];
+		Asteroid* ast = asteroid;
 		auto theShader = feedbackShader;
 
 		PatchSphere* pAsteroid = new PatchSphere();
@@ -73,10 +77,18 @@ Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3
 
 			pAsteroid->init();
 			pAsteroid->download();
+			if(checkGlError("generated Asteroid") != 0){
+				status=false;
+				return;
+			}
 			a->tfGeometry.init();
-			glQueue.async([=](){
+			{//glQueue.async([=](){
 				shader->bind();
 				a->tfGeometry.allocateStorage(tessfactor*tessfactor*6*6*4*sizeof(GLfloat)*12);
+				if(checkGlError("generated Asteroid") != 0){
+					status=false;
+					return;
+				}
 				VertexAttribBuilder b;
 				b.attrib(FLOAT_ATTRIB,3);
 				b.attrib(FLOAT_ATTRIB,3);
@@ -90,10 +102,9 @@ Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3
 				pAst->draw();
 				a->tfGeometry.disable();
 				delete pAst;
-				auto result = status;
-				result.set(true);
+				status.set(0 == checkGlError("generated Asteroid"));
 				a->generated = true;
-			});
+			}//);
 		});
 	});
 	return result;
@@ -101,9 +112,9 @@ Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3
 
 void AsteroidRenderer::draw(MvpShader s){
 	for(auto it = m_asteroids.begin(); it != m_asteroids.end();it++){
-		if(it->generated){
-			s.setModel(it->modelMatrix);
-			it->tfGeometry.draw();
+		if((*it)->generated){
+			s.setModel((*it)->modelMatrix);
+			(*it)->tfGeometry.draw();
 		}
 	}
 }

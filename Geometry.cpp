@@ -275,9 +275,9 @@ void IndexedGeometry::download(){
 	glBindBuffer(GL_ARRAY_BUFFER,0);
 #endif
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	checkGlError("glBindBuffer elements");
+	//checkGlError("glBindBuffer elements");
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER,indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
-	checkGlError("glBufferData elements");
+	//checkGlError("glBufferData elements");
 #ifdef _DEBUG
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
 #endif
@@ -532,7 +532,7 @@ void Patch::genPatch(int nx, int ny, int px, int py, glm::vec3* verts,unsigned i
 	float fl = 1.f/static_cast<float>(left-1);
 	float ft = 1.f/static_cast<float>(top-1);
 	//int size = patchVerts(nx,ny,px,py);
-	//int isize = patchInds(nx,ny,px,py);
+	int isize = patchInds(nx,ny,px,py);
 	//verts.resize(size);
 	//indices.resize(isize);
 	//generate main vertex patch at level (left,top)
@@ -703,17 +703,17 @@ void Patch::genPatch(int nx, int ny, int px, int py, glm::vec3* verts,unsigned i
 		indices[j++] = innerbase + 2*i+1;
 		indices[j++] = outerbase + i+1;
 	}
-	//if(!(j==isize)) DebugBreak();
+	if(!(j==isize)) DebugBreak();
 }
 
 void Patch::tesselate(int tessFactor[4],std::function<vec3(vec3)> transform){
 	int vertCount = patchVerts(tessFactor[0],tessFactor[1],tessFactor[2],tessFactor[3]);
 	int indCount = patchInds(tessFactor[0],tessFactor[1],tessFactor[2],tessFactor[3]);
 	vec3* vs = new vec3[vertCount];
-	//int* is = new int[indCount];
+	unsigned int* is = new unsigned int[indCount];
 	verts.resize(vertCount);
 	indices.resize(indCount);
-	genPatch(tessFactor[0],tessFactor[1],tessFactor[2],tessFactor[3],vs,&indices[0]);
+	genPatch(tessFactor[0],tessFactor[1],tessFactor[2],tessFactor[3],vs,is);
 	for(int i=0;i<vertCount;i++){
 		vec3 vpos = transform(vs[i]);
 		verts[i].pos = vpos;
@@ -725,7 +725,26 @@ void Patch::tesselate(int tessFactor[4],std::function<vec3(vec3)> transform){
 		}
 		verts[i].tc = glm::normalize(vpos);
 	}
+	for(int i=0;i<indCount;i++){
+		indices[i] = is[i];
+	}
 	delete[] vs;
+	delete[] is;
+}
+
+PatchSphere::PatchSphere()
+{
+	for(int i=0;i<6;i++){
+		m_facePatches[i] = nullptr;
+		m_facePatchCount[i] = 0;
+	}
+}
+PatchSphere::~PatchSphere(){
+	for(int i=0;i<6;i++){
+		if(m_facePatches[i] != nullptr){
+			delete[] m_facePatches[i];
+		}	
+	}
 }
 
 void PatchSphere::init(){

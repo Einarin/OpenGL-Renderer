@@ -127,6 +127,8 @@ namespace gl{
 		Patch* m_facePatches[6];
 		int m_facePatchCount[6];
 	public:
+		PatchSphere();
+		~PatchSphere();
 		virtual void init();
 		void tesselate(int baseFactor);
 		virtual void download();

@@ -103,7 +103,7 @@ public:
 	inline bool isDone(){
 		return data->m_set && data->child.isDone();
 	}
-	inline void set(Future<T> result)
+	inline void set(const Future<T>& result)
 	{
 		data->child = result;
 		data->m_set = true;
@@ -203,6 +203,9 @@ public:
 	ThreadPool();
 	ThreadPool(int numberOfThreads);
 	~ThreadPool();
+	bool working(){
+		return sharedState->dispatchQueue.size() > 0;
+	}
 	void async(std::function<void()> workUnit);
 	template<typename T>
 	Future<T> async(std::function<T()> func){

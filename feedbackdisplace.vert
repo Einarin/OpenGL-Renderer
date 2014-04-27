@@ -424,34 +424,34 @@ float SimplexPerlin3D(vec3 P)
     return dot( Simplex3D_GetSurfletWeights( v1234_x, v1234_y, v1234_z ), grad_results ) * FINAL_NORMALIZATION;
 }
 
-float craterDist(){
+float craterDist(vec3 point){
 	float x = 2.0*distance(normalize(vec3(0.5,0.0,0.0)),normalize(in_Position.xyz));
 	return clamp(abs(x),0.0,1.0);
 }
 
-float craterfunc()
+float craterfunc(vec3 point)
 {
-	float x = craterDist() * 10.9314;
+	float x = craterDist(point) * 10.9314;
 	return 0.00001* pow(x,4) - 0.00055 * pow(x,3) + 0.00729*x*x - 0.02252*x - 0.0493;
 }
 
 float crater(vec3 point){
 	//vec4 num = FAST32_hash_3D_Cell(floor(point*10.0));
-	return 4.0 * craterfunc();
+	return 4.0 * craterfunc(point);
 }
 
 float scale;
-vec4 displace(vec3 point){
+vec4 displace(vec3 point, vec3 seed){
 	vec4 displacement = vec4(0.0);
 	scale = 0.1;
 	float frequency = 1.0;
 	for(int i=0;i<levels;i++){
-		vec4 result = SimplexPerlin3D_Deriv(frequency * point);
+		vec4 result = SimplexPerlin3D_Deriv(frequency * (point+seed));
 		displacement += scale * result;
 		frequency *= 2;
 		scale *= 0.5;
 	}
-	return displacement;//crater(point) + displacement;//,craterDist());
+	return crater(point) + displacement;//,craterDist());
 }
 
 
@@ -480,11 +480,11 @@ void main(void)
 		frequency *= 2;
 		scale *= 0.5;
 	}*/
-	displacement = displace( in_Position.xyz+seed);
+	displacement = displace( in_Position.xyz,seed);
 	const float dt = 0.000001;
-	vec4 disptangent = displace( normalize(in_Position.xyz+dt*tangent)+seed);
-	vec4 dispbitan = displace( normalize(in_Position.xyz+dt*bitan)+seed);
-	vec4 dispnorm = displace( normalize(in_Position.xyz+dt*norm)+seed);
+	vec4 disptangent = displace( normalize(in_Position.xyz+dt*tangent),seed);
+	vec4 dispbitan = displace( normalize(in_Position.xyz+dt*bitan),seed);
+	vec4 dispnorm = displace( normalize(in_Position.xyz+dt*norm),seed);
 	
 	//vec3 df = vec3(disptangent.x,dispbitan.x,dispnorm.x)- displacement.x;
 	

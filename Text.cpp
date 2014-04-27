@@ -52,7 +52,7 @@ glm::vec2 TextRenderer::addText(std::string text,glm::vec2 pos,glm::vec4 color){
 			pos.x += glyph->advance_x;
 		}
 	}
-	delete wstr;
+	delete[] wstr;
 	return pos;
 }
 
@@ -73,6 +73,10 @@ void TextRenderer::draw(glm::mat4 ortho){
 
 TextManager::TextManager() : manager((font_manager_type*)font_manager_new( 512, 512, 1 )),shader(Shader::Allocate())
 {}
+
+TextManager::~TextManager(){
+	font_manager_delete((font_manager_t*)manager);
+}
 
 TextRenderer * TextManager::getTextRenderer(std::string fontfile, float size){
 	texture_font_t * font = font_manager_get_from_filename((font_manager_t*)manager,fontfile.c_str(),size);

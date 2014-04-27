@@ -15,10 +15,12 @@ out vec4 FragColor;
 void main( void )
 {	
 	vec3 norm = normalize(normal.xyz);
+	vec3 tang = normalize(tangent.xyz);
 	vec3 eye = normalize(eyevec.xyz);
 	vec3 light = normalize(lightvec.xyz);
   //vec3 ambient = vec3(0.1);
-  vec3 diffuse = texture2D(diffuseTex,vec2(texCoords.s,1.0-texCoords.t)).rgb;
+  vec4 tex = texture2D(diffuseTex,vec2(texCoords.s,1.0-texCoords.t));
+  vec3 diffuse = tex.rgb;
   //vec3 specular = vec3(0.8);
   float diff = max(-dot(light,norm),0);
   vec3 reflect = 2* dot(light,norm) * norm - light;

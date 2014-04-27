@@ -82,6 +82,7 @@ protected:
 	std::vector<Light> lights;
 	std::vector<Material> materials;
 	ModelPart rootPart;
+	char* meshbuff;
 	bool m_loaded,m_downloaded;
 	void loadTextures(const aiScene* scene);
 	void buildFromNode(const aiScene* scene, aiNode* node, glm::mat4 transform,ModelPart* currentPart);
@@ -93,6 +94,7 @@ protected:
 	unsigned int typenum();
 public:
 	Model(std::string filename);
+	~Model();
 	static void addProcessing(std::function<void(Model*)> f);
 	void save(std::string filename);
 	bool ready(){

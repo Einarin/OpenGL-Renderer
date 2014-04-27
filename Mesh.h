@@ -8,6 +8,19 @@ namespace gl{
 
 	class Mesh{
 	public:
+		struct MeshHeader{
+			unsigned int nameoff;
+			unsigned int vertoff;
+			unsigned int vertsize;
+			unsigned int indoff;
+			unsigned int indsize;
+			unsigned int flags;
+			unsigned int drawCount;
+			unsigned int numVertexColorChannels;
+			unsigned int numUVChannels;
+			unsigned int materialIndex;
+			unsigned int numUVComponents[AI_MAX_NUMBER_OF_TEXTURECOORDS];
+		};
 		std::string name;
 		std::vector<vertex> vertices;
 		std::vector<unsigned int> indices;

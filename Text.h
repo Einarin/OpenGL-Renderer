@@ -75,6 +75,7 @@ namespace gl {
 		}
 	public:
 		TextManager();
+		~TextManager();
 		void init()
 		{
 			buildShader();

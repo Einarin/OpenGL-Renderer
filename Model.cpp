@@ -67,7 +67,11 @@ public:
 	}
 };
 
-Model::Model(std::string filename) : filepath(filename),m_loaded(false),m_downloaded(false){
+Model::~Model(){
+	if(meshbuff) delete[] meshbuff;
+}
+
+Model::Model(std::string filename) : filepath(filename),m_loaded(false),m_downloaded(false),meshbuff(nullptr){
 	std::string cachename = filename+".mcache";
 	auto slash = filename.find_last_of('/');
 	auto bslash = filename.find_last_of('\\');
@@ -429,6 +433,10 @@ unsigned int Model::typenum(){
 	typesize += sizeof(Header);
 	typesize += sizeof(FlatModel);
 	typesize += sizeof(FlatMaterial);
+	typesize += sizeof(Mesh);
+	typesize += sizeof(RenderableMesh);
+	typesize += sizeof(vertex);
+	typesize += sizeof(Mesh::MeshHeader);
 	return typesize;
 }
 void Model::save(std::string filename){
@@ -611,7 +619,7 @@ bool Model::loadCache(std::string filename){
 	file.read(reinterpret_cast<char*>(childbuff),h.meshindoff - h.childbuffoff);
 	uint32* meshindbuff = reinterpret_cast<uint32*>(new char[h.meshbuffoff - h.meshindoff]);
 	file.read(reinterpret_cast<char*>(meshindbuff),h.meshbuffoff - h.meshindoff);
-	char* meshbuff = new char[h.filesize - h.meshbuffoff];
+	meshbuff = new char[h.filesize - h.meshbuffoff];
 	if(h.type){
 		char* compressedbuff = new char[h.compressedmeshsize];
 		file.read(compressedbuff,h.compressedmeshsize);
@@ -654,12 +662,14 @@ bool Model::loadCache(std::string filename){
 		int i = current->index;
 		current->name = namebuff+flatlist[i].nameoff;
 		for(int j = flatlist[i].meshlistoff;j<(int)(flatlist[i].meshlistoff+flatlist[i].meshlistsize);j++){
-			current->meshes.emplace_back(RenderableMesh());
+			//current->meshes.emplace_back(RenderableMesh());
+			current->meshes.push_back(RenderableMesh());
 			current->meshes.back().deserialize(meshbuff+meshindbuff[j]);
 		}
 		current->localTranform = flatlist[i].localTransform;
 		for(int j= flatlist[i].childlistoff;j<(int)(flatlist[i].childlistoff+flatlist[i].childlistsize);j++){
-			current->children.emplace_back(ModelPart());
+			//current->children.emplace_back(ModelPart());
+			current->children.push_back(ModelPart());
 			current->children.back().index = childbuff[j];
 			current->children.back().parent = current;
 			workstack.push_back(&current->children.back());
