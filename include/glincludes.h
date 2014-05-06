@@ -19,7 +19,7 @@ enum GlFeatures{
 	GL_TRANSFORM_FEEDBACK_2,
 	GL_FEATURES_COUNT
 };
-void SetupSupport();
+bool SetupSupport();
 int MaxFboColorAttachments();
 int FreeGpuMemoryMB();
 extern bool gl_features[GL_FEATURES_COUNT];

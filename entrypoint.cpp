@@ -33,6 +33,7 @@ glm::mat4 orthoMatrix;
 int levels = 5;
 int tessFactor = 50;
 double fpsTarget = 60.0;
+extern bool fullscreen;
 
 int main(int argc, char* argv[])
 {
@@ -42,12 +43,26 @@ int main(int argc, char* argv[])
 
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
-    //window = glfwCreateWindow(1680, 1050, "Game", glfwGetPrimaryMonitor(), NULL);
-    window = glfwCreateWindow(1280, 800, "Game", NULL/*glfwGetPrimaryMonitor()*/, NULL);
+	glfwWindowHint(GLFW_RESIZABLE,GL_TRUE);
+	//glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,3);
+	//glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);
+#ifdef _DEBUG
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT,GL_TRUE);
+#endif
+	//glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
+	if(fullscreen){
+		GLFWmonitor* primary = glfwGetPrimaryMonitor();
+		int count;
+		const GLFWvidmode* mode = glfwGetVideoMode(primary);
+		window = glfwCreateWindow(mode->width, mode->height, "Game", primary, NULL);
+	} else {
+		window = glfwCreateWindow(1280, 800, "Game", NULL/*glfwGetPrimaryMonitor()*/, NULL);
+	}
 	if (!window)
 	{
-	glfwTerminate();
-	exit(EXIT_FAILURE);
+		DebugBreak();
+		glfwTerminate();
+		return -1;
 	}
 	glfwMakeContextCurrent(window);
 	glewInit();
@@ -55,10 +70,17 @@ int main(int argc, char* argv[])
 	if (GLEW_OK != err)
 	{
 		cout << "glewInit failed, aborting." << endl;
-		exit (1);
+		DebugBreak();
+		glfwTerminate();
+		return -1;
 	}
 	cout << "Status: Using GLEW " << glewGetString(GLEW_VERSION) << endl;
-	SetupSupport();
+	if(!SetupSupport()){
+		cout << "Setup failed! Bailing out..." << endl;
+		DebugBreak();
+		glfwTerminate();
+		return -1;
+	}
 	
 	Assimp::DefaultLogger::create("assimp.log",Assimp::Logger::VERBOSE,aiDefaultLogStream_STDOUT);
 

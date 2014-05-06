@@ -1,9 +1,7 @@
 #pragma once
-
 #include "glincludes.h"
 #include "Shader.h"
 #include <string>
-#include <cstdlib>
 
 //freetype-gl causes massive namespace pollution so we keep it out of the rest of the program
 // we define new types here because C++ sucks >.>
@@ -45,9 +43,10 @@ namespace gl {
 	protected:
 		font_manager_type * manager;
 		std::shared_ptr<Shader> shader;
-		void buildShader(){
+		bool buildShader(){
+			bool status = true;
 			std::shared_ptr<ShaderStage> vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
-			if(!vs->compile(
+			status &= vs->compile(
 				"uniform mat4 projection;\n"
 				"attribute vec3 vertex;\n"
 				"attribute vec2 tex_coord;\n"
@@ -57,21 +56,22 @@ namespace gl {
 					"gl_TexCoord[0].xy = tex_coord.xy;\n"
 					"gl_FrontColor = color;\n"
 					"gl_Position = projection * vec4(vertex,1.0);\n"
-				"}\n")) DebugBreak();
+				"}\n");
 			std::shared_ptr<ShaderStage> fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
-			if(!fs->compile(
+			status &= fs->compile(
 				"uniform sampler2D texture;\n"
 				"void main()\n"
 				"{\n"
 				"float a = texture2D(texture, gl_TexCoord[0].xy).a;\n"
 				"gl_FragColor = vec4(gl_Color.rgb, gl_Color.a*a);\n"
-				"}\n")) DebugBreak();
+				"}\n");
 			shader->addAttrib("vertex",0);
 			shader->addAttrib("tex_coord",1);
 			shader->addAttrib("color",2);
 			shader->attachStage(vs);
 			shader->attachStage(fs);
-			shader->link();
+			status &= shader->link();
+			return status;
 		}
 	public:
 		TextManager();

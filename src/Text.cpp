@@ -1,7 +1,7 @@
-#include "freetype-gl.h"
-#include "font-manager.h"
-#include "vertex-buffer.h"
 #include "Text.h"
+#include "../freetype-gl/freetype-gl.h"
+#include "../freetype-gl/font-manager.h"
+#include "../freetype-gl/vertex-buffer.h"
 #include <glm/gtc/type_ptr.hpp>
 
 namespace gl{

@@ -16,7 +16,11 @@ void onResizeWindow(GLFWwindow* window, int w, int h){
 }
 using glm::vec3;
 //menu keys
+#ifdef _DEBUG
 bool fullscreen = false;
+#else
+bool fullscreen = true;
+#endif
 void onKeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods){
 	if (key == GLFW_KEY_ESCAPE){
 		glfwSetWindowShouldClose(window, GL_TRUE);

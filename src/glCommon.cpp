@@ -107,10 +107,10 @@ int FreeGpuMemoryMB(){
 	return mem[0];
 }
 
-void SetupSupport(){
+bool SetupSupport(){
+	bool status = true;
 	std::string version((const char*)glGetString(GL_VERSION));
 	
-	gl_extensions = ((const char*)glGetString(GL_EXTENSIONS));
 	int spaceEnd = version.find_last_of(' ');
 	int dotEnd = version.find_last_of('.');
 	major_version = version[spaceEnd+1] - 0x30; //convert ASCII to number
@@ -119,6 +119,14 @@ void SetupSupport(){
 	cout << "OpenGL version " << major_version << '.' << minor_version << " supported" << endl;
 	cout << "Vendor is " << glGetString(GL_VENDOR) << endl;
 	cout << "Renderer is " << glGetString(GL_RENDERER) << endl;
+
+	const char* ptr = (const char*)glGetString(GL_EXTENSIONS);
+	if(ptr != nullptr){
+		gl_extensions = ptr;
+	} else {
+		checkGlErrorImpl("Get GL Extensions",__FILE__,__LINE__);
+		status = false;
+	}
 
 	for(int i=0;i<GL_FEATURES_COUNT;i++){
 		gl_features[i] = false;
@@ -142,6 +150,7 @@ void SetupSupport(){
 	if(gl_extensions.find("GL_ATI_meminfo") != std::string::npos){
 		sFreeTexMemNum = 0x87FC;
 	}
+	return status;
 }
 
 int MaxFboColorAttachments(){
