@@ -29,6 +29,5 @@ inline bool SupportFor(GlFeatures index){
 typedef unsigned int uint32;
 
 #ifndef _WIN32
-void DebugBreak()
-{}
+void DebugBreak();
 #endif

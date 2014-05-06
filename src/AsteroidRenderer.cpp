@@ -39,7 +39,7 @@ void AsteroidRenderer::reset(){
 	m_asteroids.clear();
 }
 
-const unsigned int tessfactor = 16;
+const unsigned int tessfactor = 8;
 
 //In order to avoid hanging while generating asteroids
 //	this function behaves as asynchronously as possible

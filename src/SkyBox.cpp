@@ -92,7 +92,7 @@ void SkyBox::init()
 	shaderState &= shader->link();
 	shader->bind();
 	checkGlError("skybox shader");
-	if(!shaderState) while(true); //shader compiler failure
+	if(!shaderState) DebugBreak(); //shader compiler failure
 	texloc = shader->getUniformLocation("cubemap");
 	initialized = true;
 }

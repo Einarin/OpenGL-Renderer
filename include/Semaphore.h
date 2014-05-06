@@ -6,16 +6,21 @@
 #include <semaphore.h>
 #define semaphore_t sem_t
 #endif
+#include <iostream>
 class Semaphore{
 protected:
     semaphore_t s;
+    int id;
 public:
     Semaphore(int initialCount=1){
+    static int num;
         #ifdef _WIN32
             s = CreateSemaphore(NULL,0,initialCount,NULL);
         #else
             sem_init(&s,0,initialCount);
         #endif
+        id = num;
+        num++;
     }
     ~Semaphore(){
         #ifdef _WIN32
@@ -37,6 +42,7 @@ public:
         #else
             sem_post(&s);
         #endif
+        //std::cout << "posting 1 to sem " << id << std::endl;
     }
     void post(int count){
         #ifdef _WIN32
@@ -46,6 +52,7 @@ public:
                 sem_post(&s);
             }
         #endif
+        //std::cout << "posting " << count << " to sem " << id << std::endl;
     }
 };
 

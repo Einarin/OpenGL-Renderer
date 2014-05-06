@@ -78,7 +78,7 @@ public:
 		return data->complete;
 	}
 	inline T wait(){
-		while(data->s.wait())
+		while(!data->s.wait())
 		{}
 		data->s.post();
 		return data->result;
@@ -111,7 +111,7 @@ public:
 		data->s.post();
 	}
 	inline Future<T> wait(){
-		while(data->s.wait())
+		while(!data->s.wait())
 		{}
 		data->s.post();
 		return data->child;
@@ -142,7 +142,7 @@ public:
 		data->s.post();
 	}
 	inline void wait(){
-		while(data->s.wait())
+		while(!data->s.wait())
 		{}
 		data->s.post();
 	}
@@ -268,14 +268,7 @@ public:
 };
 
 template<>
-Future<void> ThreadPool::async<void>(std::function<void()> func){
-	Future<void> f;
-	async([f,func]()mutable{
-		func();
-		f.set();
-	});
-	return f;
-}
+Future<void> ThreadPool::async<void>(std::function<void()> func);
 
 class WorkQueue{
 protected:
@@ -297,14 +290,7 @@ public:
 };
 
 template<>
-Future<void> WorkQueue::async<void>(std::function<void()> func){
-	Future<void> f;
-	async([f,func]()mutable{
-		func();
-		f.set();
-	});
-	return f;
-}
+Future<void> WorkQueue::async<void>(std::function<void()> func);
 
 extern ThreadPool CpuPool;
 extern ThreadPool IoPool;

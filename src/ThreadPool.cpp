@@ -70,6 +70,16 @@ DWORD WINAPI WorkerThreadProc(LPVOID lpParameter){
 #endif
 }
 
+template<>
+Future<void> ThreadPool::async<void>(std::function<void()> func){
+	Future<void> f;
+	async([f,func]()mutable{
+		func();
+		f.set();
+	});
+	return f;
+}
+
 ThreadPool::ThreadPool():sharedState(new DispatchData){
 #ifdef _WIN32
 	SYSTEM_INFO sysinfo;
@@ -200,6 +210,16 @@ bool WorkQueue::processQueueUnit(){
 		RELEASE_MUTEX(queueMutex);
 		return false;
 	}
+}
+
+template<>
+Future<void> WorkQueue::async<void>(std::function<void()> func){
+	Future<void> f;
+	async([f,func]()mutable{
+		func();
+		f.set();
+	});
+	return f;
 }
 
 /*DWORD WINAPI DispatchThreadProc(LPVOID lpParameter){
