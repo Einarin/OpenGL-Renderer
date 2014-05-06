@@ -21,13 +21,19 @@ bool fullscreen = false;
 #else
 bool fullscreen = true;
 #endif
+bool cursorGrabbed = false;
 void onKeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods){
 	if (key == GLFW_KEY_ESCAPE){
 		glfwSetWindowShouldClose(window, GL_TRUE);
 		return;
 	}
-	if(key == GLFW_KEY_C){
-		glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_NORMAL);
+	if(key == GLFW_KEY_C && action == GLFW_PRESS){
+		if(cursorGrabbed){
+			glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_NORMAL);
+		} else {
+			glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_DISABLED);
+		}
+		cursorGrabbed = !cursorGrabbed;
 	}
 	if(key == GLFW_KEY_Y && action == GLFW_PRESS){
 		static int wireframe;
@@ -81,7 +87,7 @@ void handleKeys(GLFWwindow* window){
 double oldMouseX, oldMouseY;
 bool hasmouse = false;
 void onCursorMoved(GLFWwindow* window, double xpos, double ypos){
-	if(hasmouse){
+	if(hasmouse && cursorGrabbed){
 		double dx = oldMouseX-xpos;
 		double dy = oldMouseY-ypos;
 
@@ -93,5 +99,5 @@ void onCursorMoved(GLFWwindow* window, double xpos, double ypos){
 	}
 	oldMouseX = xpos;
 	oldMouseY = ypos;
-	hasmouse = true;
+	hasmouse = cursorGrabbed;
 }

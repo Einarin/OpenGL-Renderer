@@ -34,6 +34,7 @@ int levels = 5;
 int tessFactor = 50;
 double fpsTarget = 60.0;
 extern bool fullscreen;
+extern bool cursorGrabbed;
 
 int main(int argc, char* argv[])
 {
@@ -247,7 +248,10 @@ int main(int argc, char* argv[])
 		glfwPollEvents();
 	}
 	//grab the mouse last so we can do things during load
-	glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_DISABLED);
+	if(!cursorGrabbed){
+		glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_DISABLED);
+		cursorGrabbed = true;
+	}
 
 	while (!glfwWindowShouldClose(window))
 	{
