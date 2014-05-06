@@ -1,11 +1,8 @@
-#pragma once
 #include "Texture.h"
 #include "ImageLoader.h"
 #include <iostream>
-#ifdef _DEBUG
-#include "shader.h"
+#include "Shader.h"
 #include "Geometry.h"
-#endif
 
 namespace gl {
 

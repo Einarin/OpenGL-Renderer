@@ -21,8 +21,6 @@
 #include "CoreShaders.h"
 #include "FrameBufferObject.h"
 
-#include "windows.h" //for debugbreak only!
-
 using namespace std;
 using namespace gl;
 using namespace glm;
@@ -321,8 +319,7 @@ int main(int argc, char* argv[])
 				model->draw(dns);
 			}
 		}
-
-		star.modelMatrix = translate(mat4(),-(vec3)lightpos.xyz);
+		star.modelMatrix = translate(mat4(),-vec3(lightpos.xyz()));
 		star.draw(&camera);
 		FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);
 		glDisable(GL_DEPTH_TEST);
@@ -399,7 +396,7 @@ int main(int argc, char* argv[])
 						} else {
 							if(dt > 5){ //lets not oversleep!
 								cout << "s " << dt << " ";
-								Sleep(dt);
+								std::this_thread::sleep_for(std::chrono::milliseconds(dt));
 							}
 						}
 					}

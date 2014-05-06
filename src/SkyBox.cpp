@@ -123,7 +123,7 @@ GLenum faces[] = {
 		GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
 		};
-char* suffixes[] = {"+x","-x","+y","-y","+z","-z"};
+const char* suffixes[] = {"+x","-x","+y","-y","+z","-z"};
 void SkyBox::setImageAsync(std::string basepngfilename){
 	cubemap.bind();
 	for(int i=0;i<6;i++){

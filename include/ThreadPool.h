@@ -4,26 +4,37 @@
 #include <vector>
 #include <functional>
 #include <utility>
-//use Standard library concurrency when available
-#define USE_STD_CONCURRENCY
+#include <iostream>
+#include "Semaphore.h"
 
+//use Standard library thread when available
+#define USE_STD_THREAD
+
+//Visual Studio before 2012 doesn't have std::thread
 #ifdef _MSC_VER
 #if _MSC_VER < 1700
-#undef USE_STD_CONCURRENCY
+#undef USE_STD_THREAD
 #endif
 #endif
 
-#if USE_STD_CONCURRENCY
+//GCC < 4.8 doesn't have thread_local
+#ifdef __GNUC__
+#if __GNUC__ < 4 || __GNUC__ == 4 && __GNUC_MINOR__ < 8
+#define thread_local __thread
+#endif
+#endif
+
+#ifdef USE_STD_THREAD
 #include <thread>
 #include <mutex>
 #define MUTEX std::unique_ptr<std::mutex>
-#define NEW_MUTEX std::unique_ptr<std::mutex>(new mutex())
+#define NEW_MUTEX std::unique_ptr<std::mutex>(new std::mutex)
 #define ACQUIRE_MUTEX(m) m->lock()
 #define TRY_MUTEX(m) m->try_lock()
 #define RELEASE_MUTEX(m) m->unlock()
 #define THREAD_ID thread::id
 #define LPVOID void*
-#using std::thread;
+using std::thread;
 #else
 //no STL support for concurrency
 #ifdef _WIN32
@@ -37,8 +48,6 @@
 #define thread_local __declspec(thread)
 #define THREAD_ID DWORD
 typedef HANDLE thread;
-#else
-#error "Unsupported compiler environment"
 #endif
 #endif
 
@@ -46,15 +55,11 @@ template<typename T>
 class Future{
 protected:
 	struct Data{
-	HANDLE s;
-	bool complete;
-	T result;
-	Data():complete(false){
-		s = CreateSemaphore(NULL,0,1,NULL);
-	}
-	~Data(){
-		CloseHandle(s);
-	}
+	    Semaphore s;
+	    bool complete;
+	    T result;
+	    Data():complete(false){
+	    }
 	};
 	std::shared_ptr<Data> data;
 public:
@@ -63,7 +68,7 @@ public:
 	inline void set(T val){
 		data->result = val;
 		data->complete = true;
-		ReleaseSemaphore(data->s,1,NULL);
+		data->s.post();
 	}
 	inline T operator=(T val){
 		set(val);
@@ -73,9 +78,9 @@ public:
 		return data->complete;
 	}
 	inline T wait(){
-		while(0 != WaitForSingleObject(data->s,INFINITE))
+		while(data->s.wait())
 		{}
-		ReleaseSemaphore(data->s,1,NULL);
+		data->s.post();
 		return data->result;
 	}
 	inline operator T(){
@@ -86,14 +91,10 @@ public:
 template<typename T>
 class Future<Future<T>>{
 	struct Data{
-		HANDLE s;
+		Semaphore s;
 		bool m_set;
 		Future<T> child;
 		Data():m_set(false){
-		s = CreateSemaphore(NULL,0,1,NULL);
-		}
-		~Data(){
-			CloseHandle(s);
 		}
 	};
 	std::shared_ptr<Data> data;
@@ -107,32 +108,25 @@ public:
 	{
 		data->child = result;
 		data->m_set = true;
-		ReleaseSemaphore(data->s,1,NULL);
+		data->s.post();
 	}
 	inline Future<T> wait(){
-		while(0 != WaitForSingleObject(data->s,INFINITE))
+		while(data->s.wait())
 		{}
-		ReleaseSemaphore(data->s,1,NULL);
+		data->s.post();
 		return data->child;
 	}
 	inline operator Future<T>(){
 		return wait();
 	}
-	/*inline operator T(){
-		return wait();
-	}*/
 };
 
 template<>
 class Future<void>{
 	struct Data{
-	HANDLE s;
+	Semaphore s;
 	bool complete;
 	Data():complete(false){
-		s = CreateSemaphore(NULL,0,1,NULL);
-	}
-	~Data(){
-		CloseHandle(s);
 	}
 	};
 	std::shared_ptr<Data> data;
@@ -145,23 +139,23 @@ public:
 	inline void set(void)
 	{
 		data->complete = true;
-		ReleaseSemaphore(data->s,1,NULL);
+		data->s.post();
 	}
 	inline void wait(){
-		while(0 != WaitForSingleObject(data->s,INFINITE))
+		while(data->s.wait())
 		{}
-		ReleaseSemaphore(data->s,1,NULL);
+		data->s.post();
 	}
 };
 
 struct WorkerThreadData{
 public:
-	thread thread;
+	thread mthread;
 	THREAD_ID threadId;
 	MUTEX mutex;
 	bool blocked;
 	std::queue<std::function<void()>> workData; 
-	WorkerThreadData(): blocked(false),thread(NULL){
+	WorkerThreadData(): blocked(false){
 		mutex = NEW_MUTEX;
 	}
 };
@@ -170,14 +164,20 @@ struct DispatchData{
 	std::vector<WorkerThreadData> workerThreads;
 	std::queue<std::function<void()>> dispatchQueue;
 	MUTEX dispatchMutex;
-	HANDLE dispatchSemaphore;
+	Semaphore dispatchSemaphore;
 	bool stop;
-	/*HANDLE queuingThread;
-	int roundRobinIndex;*/
 };
 
 template<typename T>
+#ifdef USE_STD_THREAD
+void awaitWorkerThreadProc(void* lpParameter){
+#else
+#ifdef _WIN32
 DWORD WINAPI awaitWorkerThreadProc(LPVOID lpParameter){
+#else
+#error "Need thread invocation signature"
+#endif
+#endif
 	std::pair<DispatchData*,Future<T>>* stuff = (std::pair<DispatchData*,Future<T>>*)lpParameter;
 	DispatchData* data = stuff->first;
 	while(true/*!stuff->second.complete()*/){
@@ -193,7 +193,9 @@ DWORD WINAPI awaitWorkerThreadProc(LPVOID lpParameter){
 		}	
 	}
 	delete stuff;
+#ifndef USE_STD_THREAD
 	return 0;
+#endif
 }
 
 class ThreadPool{
@@ -215,15 +217,6 @@ public:
 		});
 		return f;
 	}
-	template<>
-	Future<void> async<void>(std::function<void()> func){
-		Future<void> f;
-		async([f,func]()mutable{
-			func();
-			f.set();
-		});
-		return f;
-	}
 	/*template<typename T>
 	Future<Future<T>> async(std::function<Future<T>()> func){
 		Future<T> f;
@@ -235,7 +228,7 @@ public:
 	}*/
 	template<typename T>
 	T await(Future<T> result){
-		thread_local static int depth;
+		static thread_local int depth;
 		depth++; //track recursion depth
 		//put upper bound on recursion depth to prevent stack overflow
 		if(depth < 100){ 
@@ -253,7 +246,7 @@ public:
 				}
 			}
 		} else {
-			DebugBreak();
+			std::cout << "Warning: worker thread stack has become excessive" << std::endl;
 			//spawn a new worker thread so we don't blow out our stack
 			//auto data = make_pair(&sharedState,result);
 			std::pair<DispatchData*,Future<T>>* data = new std::pair<DispatchData*,Future<T>>;
@@ -274,10 +267,20 @@ public:
 	}
 };
 
+template<>
+Future<void> ThreadPool::async<void>(std::function<void()> func){
+	Future<void> f;
+	async([f,func]()mutable{
+		func();
+		f.set();
+	});
+	return f;
+}
+
 class WorkQueue{
 protected:
 	std::queue<std::function<void()>> workQueue;
-	HANDLE queueMutex;
+	MUTEX queueMutex;
 public:
 	WorkQueue();
 	void async(std::function<void()> workUnit);
@@ -289,17 +292,19 @@ public:
 		});
 		return f;
 	}
-	template<>
-	Future<void> async<void>(std::function<void()> func){
-		Future<void> f;
-		async([f,func]()mutable{
-			func();
-			f.set();
-		});
-		return f;
-	}
+	
 	bool processQueueUnit(); //returns true if work was done
 };
+
+template<>
+Future<void> WorkQueue::async<void>(std::function<void()> func){
+	Future<void> f;
+	async([f,func]()mutable{
+		func();
+		f.set();
+	});
+	return f;
+}
 
 extern ThreadPool CpuPool;
 extern ThreadPool IoPool;

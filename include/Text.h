@@ -1,7 +1,7 @@
 #pragma once
 
 #include "glincludes.h"
-#include "shader.h"
+#include "Shader.h"
 #include <string>
 #include <cstdlib>
 

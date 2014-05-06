@@ -1,6 +1,7 @@
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstring>
 #include "ImageLoader.h"
-#include "png.h"
+#include <png.h>
 #include "Texture.h"
 
 namespace gl{

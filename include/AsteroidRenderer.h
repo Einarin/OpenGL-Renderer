@@ -1,6 +1,6 @@
 #pragma once
 #include "glincludes.h"
-#include "renderer.h"
+#include "Renderer.h"
 #include "TransformFeedback.h"
 #include "ThreadPool.h"
 #include <list>

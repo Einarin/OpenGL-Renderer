@@ -2,7 +2,7 @@
 #include "glincludes.h"
 #include <vector>
 #include <functional>
-#include "shader.h"
+#include "Shader.h"
 namespace gl{
 
 	class Geometry

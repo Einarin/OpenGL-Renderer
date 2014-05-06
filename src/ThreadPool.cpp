@@ -40,9 +40,12 @@ void SetThreadName( DWORD dwThreadID, const char* threadName)
 #endif
 #endif
 
-DWORD WINAPI DispatchThreadProc(LPVOID lpParameter);
-
+//DWORD WINAPI DispatchThreadProc(LPVOID lpParameter);
+#ifdef USE_STD_THREAD
+void WorkerThreadProc(void* lpParameter){
+#else
 DWORD WINAPI WorkerThreadProc(LPVOID lpParameter){
+#endif
 	std::shared_ptr<DispatchData> data = *(std::shared_ptr<DispatchData>*)lpParameter;
 	bool run = true;
 	while(run){
@@ -57,12 +60,14 @@ DWORD WINAPI WorkerThreadProc(LPVOID lpParameter){
 			run = !data->stop;
 			RELEASE_MUTEX(data->dispatchMutex);
 			if(run){
-				WaitForSingleObject(data->dispatchSemaphore,INFINITE);
+				data->dispatchSemaphore.wait();
 			}
 		}
 		
 	}
+#ifndef USE_STD_THREAD
 	return 0;
+#endif
 }
 
 ThreadPool::ThreadPool():sharedState(new DispatchData){
@@ -79,13 +84,13 @@ ThreadPool::ThreadPool():sharedState(new DispatchData){
 	sharedState->workerThreads.resize(numberOfThreads);
 
 	sharedState->dispatchMutex = NEW_MUTEX;
-	sharedState->dispatchSemaphore = CreateSemaphore(NULL,0,numberOfThreads,NULL);
+	//sharedState->dispatchSemaphore = CreateSemaphore(NULL,0,numberOfThreads,NULL);
 
 	for(int i=0;i<numberOfThreads;i++)
 	{
 		WorkerThreadData& current = sharedState->workerThreads[i];
-		#ifdef WIN32_CONCURRENCY
-			current.thread = CreateThread(NULL,0,WorkerThreadProc,(LPVOID)&sharedState,0,&current.threadId);
+		#ifndef USE_STD_THREAD
+			current.mthread = CreateThread(NULL,0,WorkerThreadProc,(LPVOID)&sharedState,0,&current.threadId);
 			#ifdef _DEBUG
 			std::stringstream ss;
 			ss << "Thread Pool Worker " << workernum++;
@@ -94,9 +99,9 @@ ThreadPool::ThreadPool():sharedState(new DispatchData){
 			SetThreadName(current.threadId,tmp.c_str());
 			#endif
 		#else
-			current.thread = thread(WorkerThreadProc,(LPVOID)data);
-			current.threadId = current.thread.get_id();
-			worker.detach();
+			current.mthread = thread(WorkerThreadProc,(void*)&sharedState);
+			current.threadId = current.mthread.get_id();
+			current.mthread.detach();
 		#endif
 	}
 	//sharedState.roundRobinIndex=0;
@@ -110,13 +115,13 @@ ThreadPool::ThreadPool(int numberOfThreads):sharedState(new DispatchData){
 	sharedState->workerThreads.resize(numberOfThreads);
 
 	sharedState->dispatchMutex = NEW_MUTEX;
-	sharedState->dispatchSemaphore = CreateSemaphore(NULL,0,numberOfThreads,NULL);
+	//sharedState->dispatchSemaphore = CreateSemaphore(NULL,0,numberOfThreads,NULL);
 
 	for(int i=0;i<numberOfThreads;i++)
 	{
 		WorkerThreadData& current = sharedState->workerThreads[i];
-		#ifdef WIN32_CONCURRENCY
-			current.thread = CreateThread(NULL,0,WorkerThreadProc,(LPVOID)&sharedState,0,&current.threadId);
+		#ifndef USE_STD_THREAD
+			current.mthread = CreateThread(NULL,0,WorkerThreadProc,(LPVOID)&sharedState,0,&current.threadId);
 			#ifdef _DEBUG
 			std::stringstream ss;
 			ss << "Thread Pool Worker " << workernum++;
@@ -125,9 +130,9 @@ ThreadPool::ThreadPool(int numberOfThreads):sharedState(new DispatchData){
 			SetThreadName(current.threadId,tmp.c_str());
 			#endif
 		#else
-			current.thread = thread(WorkerThreadProc,(LPVOID)data);
-			current.threadId = current.thread.get_id();
-			worker.detach();
+			current.mthread = thread(WorkerThreadProc,(void*)&sharedState);
+			current.threadId = current.mthread.get_id();
+			current.mthread.detach();
 		#endif
 	}
 	//sharedState.roundRobinIndex=0;
@@ -141,13 +146,14 @@ ThreadPool::~ThreadPool(){
 	int numThreads = sharedState->workerThreads.size();
 	ACQUIRE_MUTEX(sharedState->dispatchMutex);
 	sharedState->stop = true; //tell the worker threads to stop
-	ReleaseSemaphore(sharedState->dispatchSemaphore,numThreads,NULL); //wake all worker threads
+	///ReleaseSemaphore(sharedState->dispatchSemaphore,numThreads,NULL); //wake all worker threads
+	sharedState->dispatchSemaphore.post(numThreads);
 	RELEASE_MUTEX(sharedState->dispatchMutex);
 	
-	#ifdef WIN32_CONCURRENCY
+	#ifndef USE_STD_THREAD
 	HANDLE* lpHandles = new HANDLE[numThreads];
 	for(int i=0; i<numThreads;i++){
-		lpHandles[i] = sharedState->workerThreads[i].thread;
+		lpHandles[i] = sharedState->workerThreads[i].mthread;
 	}
 	//Don't wait for threads to end before returning
 	//sharedState is a shared_ptr so it will persist until all threads end
@@ -158,7 +164,7 @@ ThreadPool::~ThreadPool(){
 	delete[] lpHandles;
 	#else
 	for(int i=0; i<numThreads;i++){
-		sharedState.workerThreads[i].thread.join();
+		//sharedState.workerThreads[i].thread.join();
 	}
 	#endif
 }
@@ -167,7 +173,8 @@ void ThreadPool::async(std::function<void()> workUnit){
 	ACQUIRE_MUTEX(sharedState->dispatchMutex);
 	sharedState->dispatchQueue.push(workUnit);
 	RELEASE_MUTEX(sharedState->dispatchMutex);
-	ReleaseSemaphore(sharedState->dispatchSemaphore,1,NULL);
+	//ReleaseSemaphore(sharedState->dispatchSemaphore,1,NULL);
+	sharedState->dispatchSemaphore.post();
 	//ResumeThread(sharedState.queuingThread);
 }
 
