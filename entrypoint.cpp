@@ -396,7 +396,11 @@ int main(int argc, char* argv[])
 						} else {
 							if(dt > 5){ //lets not oversleep!
 								//cout << "s " << dt << " ";
+#ifdef USE_STD_THREAD
 								std::this_thread::sleep_for(std::chrono::milliseconds(dt));
+#else
+								Sleep(dt);
+#endif
 							}
 						}
 					}

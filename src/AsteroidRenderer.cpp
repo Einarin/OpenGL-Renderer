@@ -18,7 +18,7 @@ bool AsteroidRenderer::setup(){
 	bool success = true;
 	feedbackShader = Shader::Allocate();
 	auto feedbackvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
-	success &= feedbackvs->compileFromFile("feedbackdisplace.vert");
+	success &= feedbackvs->compileFromFile("glsl/feedbackdisplace.vert");
 	feedbackShader->addAttrib("in_Position",0);
 	feedbackShader->addAttrib("in_Normal",1);
 	feedbackShader->addAttrib("in_Tangent",2);
