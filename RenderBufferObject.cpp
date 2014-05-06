@@ -15,7 +15,8 @@ void RenderbufferObject::init(unsigned int format, glm::ivec2 size){
 		glDeleteRenderbuffers(1,&id);
 	}
 	glGenRenderbuffers(1,&id);
-	glRenderbufferStorage(id,format,size.x,size.y);
+	glBindRenderbuffer(GL_RENDERBUFFER,id);
+	glRenderbufferStorage(GL_RENDERBUFFER,format,size.x,size.y);
 }
 
 RenderbufferObject::~RenderbufferObject(void)

@@ -21,6 +21,7 @@ enum GlFeatures{
 };
 void SetupSupport();
 int MaxFboColorAttachments();
+int FreeGpuMemoryMB();
 extern bool gl_features[GL_FEATURES_COUNT];
 inline bool SupportFor(GlFeatures index){
 	return gl_features[index];

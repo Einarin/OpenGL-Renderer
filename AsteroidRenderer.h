@@ -26,6 +26,9 @@ public:
 	AsteroidRenderer(void);
 	~AsteroidRenderer(void);
 	bool setup();
+	inline int asteroidCount() {
+		return m_asteroids.size();
+	}
 	void reset();
 	Future<bool> addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3 seed);
 	virtual void draw(MvpShader s);

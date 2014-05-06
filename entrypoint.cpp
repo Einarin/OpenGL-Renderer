@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
 	AsteroidRenderer aRenderer;
 	if(!aRenderer.setup()) DebugBreak();
 	Future<bool> asteroidsGenerated;
-	CpuPool.async([&aRenderer,asteroidsGenerated]() mutable{
+	/*CpuPool.async([&aRenderer,asteroidsGenerated]() mutable{
 		std::mt19937 mtgen;
 		std::uniform_real_distribution<float> dist(1.f,2.f);
 		for(int q=0;q<500;q++){
@@ -147,8 +147,9 @@ int main(int argc, char* argv[])
 	/*while(!result.complete()){
 		glPool.processMainQueueUnit();
 	}*/
+	aRenderer.addAsteroidAsync(mat4(),vec3(0.f));
 	
-	CpuPool.async([&](){
+	/*CpuPool.async([&](){
 		model = new Model("assets/missile.obj");
 		auto ptr = model;
 		glQueue.async([=](){
@@ -198,8 +199,11 @@ int main(int argc, char* argv[])
 	fbo.Size = ivec2(1280,800);
 	//TexRef tex = TextureManager::Instance()->texFromFile("Hello.png");
 	TexRef tex = TextureManager::Instance()->backedTex(GL_RGBA,fbo.Size,GL_UNSIGNED_BYTE);
+	checkGlError("backedTex");
 	fbo.attachTexture(GL_DRAW_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,tex);
+	checkGlError("attachTexture");
 	fbo.attachDepthStencilRenderbuffer(GL_DEPTH24_STENCIL8);
+	checkGlError("attachDepthStencilRenderbuffer");
 	if(!fbo.isComplete(GL_DRAW_FRAMEBUFFER)){
 		DebugBreak();
 	}
@@ -337,12 +341,12 @@ int main(int argc, char* argv[])
 			counter = 0;
 			fps->clearText();
 			checkGlError("fps clear text");
-			stringstream ss, ss1, ss2;
+			stringstream ss, ss1, ss2, ss3;
 			ss.precision(3);
 
 			int runs=0;
 			//process async work
-			if(glQueue.processQueueUnit() || !(model && model->ready())){
+			if(glQueue.processQueueUnit() ){//|| !(model && model->ready())){
 				runs++;
 				loadingVal = 2.f;
 			}
@@ -353,9 +357,9 @@ int main(int argc, char* argv[])
 			}
 			//let's see if we have time left over
 			time = glfwGetTime();
-			double targetTime = 0.9 * 1.0/fpsTarget;
+			double targetTime =  1.0/fpsTarget;
 			while(time < targetTime){
-				if(glQueue.processQueueUnit() || !(model && model->ready())){
+				if(glQueue.processQueueUnit()){
 					runs++;
 				} else {
 					//do we have enough time to sleep?
@@ -364,14 +368,11 @@ int main(int argc, char* argv[])
 						//We have time left over to meet our frame target
 						//	and no queued work to do
 						//do we have GPU memory?
-						int mem[] = {0,0,0,0};
-						glGetIntegerv(0x9049,mem);
-						glGetIntegerv(0x87FB,mem);
-						glGetError();
+						int freeMem = FreeGpuMemoryMB();
 						//Obviously we need MOAR ASTEROIDS!
-						if(mem[0] > 100000 && asteroidsGenerated.isDone() && asteroidsGenerated){
+						if(freeMem > 100000 && asteroidsGenerated.isDone() && asteroidsGenerated){
 							const int count = 5;
-							cout << "Generating " << count << " asteroids with " << mem[0] << " bytes available" << endl;
+							cout << "Generating " << count << " asteroids with " << freeMem << " bytes available" << endl;
 							CpuPool.async([&aRenderer,asteroidsGenerated,count,time]() mutable{
 								static std::mt19937 mtgen(1000.0*time);
 								static std::uniform_real_distribution<float> dist(1.f,2.f);
@@ -407,10 +408,12 @@ int main(int argc, char* argv[])
 				}
 				time = glfwGetTime();
 			}
+			ss3 << aRenderer.asteroidCount() << " asteroids";
+			fps->addText(ss3.str(),vec2(5,height-96),vec4(1.f));
 			if(runs > 0 || loadingVal > 0.f){
 				if(runs > 0) lastruns = runs;
 				ss1 << "ran " << lastruns << " tasks";
-				fps->addText(ss1.str(),vec2(5,height-96),vec4(1.f,1.f,1.f,loadingVal));
+				fps->addText(ss1.str(),vec2(5,height-128),vec4(1.f,1.f,1.f,loadingVal));
 			}
 			
 			glm::vec3 position = camera.GetPosition();

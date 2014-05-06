@@ -91,19 +91,19 @@ void FramebufferObject::attachRenderbuffer(unsigned int target, unsigned int att
 void FramebufferObject::attachDepthStencilRenderbuffer(unsigned int format){
 	depthStencilRenderbuffer.init(format,Size);
 	bind(GL_DRAW_FRAMEBUFFER);
-	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER,GL_DEPTH_STENCIL_ATTACHMENT,
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER,GL_DEPTH_STENCIL_ATTACHMENT,
 		GL_RENDERBUFFER,depthStencilRenderbuffer.getId());
 }
 void FramebufferObject::attachDepthRenderbuffer(unsigned int format){
 	depthRenderbuffer.init(format,Size);
 	bind(GL_DRAW_FRAMEBUFFER);
-	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER,GL_DEPTH_ATTACHMENT,
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER,GL_DEPTH_ATTACHMENT,
 		GL_RENDERBUFFER,depthRenderbuffer.getId());
 }
 void FramebufferObject::attachStencilRenderbuffer(unsigned int format){
 	stencilRenderbuffer.init(format,Size);
 	bind(GL_DRAW_FRAMEBUFFER);
-	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER,GL_STENCIL_ATTACHMENT,
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER,GL_STENCIL_ATTACHMENT,
 		GL_RENDERBUFFER,stencilRenderbuffer.getId());
 }
 
