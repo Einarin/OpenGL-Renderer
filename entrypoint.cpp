@@ -42,8 +42,8 @@ int main(int argc, char* argv[])
 
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
-	//window = glfwCreateWindow(1680, 1050, "Game", glfwGetPrimaryMonitor(), NULL);
-	window = glfwCreateWindow(1280, 800, "Game", NULL/*glfwGetPrimaryMonitor()*/, NULL);
+    //window = glfwCreateWindow(1680, 1050, "Game", glfwGetPrimaryMonitor(), NULL);
+    window = glfwCreateWindow(1280, 800, "Game", NULL/*glfwGetPrimaryMonitor()*/, NULL);
 	if (!window)
 	{
 	glfwTerminate();
@@ -123,10 +123,10 @@ int main(int argc, char* argv[])
 	AsteroidRenderer aRenderer;
 	if(!aRenderer.setup()) DebugBreak();
 	Future<bool> asteroidsGenerated;
-	/*CpuPool.async([&aRenderer,asteroidsGenerated]() mutable{
+    CpuPool.async([&aRenderer,asteroidsGenerated]() mutable{
 		std::mt19937 mtgen;
 		std::uniform_real_distribution<float> dist(1.f,2.f);
-		for(int q=0;q<100;q++){
+        for(int q=0;q<5;q++){
 			glm::vec3 position(dist(mtgen)-1.5f,dist(mtgen)-1.5f,dist(mtgen)-1.5f);
 			if(length(position) < 0.1f) //we don't want asteroids at the origin
 				continue;
@@ -145,9 +145,9 @@ int main(int argc, char* argv[])
 	/*while(!result.complete()){
 		glPool.processMainQueueUnit();
 	}*/
-	aRenderer.addAsteroidAsync(mat4(),vec3(0.f));
+    //aRenderer.addAsteroidAsync(mat4(),vec3(0.f));
 	
-	/*CpuPool.async([&](){
+    CpuPool.async([&](){
 		model = new Model("assets/missile.obj");
 		auto ptr = model;
 		glQueue.async([=](){
