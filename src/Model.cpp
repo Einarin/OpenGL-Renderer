@@ -34,7 +34,7 @@ uint64_t fileModificationTime(std::string filename){
 	}
 	return result;
 #else
-#error "TODO: Implement!"
+//#error "TODO: Implement!"
 return 0;
 #endif
 }
@@ -602,6 +602,8 @@ bool Model::loadCache(std::string filename){
 	std::ifstream file(filename, std::ifstream::binary);
 	Header h;
 	std::vector<ModelPart*> workstack;
+	FlatModel* flatlist;
+	FlatMaterial* flatmat;
 	bool status = true;
 	file.read(reinterpret_cast<char*>(&h),sizeof(Header));
 	//calculate the sum of the type sizes to use as a check for cache format changes
@@ -633,7 +635,7 @@ bool Model::loadCache(std::string filename){
 		file.read(meshbuff,h.filesize - h.meshbuffoff);
 	}
 	file.close();
-	FlatMaterial* flatmat = reinterpret_cast<FlatMaterial*>(matbuff);
+	flatmat = reinterpret_cast<FlatMaterial*>(matbuff);
 	//build materials
 	materials.resize(h.flatmatsize);
 	for(int i=0;i<h.flatmatsize;i++){
@@ -652,7 +654,7 @@ bool Model::loadCache(std::string filename){
 		materials[i].setupTextures();
 	}
 
-	FlatModel* flatlist = reinterpret_cast<FlatModel*>(flatbuff);
+	flatlist = reinterpret_cast<FlatModel*>(flatbuff);
 	//build graph from flatlist
 	workstack.push_back(&rootPart);
 	rootPart.index = 0;

@@ -1,6 +1,6 @@
 #pragma once
 #include "glincludes.h"
-#include "renderer.h"
+#include "Renderer.h"
 #include "Geometry.h"
 
 namespace gl {

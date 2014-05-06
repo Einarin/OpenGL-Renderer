@@ -9,11 +9,11 @@ namespace gl{
 bool NormalShader::init(){
 	bool success = true;
 	auto nvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
-	success &= nvs->compileFromFile("mvpnorm.vert");
+	success &= nvs->compileFromFile("glsl/mvpnorm.vert");
 	auto ngs = ShaderStage::Allocate(GL_GEOMETRY_SHADER);
-	success &= ngs->compileFromFile("normals.geom");
+	success &= ngs->compileFromFile("glsl/normals.geom");
 	auto cfs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
-	success &= cfs->compileFromFile("attribColor.frag");
+	success &= cfs->compileFromFile("glsl/attribColor.frag");
 	m_shader = Shader::Allocate();
 	m_shader->addAttrib("in_Position",0);
 	m_shader->addAttrib("in_Normal",1);
@@ -33,8 +33,8 @@ bool LightingShader::init(){
 	m_shader = Shader::Allocate();
 	auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 	auto fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
-	success &= vs->compileFromFile("asteroid.vert");
-	success &= fs->compileFromFile("asteroid.frag");
+	success &= vs->compileFromFile("glsl/asteroid.vert");
+	success &= fs->compileFromFile("glsl/asteroid.frag");
 	m_shader->addAttrib("in_Position",0);
 	m_shader->addAttrib("in_Normal",1);
 	m_shader->addAttrib("in_Tangent",2);
@@ -53,8 +53,8 @@ bool TexturedShader::init(){
 	m_shader = Shader::Allocate();
 	auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 	auto fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
-	success &= vs->compileFromFile("model.vert");
-	success &= fs->compileFromFile("model.frag");
+	success &= vs->compileFromFile("glsl/model.vert");
+	success &= fs->compileFromFile("glsl/model.frag");
 	m_shader->addAttrib("in_Position",0);
 	m_shader->addAttrib("in_Normal",1);
 	m_shader->addAttrib("in_Tangent",2);

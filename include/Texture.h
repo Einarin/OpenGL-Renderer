@@ -24,10 +24,10 @@ public:
 	virtual void wrap()=0;
 	virtual void clamp()=0;
 	virtual void mirror()=0;
-	#ifdef _DEBUG
+
 	//liable to be slow, intended for debugging only!
 	virtual void draw()=0;
-	#endif
+
 	virtual ~Texture(){
 		if(allocated){
 			dealloc();
@@ -104,9 +104,7 @@ public:
 	virtual void unreferenced();
 	void setup(GLint format,glm::ivec2 size,GLenum datatype);
 	void setImage(GLint format,glm::ivec2 size,GLenum datatype,void* data);
-#ifdef _DEBUG
 	void draw();
-#endif
 	protected:
 	glm::ivec2 size;
 };
@@ -125,11 +123,9 @@ public:
 	virtual void dealloc();
 	void setup(GLint format,glm::ivec2 texSize,GLenum datatype,GLenum face);
 	void setImage(GLint format,glm::ivec2 size,GLenum datatype,GLenum face,void* data);
-#ifdef _DEBUG
 	void draw(){
 	//TODO: unimplemented
 	}
-#endif
 };
 
 class FileBackedGlTexture2D : public GlTexture2D {

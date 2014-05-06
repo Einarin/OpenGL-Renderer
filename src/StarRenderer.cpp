@@ -22,8 +22,8 @@ bool StarRenderer::load(){
 	shader = Shader::Allocate();
 	auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 	auto fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
-	success &= vs->compileFromFile("star.vert");
-	success &= fs->compileFromFile("star.frag");
+	success &= vs->compileFromFile("glsl/star.vert");
+	success &= fs->compileFromFile("glsl/star.frag");
 	shader->addAttrib("in_Position",0);
 	shader->addAttrib("in_Normal",1);
 	shader->addAttrib("in_Tangent",2);

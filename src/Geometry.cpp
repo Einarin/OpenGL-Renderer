@@ -83,7 +83,7 @@ void Billboard::move(float topLeftX, float topLeftY, float width, float height)
 }
 void Billboard::move(float topLeftX, float topLeftY)
 {
-	vec2 size = corners[3].pos.xy - corners[0].pos.xy;
+	vec2 size = vec2(corners[3].pos.xy()) - vec2(corners[0].pos.xy());
 	corners[0].pos = vec4(topLeftX,topLeftY,0,1);
     corners[1].pos = vec4(topLeftX,topLeftY+size.y,0,1);
     corners[2].pos = vec4(topLeftX+size.x,topLeftY,0,1);
@@ -92,10 +92,14 @@ void Billboard::move(float topLeftX, float topLeftY)
 }
 void Billboard::moveRel(float dx, float dy)
 {
-	corners[0].pos.xy += vec2(dx,dy);
-	corners[1].pos.xy += vec2(dx,dy);
-	corners[2].pos.xy += vec2(dx,dy);
-	corners[3].pos.xy += vec2(dx,dy);
+	corners[0].pos.x += dx;
+	corners[0].pos.y += dy;
+	corners[1].pos.x += dx;
+	corners[1].pos.y += dy;
+	corners[2].pos.x += dx;
+	corners[2].pos.y += dy;
+	corners[3].pos.x += dx;
+	corners[3].pos.y += dy;
 	download();
 }
 
@@ -209,7 +213,7 @@ void Sphere::tesselate(std::vector<vertex>& verts,std::vector<unsigned int>& ind
 			float z = sin(angle) * xzMag;
 			vertex& vert = verts[i*tesselationFactor + j];
 			vert.pos = vec3(x,y,z);
-			vert.tc = vec3(texCoord.st,0.0);
+			vert.tc = vec3(texCoord.s,texCoord.t,0.0);
 			vert.normal = vert.pos;
 		}
 	}
@@ -313,11 +317,13 @@ void Cube::generate(unsigned int tesselationFactor, glm::vec3 seed, bool simplex
 
 void Cube::calcFaceNormal(std::vector<vertex>& verts,std::vector<unsigned int>& indices, int* pos)
 {
-	vec3 p1 = verts[pos[1]].pos.xyz - verts[pos[0]].pos.xyz;
-	vec3 p2 = verts[pos[2]].pos.xyz - verts[pos[0]].pos.xyz;
+	vec3 p1 = vec3(verts[pos[1]].pos.xyz()) - vec3(verts[pos[0]].pos.xyz());
+	vec3 p2 = vec3(verts[pos[2]].pos.xyz()) - vec3(verts[pos[0]].pos.xyz());
 	vec3 normal = normalize(cross(p1,p2));
 	for(int i=0;i<3;i++){
-		verts[pos[i]].normal.xyz += normal;
+		verts[pos[i]].normal.x += normal.x;
+		verts[pos[i]].normal.y += normal.y;
+		verts[pos[i]].normal.z += normal.z;
 	}
 }
 
@@ -764,7 +770,7 @@ void PatchSphere::download(){
 }
 static std::function<vec3(vec3)> transform[] = {
 	[](vec3 in)->vec3{
-		return glm::vec3(in.xy,1.f);
+		return glm::vec3(in.x,in.y,1.f);
 	},
 	[](vec3 in)->vec3{
 		return glm::vec3(-in.x,in.y,-1.f);
@@ -773,7 +779,7 @@ static std::function<vec3(vec3)> transform[] = {
 		return glm::vec3(-1.f,in.x,-in.y);
 	},
 	[](vec3 in)->vec3{
-		return glm::vec3(1.f,in.xy);
+		return glm::vec3(1.f,in.x,in.y);
 	},
 	[](vec3 in)->vec3{
 		return glm::vec3(in.x,1.f,-in.y);

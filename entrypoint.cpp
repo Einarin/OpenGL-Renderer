@@ -21,8 +21,6 @@
 #include "CoreShaders.h"
 #include "FrameBufferObject.h"
 
-#include "windows.h" //for debugbreak only!
-
 using namespace std;
 using namespace gl;
 using namespace glm;
@@ -128,7 +126,7 @@ int main(int argc, char* argv[])
 	/*CpuPool.async([&aRenderer,asteroidsGenerated]() mutable{
 		std::mt19937 mtgen;
 		std::uniform_real_distribution<float> dist(1.f,2.f);
-		for(int q=0;q<500;q++){
+		for(int q=0;q<100;q++){
 			glm::vec3 position(dist(mtgen)-1.5f,dist(mtgen)-1.5f,dist(mtgen)-1.5f);
 			if(length(position) < 0.1f) //we don't want asteroids at the origin
 				continue;
@@ -325,8 +323,7 @@ int main(int argc, char* argv[])
 				model->draw(dns);
 			}
 		}
-
-		star.modelMatrix = translate(mat4(),-(vec3)lightpos.xyz);
+		star.modelMatrix = translate(mat4(),-vec3(lightpos.xyz()));
 		star.draw(&camera);
 		FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);
 		glDisable(GL_DEPTH_TEST);
@@ -399,8 +396,12 @@ int main(int argc, char* argv[])
 							});
 						} else {
 							if(dt > 5){ //lets not oversleep!
-								cout << "s " << dt << " ";
+								//cout << "s " << dt << " ";
+#ifdef USE_STD_THREAD
+								std::this_thread::sleep_for(std::chrono::milliseconds(dt));
+#else
 								Sleep(dt);
+#endif
 							}
 						}
 					}

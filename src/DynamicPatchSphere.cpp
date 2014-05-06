@@ -24,7 +24,7 @@ DynamicPatchSphere::~DynamicPatchSphere(void)
 }
 std::function<vec3(vec3)> transform[] = {
 	[](vec3 in)->vec3{
-		return glm::vec3(in.xy,1.f);
+		return glm::vec3(in.x,in.y,1.f);
 	},
 	[](vec3 in)->vec3{
 		return glm::vec3(-in.x,in.y,-1.f);
@@ -33,7 +33,7 @@ std::function<vec3(vec3)> transform[] = {
 		return glm::vec3(-1.f,in.x,-in.y);
 	},
 	[](vec3 in)->vec3{
-		return glm::vec3(1.f,in.xy);
+		return glm::vec3(1.f,in.x,in.y);
 	},
 	[](vec3 in)->vec3{
 		return glm::vec3(in.x,1.f,-in.y);

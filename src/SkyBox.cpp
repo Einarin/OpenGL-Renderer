@@ -92,7 +92,7 @@ void SkyBox::init()
 	shaderState &= shader->link();
 	shader->bind();
 	checkGlError("skybox shader");
-	if(!shaderState) while(true); //shader compiler failure
+	if(!shaderState) DebugBreak(); //shader compiler failure
 	texloc = shader->getUniformLocation("cubemap");
 	initialized = true;
 }
@@ -123,7 +123,7 @@ GLenum faces[] = {
 		GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
 		};
-char* suffixes[] = {"+x","-x","+y","-y","+z","-z"};
+const char* suffixes[] = {"+x","-x","+y","-y","+z","-z"};
 void SkyBox::setImageAsync(std::string basepngfilename){
 	cubemap.bind();
 	for(int i=0;i<6;i++){

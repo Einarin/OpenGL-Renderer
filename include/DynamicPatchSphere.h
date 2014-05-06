@@ -1,5 +1,5 @@
 #pragma once
-#include "renderer.h"
+#include "Renderer.h"
 #include "Geometry.h"
 
 namespace gl {

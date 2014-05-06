@@ -151,3 +151,9 @@ int MaxFboColorAttachments(){
 	}
 	return numAttachments;
 }
+#ifndef _WIN32
+void DebugBreak(){
+//TODO: Do something here!
+    cout << "!!DebugBreak Called!!" << endl;
+}
+#endif
