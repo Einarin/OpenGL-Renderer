@@ -618,6 +618,7 @@ void Model::save(std::string filename){
 
 bool Model::loadCache(std::string filename){
 	double startTime = glfwGetTime();
+    double meshTime,matTime,fileTime;
 	std::ifstream file(filename, std::ifstream::binary);
 	Header h;
 	std::vector<ModelPart*> workstack;
@@ -654,7 +655,7 @@ bool Model::loadCache(std::string filename){
 		file.read(meshbuff,h.filesize - h.meshbuffoff);
 	}
 	file.close();
-	double fileTime = glfwGetTime();
+    fileTime = glfwGetTime();
 	std::cout << "loaded data from cache file in " << fileTime-startTime << " seconds" << std::endl;
 	flatmat = reinterpret_cast<FlatMaterial*>(matbuff);
 	//build materials
@@ -674,7 +675,7 @@ bool Model::loadCache(std::string filename){
 		materials[i].displacementFile = namebuff+flatmat[i].displacementFileOff;
 		materials[i].setupTextures();
 	}
-	double matTime = glfwGetTime();
+    matTime = glfwGetTime();
 	std::cout << "loaded materials from cache file in " << matTime-fileTime << " seconds" << std::endl;
 	flatlist = reinterpret_cast<FlatModel*>(flatbuff);
 	//build graph from flatlist
@@ -702,7 +703,7 @@ bool Model::loadCache(std::string filename){
 			workstack.push_back(&(current->children[j]));
 		}
 	}
-	double meshTime = glfwGetTime();
+    meshTime = glfwGetTime();
 	std::cout << "loaded mesh tree from cache file in " << meshTime-matTime << " seconds" << std::endl;
 	std::cout << "loaded "<< filename << " from cache file in " << meshTime-startTime << " seconds" << std::endl;
 	cleanup:

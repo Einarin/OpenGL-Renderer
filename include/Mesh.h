@@ -48,7 +48,7 @@ namespace gl{
 		//assumes we don't own any buffers!
 		void copy(const Mesh& other);
 	public:
-		const Mesh& Mesh::operator=(const Mesh& other){
+        const Mesh& operator=(const Mesh& other){
 			if(ownsBuffers){
 				delete[] vertices;
 				delete[] indices;
