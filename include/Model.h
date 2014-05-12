@@ -19,7 +19,7 @@ protected:
 		ModelPart* parent;
 		glm::mat4 localTranform;
 		std::vector<ModelPart> children;
-		std::vector<Light*> lights;
+		std::vector<int> lights;
 		uint32 index; //used for flattening the graph
 	};
 	class Material {
@@ -83,22 +83,29 @@ protected:
 	std::vector<Material> materials;
 	ModelPart rootPart;
 	char* meshbuff;
-	bool m_loaded,m_downloaded;
+	bool m_loaded,m_downloaded,m_cached;
 	void loadTextures(const aiScene* scene);
 	void buildFromNode(const aiScene* scene, aiNode* node, glm::mat4 transform,ModelPart* currentPart);
 	void buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& output); //potential optimization, only build each index once
 	void initPart(ModelPart& part);
 	void downloadPart(ModelPart& part);
-	void drawPart(ModelPart& part,LitTexMvpShader& s);
+	void drawPart(ModelPart& part,LitTexMvpShader& s,const glm::mat4& parentTransform);
 	bool loadCache(std::string cachefile);
 	unsigned int typenum();
 public:
+	glm::mat4 ModelMatrix;
+	Model();
 	Model(std::string filename);
 	~Model();
 	static void addProcessing(std::function<void(Model*)> f);
+	static inline std::string cachename(std::string filename);
+	bool open(std::string filename);
 	void save(std::string filename);
-	bool ready(){
+	inline bool ready(){
 		return m_loaded && m_downloaded;
+	}
+	inline bool wasCached(){
+		return m_cached;
 	}
 	virtual void init();
 	virtual void download();

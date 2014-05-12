@@ -122,6 +122,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\AssetManager.h" />
     <ClInclude Include="include\AsteroidRenderer.h" />
     <ClInclude Include="include\callbacks.h" />
     <ClInclude Include="include\Camera.h" />
@@ -160,6 +161,7 @@
     <ClCompile Include="entrypoint.cpp" />
     <ClCompile Include="lz4-r112\lz4.c" />
     <ClCompile Include="lz4-r112\lz4hc.c" />
+    <ClCompile Include="src\AssetManager.cpp" />
     <ClCompile Include="src\AsteroidRenderer.cpp" />
     <ClCompile Include="src\callbacks.cpp" />
     <ClCompile Include="src\Camera.cpp" />

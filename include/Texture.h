@@ -48,6 +48,8 @@ public:
 	virtual TexRef texFromRGBA8888(char* buff, glm::ivec2 size)=0;
 	virtual TexRef unbackedTex()=0;
 	virtual TexRef backedTex(unsigned int format,glm::ivec2 size, unsigned int datatype)=0;
+	virtual TexRef depthTex(unsigned int format,glm::ivec2 size, unsigned int datatype)=0;
+	virtual TexRef missingTex()=0;
 	virtual void contextLost()=0;
 };
 
@@ -58,6 +60,8 @@ public:
 	virtual TexRef texFromRGBA8888(char* buff, glm::ivec2 size);
 	virtual TexRef unbackedTex();
 	virtual TexRef backedTex(unsigned int format,glm::ivec2 size, unsigned int datatype);
+	virtual TexRef depthTex(unsigned int format,glm::ivec2 size, unsigned int datatype);
+	virtual TexRef missingTex();
 	virtual void contextLost();
 };
 
@@ -107,6 +111,11 @@ public:
 	void draw();
 	protected:
 	glm::ivec2 size;
+};
+
+class GlTexture2DDepth : public GlTexture2D {
+	public:
+		void draw();
 };
 
 class GlTextureCubeMap : public GlTexture2D {

@@ -10,8 +10,8 @@ namespace gl{
 uint32 Mesh::serialize(char** inbuff){
 	uint32 bufflen = sizeof(MeshHeader)
 			  + (name.size()+1)*sizeof(char)
-			  + vertices.size() * sizeof(vertex)
-			  + indices.size() * sizeof(unsigned int);
+			  + vertSize * sizeof(vertex)
+			  + indSize * sizeof(unsigned int);
 	char* buff = new char[bufflen];
 	*inbuff = buff;
 	MeshHeader* head = new(buff) MeshHeader;
@@ -27,13 +27,13 @@ uint32 Mesh::serialize(char** inbuff){
 	head->nameoff = sizeof(MeshHeader);
 	strcpy((buff+head->nameoff),name.c_str());
 	head->vertoff = sizeof(MeshHeader) + (name.size()+1)*sizeof(char);
-	head->vertsize = vertices.size();
-	memcpy(buff+head->vertoff,&vertices[0],vertices.size() * sizeof(vertex));
+	head->vertsize = vertSize;
+	memcpy(buff+head->vertoff,&vertices[0],vertSize * sizeof(vertex));
 	head->indoff = sizeof(MeshHeader)
 			  + (name.size()+1)*sizeof(char)
-			  + vertices.size() * sizeof(vertex);
-	head->indsize = indices.size();
-	memcpy(buff+head->indoff,&indices[0],indices.size() * sizeof(unsigned int));
+			  + vertSize * sizeof(vertex);
+	head->indsize = indSize;
+	memcpy(buff+head->indoff,&indices[0],indSize * sizeof(unsigned int));
 	return bufflen;
 }
 
@@ -49,10 +49,43 @@ void Mesh::deserialize(char* buff){
 		numUVComponents[i] = head->numUVComponents[i];
 	}
 	name = buff+head->nameoff;
-	vertices.resize(head->vertsize);
+	assert(vertSize==0);
+	assert(indSize==0);
+	ownsBuffers = false;
+	vertices = (gl::vertex*)(buff+head->vertoff);
+	vertSize = head->vertsize;
+	indices = (unsigned int*)(buff+head->indoff);
+	indSize = head->indsize;
+	/*ownsBuffers = true;
+	assert(vertSize==0);
+	vertSize = head->vertsize;
+	vertices = new vertex[vertSize];
 	memcpy(&vertices[0],buff+head->vertoff,head->vertsize * sizeof(vertex));
-	indices.resize(head->indsize);
-	memcpy(&indices[0],buff+head->indoff,head->indsize * sizeof(unsigned int));
+	assert(indSize==0);
+	indSize = head->indsize;
+	indices = new unsigned int[indSize];
+	memcpy(&indices[0],buff+head->indoff,head->indsize * sizeof(unsigned int));*/
+}
+
+void Mesh::copy(const Mesh& other)
+{
+	ownsBuffers = true;
+	vertSize = other.vertSize;
+	vertices = new vertex[vertSize];
+	memcpy(&vertices[0],&other.vertices[0],vertSize * sizeof(vertex));
+	indSize = other.indSize;
+	indices = new unsigned int[indSize];
+	memcpy(&indices[0],&other.indices[0],indSize * sizeof(unsigned int));
+	name = other.name;
+	hasNormals = other.hasNormals;
+	hasTangents = other.hasTangents;
+	drawCount = other.drawCount;
+	numVertexColorChannels = other.numVertexColorChannels;
+	numUVChannels = other.numUVChannels;
+	materialIndex = other.materialIndex;
+	for(int i=0;i<AI_MAX_NUMBER_OF_TEXTURECOORDS;i++){
+		numUVComponents[i] = other.numUVComponents[i];
+	}
 }
 
 void RenderableMesh::init(){
@@ -85,13 +118,13 @@ void RenderableMesh::init(){
 void RenderableMesh::download(){
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	checkGlError("glBindBuffer verts");
-	glBufferData(GL_ARRAY_BUFFER,vertices.size() * sizeof(vertex),&vertices[0],GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER,vertSize * sizeof(vertex),&vertices[0],GL_STATIC_DRAW);
 #ifdef _DEBUG
 	glBindBuffer(GL_ARRAY_BUFFER,0);
 #endif
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	checkGlError("glBindBuffer elements");
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER,indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER,indSize * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
 	checkGlError("glBufferData elements");
 #ifdef _DEBUG
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);

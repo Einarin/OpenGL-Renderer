@@ -22,8 +22,11 @@ namespace gl{
 			unsigned int numUVComponents[AI_MAX_NUMBER_OF_TEXTURECOORDS];
 		};
 		std::string name;
-		std::vector<vertex> vertices;
-		std::vector<unsigned int> indices;
+		vertex* vertices;
+		unsigned int vertSize;
+		unsigned int* indices;
+		unsigned int indSize;
+		bool ownsBuffers;
 		bool hasNormals;
 		bool hasTangents;
 		unsigned int drawCount;
@@ -31,8 +34,32 @@ namespace gl{
 		unsigned int numUVChannels;
 		unsigned int materialIndex;
 		unsigned int numUVComponents[AI_MAX_NUMBER_OF_TEXTURECOORDS];
+		Mesh():vertSize(0),indSize(0),ownsBuffers(false) //partial initialization
+		{}
+		~Mesh(){
+			if(ownsBuffers){
+				delete[] vertices;
+				delete[] indices;
+			}
+		}
 		virtual uint32 serialize(char** inbuff);
 		void deserialize(char* buf);
+	private:
+		//assumes we don't own any buffers!
+		void copy(const Mesh& other);
+	public:
+		const Mesh& Mesh::operator=(const Mesh& other){
+			if(ownsBuffers){
+				delete[] vertices;
+				delete[] indices;
+			}
+			copy(other);
+			return other;
+		}
+		Mesh(const Mesh& other):vertSize(0),indSize(0){
+			copy(other);
+		}
+	
 	};
 
 	class RenderableMesh : public Mesh{

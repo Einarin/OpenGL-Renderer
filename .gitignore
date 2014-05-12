@@ -8,6 +8,7 @@ debug/
 Release/
 release/
 GeneratedFiles/
+assets/*
 *.bak
 *.suo
 *.sdf

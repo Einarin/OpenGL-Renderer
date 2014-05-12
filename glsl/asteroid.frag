@@ -283,6 +283,7 @@ vec3 lava()
 void main( void )
 {	
 	vec3 norm = normalize(normal.xyz);
+	
 	//eyevec = camera - texCoords;
 	//lightvec = light + texCoords;
 	vec3 eye = normalize(eyevec.xyz);
@@ -292,7 +293,7 @@ void main( void )
   vec3 specular = vec3(0.1);
   float diff = max(-dot(light,norm),0);
   vec3 reflect = 2* dot(light,norm) * norm - light;
-  float spec = max(pow(-dot(reflect,eye),0.8),0);
+  float spec = 0.0;//max(pow(-dot(reflect,eye),0.8),0);
   vec3 color;
   if(gl_FrontFacing){
 	color = vec3(0.,0.,1.);

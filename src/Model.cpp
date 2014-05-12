@@ -67,12 +67,22 @@ public:
 	}
 };
 
+std::string Model::cachename(std::string filename){
+	return filename+".mcache";
+}
+
 Model::~Model(){
 	if(meshbuff) delete[] meshbuff;
 }
 
-Model::Model(std::string filename) : filepath(filename),m_loaded(false),m_downloaded(false),meshbuff(nullptr){
-	std::string cachename = filename+".mcache";
+Model::Model() : m_loaded(false),m_downloaded(false),m_cached(false),meshbuff(nullptr){
+}
+Model::Model(std::string filename) : m_loaded(false),m_downloaded(false),m_cached(false),meshbuff(nullptr){
+	open(filename);
+}
+bool Model::open(std::string filename){
+	double startTime = glfwGetTime();
+	filepath = filename;
 	auto slash = filename.find_last_of('/');
 	auto bslash = filename.find_last_of('\\');
 	auto pos = slash != std::string::npos?slash:bslash;
@@ -86,13 +96,13 @@ Model::Model(std::string filename) : filepath(filename),m_loaded(false),m_downlo
 		return;
 	}*/
 	uint64_t fileTime = fileModificationTime(filename);
-	uint64_t cacheTime = fileModificationTime(cachename);
+	uint64_t cacheTime = fileModificationTime(cachename(filename));
+	std::cout << "checked for cached version of model in " << glfwGetTime()-startTime << " seconds" << std::endl;
 	if(cacheTime > fileTime){
-		std::cout << "loading cached version of " << filename << std::endl;
-		
-		m_loaded = loadCache(cachename);
+		//std::cout << "loading " << filename << "from cache file" << std::endl;
+		m_loaded = m_cached = loadCache(cachename(filename));
 		if(m_loaded){
-			return;
+			return m_loaded;
 		} else {
 			std::cout << "loading cached version of " << filename << " failed!" << std::endl;
 		}
@@ -105,7 +115,6 @@ Model::Model(std::string filename) : filepath(filename),m_loaded(false),m_downlo
 	}
 	rootPart.name = filename+" root node";
 	Assimp::Importer importer;
-	std::cout << "loading " << filename << " using assimp..." << std::endl;
 	//remove properties we don't care about to aid optimization
 	importer.SetPropertyInteger(AI_CONFIG_PP_RRM_EXCLUDE_LIST,
 								aiComponent_CAMERAS |
@@ -132,7 +141,7 @@ Model::Model(std::string filename) : filepath(filename),m_loaded(false),m_downlo
 	std::cout << "processing " << filename << " scene..." << std::endl;
 	if(scene == NULL){
 		std::cout << importer.GetErrorString() << std::endl;
-		return;
+		return m_loaded;
 	}
 	if(scene->HasTextures()){
 		std::cout << filepath << " contains " << scene->mNumTextures << "textures\n";
@@ -240,8 +249,8 @@ Model::Model(std::string filename) : filepath(filename),m_loaded(false),m_downlo
 		(*it)(this);
 	}
 	m_loaded = true;
-	std::cout << "saving optimized representation to disk...\n";
-	save(cachename);
+	std::cout << "loaded " << filename << " using assimp in " << glfwGetTime()-startTime << " seconds" << std::endl;
+	return m_loaded;
 }
 
 void Model::loadTextures(const aiScene* scene){
@@ -265,11 +274,11 @@ void Model::loadTextures(const aiScene* scene){
 //walk the node heirarchy
 void Model::buildFromNode(const aiScene* scene, aiNode* node, glm::mat4 transform, ModelPart* currentPart){
 	std::cout << "processing node " << node->mName.C_Str() << "..." << std::endl;
-	std::vector<Light*> currentLights;
+	std::vector<int> currentLights;
 	glm::mat4 nodeTransform = *((glm::mat4*)&node->mTransformation);
-	for(auto light = lights.begin();light != lights.end();light++){
-		if(light->name == node->mName.C_Str()){
-			currentLights.push_back(&*light);
+	for(int i=0;i < lights.size();i++){
+		if(lights[i].name == node->mName.C_Str()){
+			currentLights.push_back(i);
 		}
 	}
 	for(auto it = currentLights.begin();it!=currentLights.end();it++){
@@ -282,9 +291,9 @@ void Model::buildFromNode(const aiScene* scene, aiNode* node, glm::mat4 transfor
 		buildMeshAt(scene, node->mMeshes[meshCount],currentPart->meshes[offset+meshCount]);
 		meshCount++;
 	}
+	currentPart->children.resize(node->mNumChildren);
 	for(unsigned int i=0;i<node->mNumChildren;i++){
-		currentPart->children.push_back(ModelPart());
-		currentPart->children.back().parent = currentPart;
+		currentPart->children[i].parent = currentPart;
 		buildFromNode(scene,node->mChildren[i],nodeTransform * transform,&currentPart->children.back());
 	}
 }
@@ -301,17 +310,20 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 	output.numVertexColorChannels = aim.GetNumColorChannels();
 	output.materialIndex = aim.mMaterialIndex;
 	output.drawCount = aim.mNumFaces;
-	output.indices.clear();
-	output.indices.reserve(aim.mNumFaces*3);
+	output.ownsBuffers = true;
+	output.indSize = aim.mNumFaces*3;
+	output.indices = new unsigned int[output.indSize];
+	unsigned int pos=0;
 	for(int i=0;i<(int)aim.mNumFaces;i++){
 		for(int j=0;j<(int)aim.mFaces[j].mNumIndices;j++){
-			output.indices.push_back(aim.mFaces[i].mIndices[j]);
+			output.indices[pos++] = aim.mFaces[i].mIndices[j];
 		}
 	}
 	for(int i=0;i<AI_MAX_NUMBER_OF_TEXTURECOORDS;i++){
 		output.numUVComponents[i] = aim.mNumUVComponents[i];
 	}
-	output.vertices.resize(aim.mNumVertices);
+	output.vertSize = aim.mNumVertices;
+	output.vertices = new vertex[output.vertSize];
 	for(unsigned int i=0;i<aim.mNumVertices;i++){
 		vertex& v = output.vertices[i];
 		VEC_COPY(v.pos,aim.mVertices[i]);
@@ -354,18 +366,23 @@ void Model::downloadPart(ModelPart& part)
 		downloadPart(*c);
 	}
 }
-void Model::drawPart(ModelPart& part,LitTexMvpShader& s)
+void Model::drawPart(ModelPart& part,LitTexMvpShader& s,const glm::mat4& parentTransform)
 {
-	s.setModel(part.localTranform);
+	glm::mat4 localTransform = part.localTranform * parentTransform;
+	s.setModel(localTransform);
 	for(auto m = part.meshes.begin();m != part.meshes.end();m++){
-		s.setDiffuseTex(materials[m->materialIndex].diffuseTex);
+		if(materials[m->materialIndex].diffuseTex.use_count() > 0){
+			s.setDiffuseTex(materials[m->materialIndex].diffuseTex);
+		} else {
+			s.setDiffuseTex(TextureManager::Instance()->missingTex());
+		}
 		s.setAmbient(materials[m->materialIndex].ambient);
 		s.setSpecular(materials[m->materialIndex].specular);
 		s.setShininess(materials[m->materialIndex].shininess);
 		m->draw();
 	}
 	for(auto c = part.children.begin();c != part.children.end();c++){
-		drawPart(*c,s);
+		drawPart(*c,s,localTransform);
 	}
 }
 
@@ -385,7 +402,7 @@ void Model::download(){
 }
 void Model::draw(LitTexMvpShader& s){
 	if(m_loaded && m_downloaded){
-		drawPart(rootPart,s);
+		drawPart(rootPart,s,ModelMatrix);
 	}
 }
 //serialization stuff
@@ -444,6 +461,7 @@ void Model::save(std::string filename){
 	std::vector<ModelPart*> stack; //used as temp stack
 	stack.push_back(&rootPart);
 	uint32 nodecount = 0;
+	uint32 meshcount = 0;
 	uint32 namebuffsize = 0;
 	uint32 childbuffsize = 0;
 	uint32 lightindbuffsize = 0;
@@ -452,6 +470,7 @@ void Model::save(std::string filename){
 		ModelPart* current = stack.back();
 		stack.pop_back();
 		current->index = nodecount++;
+		meshcount += current->meshes.size();
 		namebuffsize += current->name.size()+1; //+1 for trailing \0
 		childbuffsize += current->children.size();
 		lightindbuffsize += current->lights.size();
@@ -506,8 +525,7 @@ void Model::save(std::string filename){
 	std::vector<char*> meshbuffs;
 	std::vector<uint32> meshbuffsizes;
 	std::vector<uint32> meshoffsets;
-	meshbuffs.reserve(nodecount); //cut down on reallocs
-
+	meshbuffs.resize(meshcount);
 	//now walk again to build our flattened list
 	stack.push_back(&rootPart);
 	while(stack.size() > 0){
@@ -527,7 +545,7 @@ void Model::save(std::string filename){
 		m->meshlistoff = meshind;
 		for(int i=0;i<(int)current->meshes.size();i++){
 			meshbuffs.push_back(nullptr);
-			uint32 size = current->meshes[i].serialize(&meshbuffs.back());
+			uint32 size = current->meshes[i].serialize(&meshbuffs[meshind]);
 			meshoffsets.push_back(meshpos);
 			meshbuffsizes.push_back(size);
 			meshpos += size;
@@ -599,6 +617,7 @@ void Model::save(std::string filename){
 }
 
 bool Model::loadCache(std::string filename){
+	double startTime = glfwGetTime();
 	std::ifstream file(filename, std::ifstream::binary);
 	Header h;
 	std::vector<ModelPart*> workstack;
@@ -635,6 +654,8 @@ bool Model::loadCache(std::string filename){
 		file.read(meshbuff,h.filesize - h.meshbuffoff);
 	}
 	file.close();
+	double fileTime = glfwGetTime();
+	std::cout << "loaded data from cache file in " << fileTime-startTime << " seconds" << std::endl;
 	flatmat = reinterpret_cast<FlatMaterial*>(matbuff);
 	//build materials
 	materials.resize(h.flatmatsize);
@@ -653,7 +674,8 @@ bool Model::loadCache(std::string filename){
 		materials[i].displacementFile = namebuff+flatmat[i].displacementFileOff;
 		materials[i].setupTextures();
 	}
-
+	double matTime = glfwGetTime();
+	std::cout << "loaded materials from cache file in " << matTime-fileTime << " seconds" << std::endl;
 	flatlist = reinterpret_cast<FlatModel*>(flatbuff);
 	//build graph from flatlist
 	workstack.push_back(&rootPart);
@@ -663,20 +685,26 @@ bool Model::loadCache(std::string filename){
 		workstack.pop_back();
 		int i = current->index;
 		current->name = namebuff+flatlist[i].nameoff;
+		current->meshes.resize((int)(flatlist[i].meshlistoff+flatlist[i].meshlistsize)-flatlist[i].meshlistoff);
 		for(int j = flatlist[i].meshlistoff;j<(int)(flatlist[i].meshlistoff+flatlist[i].meshlistsize);j++){
-			//current->meshes.emplace_back(RenderableMesh());
-			current->meshes.push_back(RenderableMesh());
-			current->meshes.back().deserialize(meshbuff+meshindbuff[j]);
+			current->meshes[j-flatlist[i].meshlistoff].deserialize(meshbuff+meshindbuff[j]);
 		}
 		current->localTranform = flatlist[i].localTransform;
+		int count = 0;
 		for(int j= flatlist[i].childlistoff;j<(int)(flatlist[i].childlistoff+flatlist[i].childlistsize);j++){
 			//current->children.emplace_back(ModelPart());
 			current->children.push_back(ModelPart());
 			current->children.back().index = childbuff[j];
 			current->children.back().parent = current;
-			workstack.push_back(&current->children.back());
+			count++;
+		}
+		for(int j=0;j<count;j++){
+			workstack.push_back(&(current->children[j]));
 		}
 	}
+	double meshTime = glfwGetTime();
+	std::cout << "loaded mesh tree from cache file in " << meshTime-matTime << " seconds" << std::endl;
+	std::cout << "loaded "<< filename << " from cache file in " << meshTime-startTime << " seconds" << std::endl;
 	cleanup:
 	delete[] flatbuff;
 	delete[] matbuff;

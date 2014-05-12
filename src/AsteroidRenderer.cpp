@@ -18,7 +18,7 @@ bool AsteroidRenderer::setup(){
 	bool success = true;
 	feedbackShader = Shader::Allocate();
 	auto feedbackvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
-	success &= feedbackvs->compileFromFile("glsl/feedbackdisplace.vert");
+	success &= feedbackvs->compileFromFile("glsl/feedbackdisplace2.vert");
 	feedbackShader->addAttrib("in_Position",0);
 	feedbackShader->addAttrib("in_Normal",1);
 	feedbackShader->addAttrib("in_Tangent",2);
@@ -39,7 +39,7 @@ void AsteroidRenderer::reset(){
 	m_asteroids.clear();
 }
 
-const unsigned int tessfactor = 8;
+const unsigned int tessfactor = 256;
 
 //In order to avoid hanging while generating asteroids
 //	this function behaves as asynchronously as possible
@@ -98,7 +98,7 @@ Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3
 				a->tfGeometry.enable();
 				glUniformMatrix4fv(shader->getUniformLocation("transformMatrix"), 1, GL_FALSE, glm::value_ptr(glm::mat4()));
 				glUniform3fv(shader->getUniformLocation("seed"),1,glm::value_ptr(s2));
-				glUniform1i(shader->getUniformLocation("levels"), 3);
+				glUniform1i(shader->getUniformLocation("levels"), 4);
 				pAst->draw();
 				a->tfGeometry.disable();
 				delete pAst;

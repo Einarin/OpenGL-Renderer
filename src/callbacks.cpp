@@ -82,6 +82,12 @@ void handleKeys(GLFWwindow* window){
 		//camera.moveLocal(vec3(0.f,0.01f,0.f));
 		camera.MoveDown(0.02f);
 	}
+	if(glfwGetKey(window,GLFW_KEY_Q) == GLFW_PRESS){
+		camera.RollCounterClockwise(3.14159f/36.f);
+	}
+	if(glfwGetKey(window,GLFW_KEY_E) == GLFW_PRESS){
+		camera.RollClockwise(3.14159f/36.f);
+	}
 }
 
 double oldMouseX, oldMouseY;

@@ -20,6 +20,7 @@
 #include "DynamicPatchSphere.h"
 #include "CoreShaders.h"
 #include "FrameBufferObject.h"
+#include "AssetManager.h"
 
 using namespace std;
 using namespace gl;
@@ -120,6 +121,8 @@ int main(int argc, char* argv[])
 	camera.SetPosition(vec3(0.f,2.f,-10.f));
 	//camera.SetPosition(vec3(0.0,0.0,0.0));
 	//camera.SetTarget(vec3(-4.f,-4.f,-4.f));
+	camera.SetNearDistance(0.01f);
+	camera.SetViewDistance(20.f);
 	camera.SetTarget(vec3(0.0,0.0,0.0));
 	camera.SetAspectRatio(static_cast<float>(width)/static_cast<float>(height));
 
@@ -141,12 +144,12 @@ int main(int argc, char* argv[])
 	cube.download();
 	
 	cout << "loading models...\n";
-	Model* model = NULL;
+	AssetManager assetManager;
 	const unsigned int asteroidFactor=5;
 	AsteroidRenderer aRenderer;
 	if(!aRenderer.setup()) DebugBreak();
 	Future<bool> asteroidsGenerated;
-    CpuPool.async([&aRenderer,asteroidsGenerated]() mutable{
+    /*CpuPool.async([&aRenderer,asteroidsGenerated]() mutable{
 		std::mt19937 mtgen;
 		std::uniform_real_distribution<float> dist(1.f,2.f);
         for(int q=0;q<5;q++){
@@ -168,9 +171,12 @@ int main(int argc, char* argv[])
 	/*while(!result.complete()){
 		glPool.processMainQueueUnit();
 	}*/
-    //aRenderer.addAsteroidAsync(mat4(),vec3(0.f));
+    aRenderer.addAsteroidAsync(mat4(),vec3(0.f));
 	
-    CpuPool.async([&](){
+	std::shared_ptr<Model> model = assetManager.loadModel("assets/fighter.obj");
+	std::shared_ptr<Model> model2 = assetManager.loadModel("assets/missile.obj");
+
+    /*CpuPool.async([&](){
 		model = new Model("assets/missile.obj");
 		auto ptr = model;
 		glQueue.async([=](){
@@ -195,7 +201,7 @@ int main(int argc, char* argv[])
 	glPointSize(3.0f);
 
 	Light light;
-	light.position = vec3(2.0,2.0,2.0);
+	light.position = vec3(2.0,-2.0,2.0);
 
 	cout << "compiling shaders...\n";
 
@@ -220,10 +226,12 @@ int main(int argc, char* argv[])
 	fbo.Size = ivec2(1280,800);
 	//TexRef tex = TextureManager::Instance()->texFromFile("Hello.png");
 	TexRef tex = TextureManager::Instance()->backedTex(GL_RGBA,fbo.Size,GL_UNSIGNED_BYTE);
+	TexRef depthTex = TextureManager::Instance()->backedTex(GL_DEPTH_COMPONENT,fbo.Size,GL_FLOAT);
 	checkGlError("backedTex");
 	fbo.attachTexture(GL_DRAW_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,tex);
 	checkGlError("attachTexture");
-	fbo.attachDepthStencilRenderbuffer(GL_DEPTH24_STENCIL8);
+	//fbo.attachDepthStencilRenderbuffer(GL_DEPTH24_STENCIL8);
+	fbo.attachTexture(GL_DRAW_FRAMEBUFFER,GL_DEPTH_ATTACHMENT,depthTex);
 	checkGlError("attachDepthStencilRenderbuffer");
 	if(!fbo.isComplete(GL_DRAW_FRAMEBUFFER)){
 		DebugBreak();
@@ -248,16 +256,15 @@ int main(int argc, char* argv[])
 		glfwPollEvents();
 	}
 	//grab the mouse last so we can do things during load
-	if(!cursorGrabbed){
+	/*if(!cursorGrabbed){
 		glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_DISABLED);
 		cursorGrabbed = true;
-	}
+	}*/
 
 	while (!glfwWindowShouldClose(window))
 	{
 		//know when we got to the top of the render loop
-		glfwSetTime(0.0);
-		//time = glfwGetTime();
+		double frameStart = glfwGetTime();
 		//input handling
 		glfwPollEvents();
 		handleKeys(window);
@@ -303,16 +310,14 @@ int main(int argc, char* argv[])
 		skybox.draw(&camera);
 		checkGlError("draw skybox");
 		glEnable(GL_DEPTH_TEST);
-
-		vec4 lightpos = vec4(-1.0f,-5.0f,10.0f,1.0f);
-
+		
 		mls.bind();
 		mls.setView(camera.GetViewMatrix());
 		mls.setProjection(camera.GetProjectionMatrix());
 		checkGlError("set view and projection matrices");
 		ShaderRef s = ls;
 		glUniform4fv(s->getUniformLocation("camera"), 1, value_ptr(vec4(camera.GetPosition(),1.0)));
-		glUniform4fv(s->getUniformLocation("light"), 1, value_ptr(lightpos));
+		glUniform4fv(s->getUniformLocation("light"), 1, value_ptr(light.position));
 		glUniform1f(s->getUniformLocation("time"),(float)time*0.1f);
 		glUniform1i(s->getUniformLocation("levels"), levels);
 		checkGlError("setup model shader");
@@ -330,9 +335,10 @@ int main(int argc, char* argv[])
 			//ps.draw();
 		}
 
-		if(model && model->ready()){
+		if(model.use_count() > 0 && model->ready()){
+			model->ModelMatrix = translate(mat4(),vec3(-5.f,-3.f, 6.f));
 			((ShaderRef)ts)->bind();
-			glUniform4fv(((ShaderRef)ts)->getUniformLocation("light"), 1, value_ptr(lightpos));
+			glUniform4fv(((ShaderRef)ts)->getUniformLocation("light"), 1, value_ptr(light.position));
 			LitTexMvpShader dts = ts;
 			dts.setView(camera.GetViewMatrix());
 			dts.setProjection(camera.GetProjectionMatrix());
@@ -344,18 +350,39 @@ int main(int argc, char* argv[])
 			model->draw();*/
 			if(drawNormals){
 				mns.bind();
-				mns.setModel(mat4());
 				LitTexMvpShader dns = ns;
 				model->draw(dns);
 			}
 		}
-		star.modelMatrix = translate(mat4(),-vec3(lightpos.xyz()));
+		if(model2.use_count() > 0 && model2->ready()){
+			model2->ModelMatrix = translate(rotate(mat4(),180.f,vec3(0.f,1.f,0.f)),vec3(-5.f,-3.f,-4.f));
+			((ShaderRef)ts)->bind();
+			glUniform4fv(((ShaderRef)ts)->getUniformLocation("light"), 1, value_ptr(light.position));
+			LitTexMvpShader dts = ts;
+			dts.setView(camera.GetViewMatrix());
+			dts.setProjection(camera.GetProjectionMatrix());
+			checkGlError("create DiffuseTexMvpShader");
+			dts.bind();
+			model2->draw(dts);
+			/*mls.bind();
+			mls.setModel(mat4());
+			model->draw();*/
+			if(drawNormals){
+				mns.bind();
+				LitTexMvpShader dns = ns;
+				model2->draw(dns);
+			}
+		}
+		star.modelMatrix = translate(mat4(),-vec3(light.position));
 		star.draw(&camera);
 		FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);
 		glDisable(GL_DEPTH_TEST);
-		tex->draw();
-
 		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+		glEnable(GL_BLEND);
+		//tex->draw();
+		//depthTex->draw();
+
+		
 		textRenderer->draw(orthoMatrix);
 		checkGlError("draw hello world");
 		counter++;
@@ -369,7 +396,7 @@ int main(int argc, char* argv[])
 
 			int runs=0;
 			//process async work
-			if(glQueue.processQueueUnit() ){//|| !(model && model->ready())){
+			if(glQueue.processQueueUnit() || model.use_count() > 0 && !( model->ready())){
 				runs++;
 				loadingVal = 2.f;
 			}
@@ -379,7 +406,7 @@ int main(int argc, char* argv[])
 				loadingVal -= 0.01f;
 			}
 			//let's see if we have time left over
-			time = glfwGetTime();
+			time = glfwGetTime()-frameStart;
 			double targetTime =  1.0/fpsTarget;
 			while(time < targetTime){
 				if(glQueue.processQueueUnit()){
@@ -433,7 +460,7 @@ int main(int argc, char* argv[])
 					}
 					break;
 				}
-				time = glfwGetTime();
+				time = glfwGetTime()-frameStart;
 			}
 			ss3 << aRenderer.asteroidCount() << " asteroids";
 			fps->addText(ss3.str(),vec2(5,height-96),vec4(1.f));
@@ -457,7 +484,7 @@ int main(int argc, char* argv[])
 		fps->draw(orthoMatrix);
 		checkGlError("draw text");
 		glfwSwapBuffers(window);
-		fpstime = glfwGetTime();
+		fpstime = glfwGetTime()-frameStart;
 	}
 	//close window and shutdown glfw
 	glfwDestroyWindow(window);
@@ -466,7 +493,6 @@ int main(int argc, char* argv[])
 	//delete dynamic allocations
 	delete fps;
 	delete textRenderer;
-	delete model;
 	
 	return 0;
 }

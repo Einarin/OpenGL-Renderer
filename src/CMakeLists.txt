@@ -4,7 +4,7 @@ callbacks.cpp           ImageLoader.cpp    Shader.cpp
 Camera.cpp              SkyBox.cpp
 CoreShaders.cpp         MathUtilities.cpp  StarRenderer.cpp
 DynamicPatchSphere.cpp  Mesh.cpp           Text.cpp
-Model.cpp          Texture.cpp
+Model.cpp          Texture.cpp             AssetManager.cpp
 FlatDrawable.cpp        noise.cpp          ThreadPool.cpp
 FrameBufferObject.cpp   TransformFeedback.cpp
 Geometry.cpp            Quaternion.cpp     VertexAttribBuilder.cpp)
