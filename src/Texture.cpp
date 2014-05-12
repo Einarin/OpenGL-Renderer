@@ -3,6 +3,7 @@
 #include <iostream>
 #include "Shader.h"
 #include "Geometry.h"
+#include "ThreadPool.h"
 
 namespace gl {
 
@@ -281,11 +282,22 @@ TexRef GlTextureManager::texFromRGBA8888(char* buff, glm::ivec2 size){
 }
 void FileBackedGlTexture2D::init(){
 	GlTexture2D::init();
-	if(!backed){
+	/*if(!backed){
 		if(!loadPngToGlTex2D(filename,(GlTexture2D*)this))
 			std::cout << "Loading " << filename << " failed\n";
 		checkGlError("loadPngToGlTex2D");
-	}
+	}*/
+	IoPool.async([=](){
+		glm::ivec2 size;
+		char* data;
+		int dataLen;
+		auto obj = this;
+		imageDataFromPngFile(filename,&size,&data,&dataLen);
+		glQueue.async([=](){
+			obj->setImage(GL_RGBA,size,GL_UNSIGNED_BYTE,data);
+			free(data);
+		});
+	});
 }
 void FileBackedGlTexture2D::bind(){
 	if(!allocated || !backed){
