@@ -8,7 +8,7 @@ namespace gl{
 
 shared_ptr<Model> AssetManager::loadModel(string filename){
 	auto ptr = mcache[filename].lock();
-	if(ptr.use_count() == 0){ //old object expired
+	if(ptr.use_count() == 0){ //no object or old object expired
 		cout << filename << " was loaded from disk" << endl;
 		ptr = shared_ptr<Model>(new Model());
 		mcache[filename] = ptr;

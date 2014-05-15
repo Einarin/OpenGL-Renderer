@@ -2,12 +2,14 @@
 #include "Texture.h"
 #include "Light.h"
 #include "Mesh.h"
+#include "Camera.h"
 #include <assimp/scene.h> // Output data structure
 
 #include <string>
 #include <vector>
 
 namespace gl {
+	
 class Model {
 protected:
 	class ModelPart {
@@ -17,7 +19,7 @@ protected:
 		std::string name;
 		std::vector<RenderableMesh> meshes;
 		ModelPart* parent;
-		glm::mat4 localTranform;
+		glm::mat4 localTransform;
 		std::vector<ModelPart> children;
 		std::vector<int> lights;
 		uint32 index; //used for flattening the graph
@@ -91,9 +93,11 @@ protected:
 	void downloadPart(ModelPart& part);
 	void drawPart(ModelPart& part,LitTexMvpShader& s,const glm::mat4& parentTransform);
 	bool loadCache(std::string cachefile);
+	void calcAABB();
 	unsigned int typenum();
 public:
 	glm::mat4 ModelMatrix;
+	AABB3 BoundingBox;
 	Model();
 	Model(std::string filename);
 	~Model();
@@ -107,8 +111,10 @@ public:
 	inline bool wasCached(){
 		return m_cached;
 	}
-	virtual void init();
-	virtual void download();
-	virtual void draw(LitTexMvpShader& s);
+	void init();
+	void download();
+	void draw(LitTexMvpShader& s);
+	void drawBoundingBoxes(Camera* c);
 };
-}
+
+} //namespace gl

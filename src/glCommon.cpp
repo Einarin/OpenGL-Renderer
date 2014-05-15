@@ -141,7 +141,7 @@ bool SetupSupport(){
 		glDebugMessageCallback((GLDEBUGPROC)OpenglErrorCallback,nullptr);
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-	}
+	}//*/
 	sFreeTexMemNum = 0;
 	if(gl_extensions.find("GL_NVX_gpu_memory_info") != std::string::npos){
 		sFreeTexMemNum = 0x9049;

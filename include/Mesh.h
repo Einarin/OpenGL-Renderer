@@ -1,6 +1,7 @@
 #pragma once
 #include "Vertex.h"
 #include "Geometry.h"
+#include "AABB.h"
 #include <vector>
 #include <string>
 
@@ -26,6 +27,7 @@ namespace gl{
 		unsigned int vertSize;
 		unsigned int* indices;
 		unsigned int indSize;
+		AABB3 BoundingBox;
 		bool ownsBuffers;
 		bool hasNormals;
 		bool hasTangents;
@@ -59,7 +61,7 @@ namespace gl{
 		Mesh(const Mesh& other):vertSize(0),indSize(0){
 			copy(other);
 		}
-	
+		void calcAABB();
 	};
 
 	class RenderableMesh : public Mesh{

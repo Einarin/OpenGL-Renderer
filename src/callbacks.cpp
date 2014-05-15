@@ -1,6 +1,12 @@
 #include "callbacks.h"
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
+#ifdef _WIN32
+#define GLFW_EXPOSE_NATIVE_WIN32
+#define GLFW_EXPOSE_NATIVE_WGL
+#include <GLFW/glfw3native.h>
+#include <Windows.h> //to toggle fullscreen
+#endif
 
 int shader=0;
 
@@ -54,6 +60,38 @@ void onKeyPressed(GLFWwindow* window, int key, int scancode, int action, int mod
 			glEnable(GL_CULL_FACE);
 			culling = 0;
 		}
+	}
+	if(key == GLFW_KEY_F && action == GLFW_PRESS){
+		fullscreen = !fullscreen;
+#ifdef _WIN32
+		const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+		LONG lExStyle, lStyle;
+		HWND hwnd = glfwGetWin32Window(window);
+		lStyle = GetWindowLong(hwnd,GWL_STYLE);
+		lExStyle = GetWindowLong(hwnd,GWL_EXSTYLE);
+		if(fullscreen){
+			SetWindowLong(hwnd, GWL_STYLE,
+						lStyle & ~(WS_CAPTION | WS_THICKFRAME));
+			SetWindowLong(hwnd, GWL_EXSTYLE,
+						lExStyle & ~(WS_EX_DLGMODALFRAME |
+						WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE));
+
+			SetWindowPos(hwnd, NULL, 0, 0,
+						mode->width, mode->height,
+						SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+		}else{
+			SetWindowLong(hwnd, GWL_STYLE, lStyle | WS_CAPTION | WS_THICKFRAME);
+			SetWindowLong(hwnd, GWL_EXSTYLE, lExStyle | WS_EX_DLGMODALFRAME |
+						WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
+			glfwSetWindowSize(window,1280,800);
+			glfwSetWindowPos(window,(mode->width-1280)/2,(mode->height-800)/2);
+		}
+#endif
+	}
+	if(key == GLFW_KEY_V && action == GLFW_PRESS){
+		static int interval;
+		interval = interval==0?1:0;
+		glfwSwapInterval(interval);
 	}
 }
 //controls

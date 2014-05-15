@@ -337,9 +337,9 @@ int main(int argc, char* argv[])
 
 		if(model.use_count() > 0 && model->ready()){
 			model->ModelMatrix = translate(mat4(),vec3(-5.f,-3.f, 6.f));
-			((ShaderRef)ts)->bind();
+			ts.bind();
 			glUniform4fv(((ShaderRef)ts)->getUniformLocation("light"), 1, value_ptr(light.position));
-			LitTexMvpShader dts = ts;
+			LitTexMvpShader dts = ts.litTexMvpShader;
 			dts.setView(camera.GetViewMatrix());
 			dts.setProjection(camera.GetProjectionMatrix());
 			checkGlError("create DiffuseTexMvpShader");
@@ -354,11 +354,12 @@ int main(int argc, char* argv[])
 				model->draw(dns);
 			}
 		}
+		model->drawBoundingBoxes(&camera);
 		if(model2.use_count() > 0 && model2->ready()){
 			model2->ModelMatrix = translate(rotate(mat4(),180.f,vec3(0.f,1.f,0.f)),vec3(-5.f,-3.f,-4.f));
-			((ShaderRef)ts)->bind();
+			ts.bind();
 			glUniform4fv(((ShaderRef)ts)->getUniformLocation("light"), 1, value_ptr(light.position));
-			LitTexMvpShader dts = ts;
+			LitTexMvpShader dts = ts.litTexMvpShader;
 			dts.setView(camera.GetViewMatrix());
 			dts.setProjection(camera.GetProjectionMatrix());
 			checkGlError("create DiffuseTexMvpShader");
@@ -373,6 +374,7 @@ int main(int argc, char* argv[])
 				model2->draw(dns);
 			}
 		}
+		model2->drawBoundingBoxes(&camera);
 		star.modelMatrix = translate(mat4(),-vec3(light.position));
 		star.draw(&camera);
 		FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);
@@ -486,13 +488,13 @@ int main(int argc, char* argv[])
 		glfwSwapBuffers(window);
 		fpstime = glfwGetTime()-frameStart;
 	}
-	//close window and shutdown glfw
-	glfwDestroyWindow(window);
-	glfwTerminate();
-
 	//delete dynamic allocations
 	delete fps;
 	delete textRenderer;
-	
+
+	//close window and shutdown glfw
+	//for some reason this is hideously slow sometimes (seems to be hanging on something...)
+	glfwDestroyWindow(window); 
+	glfwTerminate();
 	return 0;
 }

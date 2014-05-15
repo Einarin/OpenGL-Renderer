@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdint>
+#include <deque>
 //for file modification
 #ifdef _WIN32
 #include <Windows.h>
@@ -102,6 +103,7 @@ bool Model::open(std::string filename){
 		//std::cout << "loading " << filename << "from cache file" << std::endl;
 		m_loaded = m_cached = loadCache(cachename(filename));
 		if(m_loaded){
+			calcAABB();
 			return m_loaded;
 		} else {
 			std::cout << "loading cached version of " << filename << " failed!" << std::endl;
@@ -245,6 +247,7 @@ bool Model::open(std::string filename){
 	}
 	
 	buildFromNode(scene, scene->mRootNode, glm::mat4(),&rootPart);
+	calcAABB();
 	for(auto it = sProcessSteps.begin();it != sProcessSteps.end();it++){
 		(*it)(this);
 	}
@@ -368,7 +371,7 @@ void Model::downloadPart(ModelPart& part)
 }
 void Model::drawPart(ModelPart& part,LitTexMvpShader& s,const glm::mat4& parentTransform)
 {
-	glm::mat4 localTransform = part.localTranform * parentTransform;
+	glm::mat4 localTransform = part.localTransform * parentTransform;
 	s.setModel(localTransform);
 	for(auto m = part.meshes.begin();m != part.meshes.end();m++){
 		if(materials[m->materialIndex].diffuseTex.use_count() > 0){
@@ -538,7 +541,7 @@ void Model::save(std::string filename){
 			m->parentind = 0; //just set it to 0 so it's initialized
 		}
 		m->nameoff = namebuffpos;
-		m->localTransform = current->localTranform;
+		m->localTransform = current->localTransform;
 		strcpy(namebuff+namebuffpos,current->name.c_str());
 		namebuffpos += current->name.size()+1;
 
@@ -690,7 +693,7 @@ bool Model::loadCache(std::string filename){
 		for(int j = flatlist[i].meshlistoff;j<(int)(flatlist[i].meshlistoff+flatlist[i].meshlistsize);j++){
 			current->meshes[j-flatlist[i].meshlistoff].deserialize(meshbuff+meshindbuff[j]);
 		}
-		current->localTranform = flatlist[i].localTransform;
+		current->localTransform = flatlist[i].localTransform;
 		int count = 0;
 		for(int j= flatlist[i].childlistoff;j<(int)(flatlist[i].childlistoff+flatlist[i].childlistsize);j++){
 			//current->children.emplace_back(ModelPart());
@@ -713,6 +716,76 @@ bool Model::loadCache(std::string filename){
 	delete[] childbuff;
 	delete[] meshindbuff;
 	return status;
+}
+
+void Model::calcAABB(){
+	std::deque<ModelPart*> stack;
+	stack.push_back(&rootPart);
+	while(!stack.empty()){
+		ModelPart* p = stack.back();
+		stack.pop_back();
+		AABB3 localBB;
+		for(auto it = p->meshes.begin();it != p->meshes.end(); it++){
+			it->calcAABB();
+			localBB += it->BoundingBox;
+		}
+		//AABB3 globalBB = glm::inverse(p->localTransform)*localBB;
+		//BoundingBox += globalBB;
+		BoundingBox += localBB;
+		
+		for(auto it = p->children.begin(); it != p->children.end();it++){
+			stack.push_back(&*it);
+		}
+	}
+}
+ShaderRef bbDrawShader;
+bool bbDrawShaderSetup=false;
+void Model::drawBoundingBoxes(Camera* c){
+	if(!bbDrawShaderSetup){
+		bbDrawShader = Shader::Allocate();
+		auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+		auto fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+		vs->compile("#version 330\n"
+					"uniform mat4 modelMatrix;\n"
+					"uniform mat4 viewMatrix;\n"
+					"uniform mat4 projMatrix;\n"
+					"in vec3 position;\n"
+					"void main(void){\n"
+					"gl_Position = projMatrix * viewMatrix * modelMatrix * vec4(position,1.0);\n"
+					"}\n");
+		fs->compileFromFile("glsl/color.frag");
+		bbDrawShader->addAttrib("position",0);
+		bbDrawShader->attachStage(vs);
+		bbDrawShader->attachStage(fs);
+		bbDrawShader->link();
+		bbDrawShaderSetup=true;
+	}
+	if(m_loaded){
+		bbDrawShader->bind();
+		auto colorloc = bbDrawShader->getUniformLocation("color");
+		MvpShader mvp(bbDrawShader);
+		mvp.setProjection(c->GetProjectionMatrix());
+		mvp.setView(c->GetViewMatrix());
+		mvp.setModel(ModelMatrix);
+		float modelColor[] = {0.0f,1.0f,0.0f,1.0f};
+		float meshColor[] = {1.0f,1.0f,0.0f,1.0f};
+		glUniform4fv(colorloc,1,modelColor);
+		buildAndRender(BoundingBox);
+		glUniform4fv(colorloc,1,meshColor);
+		std::deque<ModelPart*> stack;
+		stack.push_back(&rootPart);
+		while(!stack.empty()){
+			ModelPart* p = stack.back();
+			stack.pop_back();
+			mvp.setModel(ModelMatrix * p->localTransform);
+			for(auto it = p->meshes.begin();it != p->meshes.end(); it++){
+				buildAndRender(it->BoundingBox);
+			}
+			for(auto it = p->children.begin(); it != p->children.end();it++){
+				stack.push_back(&*it);
+			}
+		}
+	}
 }
 
 } //namespace gl

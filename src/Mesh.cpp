@@ -6,6 +6,8 @@ enum flags{
 	HAS_TANGENT = 0x2
 };
 
+using namespace glm;
+
 namespace gl{
 uint32 Mesh::serialize(char** inbuff){
 	uint32 bufflen = sizeof(MeshHeader)
@@ -85,6 +87,18 @@ void Mesh::copy(const Mesh& other)
 	materialIndex = other.materialIndex;
 	for(int i=0;i<AI_MAX_NUMBER_OF_TEXTURECOORDS;i++){
 		numUVComponents[i] = other.numUVComponents[i];
+	}
+}
+
+void Mesh::calcAABB(){
+	if(vertSize > 0){
+		vec3 minp,maxp;
+		minp = maxp = vertices[0].pos.xyz();
+		for(int i=1;i<vertSize;i++){
+			minp = min(minp,vertices[i].pos.xyz());
+			maxp = max(maxp,vertices[i].pos.xyz());
+		}
+		BoundingBox = AABB3(minp,maxp);
 	}
 }
 
