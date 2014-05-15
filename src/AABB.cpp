@@ -5,12 +5,20 @@
 
 namespace gl{
 
-AABB3&& operator*(glm::mat4 transform, const AABB3& aabb){
-	glm::vec3 oldMin = (transform * glm::vec4(aabb.mMinCorner,1.0f)).xyz();
-	glm::vec3 oldMax = (transform * glm::vec4(aabb.mMaxCorner,1.0f)).xyz();
-	return AABB3(glm::min(oldMin,oldMax),glm::max(oldMin,oldMax));
+AABB3 operator*(glm::mat4 transform, const AABB3& aabb){
+	BB3 tmp = BB3fromAABB3(aabb);
+	tmp = transform * tmp;
+	return AABB3fromBB3(tmp);
 }
 
+BB3 operator*(glm::mat4 transform, const BB3& bb){
+	BB3 result;
+	for(int i=0;i<8;i++){
+		result.corners[i] = (transform * glm::vec4(bb.corners[i],1.0f)).xyz();
+	}
+	result.empty = bb.empty;
+	return result;
+}
 
 const unsigned char drawInds[] = {
 	0,1, 0,2, 1,3, 2,3,
@@ -40,11 +48,28 @@ void buildAndRender(AABB3 aabb){
 	glDrawElements(GL_LINES,24,GL_UNSIGNED_BYTE,(GLvoid*)0);
 }
 
-void drawAABB3(const AABB3& aabb){
-	
-	
-	
+BB3 BB3fromAABB3(const AABB3& aabb){
+	BB3 bb;
+	bb.corners[0] =	glm::vec3(aabb.mMinCorner.x, aabb.mMinCorner.y, aabb.mMinCorner.z);
+	bb.corners[1] =	glm::vec3(aabb.mMinCorner.x, aabb.mMinCorner.y, aabb.mMaxCorner.z);
+	bb.corners[2] =	glm::vec3(aabb.mMinCorner.x, aabb.mMaxCorner.y, aabb.mMinCorner.z);
+	bb.corners[3] =	glm::vec3(aabb.mMinCorner.x, aabb.mMaxCorner.y, aabb.mMaxCorner.z);
+	bb.corners[4] =	glm::vec3(aabb.mMaxCorner.x, aabb.mMinCorner.y, aabb.mMinCorner.z);
+	bb.corners[5] =	glm::vec3(aabb.mMaxCorner.x, aabb.mMinCorner.y, aabb.mMaxCorner.z);
+	bb.corners[6] =	glm::vec3(aabb.mMaxCorner.x, aabb.mMaxCorner.y, aabb.mMinCorner.z);
+	bb.corners[7] =	glm::vec3(aabb.mMaxCorner.x, aabb.mMaxCorner.y, aabb.mMaxCorner.z);
+	bb.empty = false;
+	return bb;
+}
 
+AABB3 AABB3fromBB3(const BB3& bb){
+	glm::vec3 minp,maxp;
+	minp = maxp = bb.corners[0];
+	for(int i=1;i<8;i++){
+		minp = glm::min(minp,bb.corners[i]);
+		maxp = glm::max(maxp,bb.corners[i]);
+	}
+	return AABB3(minp,maxp);
 }
 
 }

@@ -132,7 +132,7 @@ bool SetupSupport(){
 		gl_features[i] = false;
 	}
 
-	if(major_version >= 4 || gl_extensions.find("GL_ARB_transform_feedback2") != std::string::npos){
+	if(false){//  major_version >= 4 || gl_extensions.find("GL_ARB_transform_feedback2") != std::string::npos){
 		gl_features[GL_TRANSFORM_FEEDBACK_2] = true;
 		cout << "GL_ARB_transform_feedback2 available" << endl;
 	}

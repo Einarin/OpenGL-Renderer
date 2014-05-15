@@ -3,6 +3,7 @@
 #include "Renderer.h"
 #include "TransformFeedback.h"
 #include "ThreadPool.h"
+#include "AABB.h"
 #include <list>
 #include <memory>
 
@@ -13,6 +14,7 @@ protected:
 	class Asteroid{
 	public:
 		glm::mat4 modelMatrix;
+		AABB3 BoundingBox;
 		TransformFeedback tfGeometry;
 		bool generated;
 		Asteroid():tfGeometry(GL_TRIANGLES),generated(false)
@@ -32,6 +34,7 @@ public:
 	void reset();
 	Future<bool> addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3 seed);
 	virtual void draw(MvpShader s);
+	void drawBoundingBoxes(MvpShader s);
 };
 
 }

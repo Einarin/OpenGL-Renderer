@@ -2,6 +2,7 @@
 #include "Model.h"
 #include "lz4.h"
 #include "lz4hc.h"
+#include "CoreShaders.h"
 #include <assimp/Importer.hpp> // C++ importer interface
 #include <assimp/postprocess.h> // Post processing flags
 #include <assimp/mesh.h>
@@ -729,8 +730,6 @@ void Model::calcAABB(){
 			it->calcAABB();
 			localBB += it->BoundingBox;
 		}
-		//AABB3 globalBB = glm::inverse(p->localTransform)*localBB;
-		//BoundingBox += globalBB;
 		BoundingBox += localBB;
 		
 		for(auto it = p->children.begin(); it != p->children.end();it++){
@@ -738,38 +737,28 @@ void Model::calcAABB(){
 		}
 	}
 }
-ShaderRef bbDrawShader;
+
+ColorPosShader bbDrawShader;
 bool bbDrawShaderSetup=false;
 void Model::drawBoundingBoxes(Camera* c){
 	if(!bbDrawShaderSetup){
-		bbDrawShader = Shader::Allocate();
-		auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
-		auto fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
-		vs->compile("#version 330\n"
-					"uniform mat4 modelMatrix;\n"
-					"uniform mat4 viewMatrix;\n"
-					"uniform mat4 projMatrix;\n"
-					"in vec3 position;\n"
-					"void main(void){\n"
-					"gl_Position = projMatrix * viewMatrix * modelMatrix * vec4(position,1.0);\n"
-					"}\n");
-		fs->compileFromFile("glsl/color.frag");
-		bbDrawShader->addAttrib("position",0);
-		bbDrawShader->attachStage(vs);
-		bbDrawShader->attachStage(fs);
-		bbDrawShader->link();
+		bbDrawShader.init();
 		bbDrawShaderSetup=true;
 	}
 	if(m_loaded){
-		bbDrawShader->bind();
-		auto colorloc = bbDrawShader->getUniformLocation("color");
+		bbDrawShader.bind();
+		auto colorloc = static_cast<ShaderRef>(bbDrawShader)->getUniformLocation("color");
 		MvpShader mvp(bbDrawShader);
 		mvp.setProjection(c->GetProjectionMatrix());
 		mvp.setView(c->GetViewMatrix());
-		mvp.setModel(ModelMatrix);
-		float modelColor[] = {0.0f,1.0f,0.0f,1.0f};
+		float modelColor[] = {1.0f,0.5f,0.0f,1.0f};
 		float meshColor[] = {1.0f,1.0f,0.0f,1.0f};
+		float worldColor[] = {0.0f,1.0f,0.0f,1.0f};
+		glUniform4fv(colorloc,1,worldColor);
+		mvp.setModel(glm::mat4());
+		buildAndRender(ModelMatrix*BoundingBox);
 		glUniform4fv(colorloc,1,modelColor);
+		mvp.setModel(ModelMatrix);
 		buildAndRender(BoundingBox);
 		glUniform4fv(colorloc,1,meshColor);
 		std::deque<ModelPart*> stack;

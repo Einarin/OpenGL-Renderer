@@ -46,6 +46,9 @@ const unsigned int tessfactor = 32;
 Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3 seed){
 	Asteroid* asteroid = new Asteroid();
 	asteroid->modelMatrix = modelMatrix;
+	asteroid->BoundingBox = AABB3(
+		(modelMatrix*glm::vec4(glm::vec3(-1.2f),1.f)).xyz(),
+		(modelMatrix*glm::vec4(glm::vec3(1.2f),1.f)).xyz());
 	m_asteroids.emplace_back(std::unique_ptr<Asteroid>(asteroid));
 	int index = m_asteroids.size()-1;
 	Future<bool> result;
@@ -62,6 +65,7 @@ Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3
 		auto s1 = seed;
 		Asteroid* ast = asteroid;
 		auto theShader = feedbackShader;
+
 
 		PatchSphere* pAsteroid = new PatchSphere();
 		//pAsteroid->generate(tessfactor,s1,false);
@@ -109,12 +113,21 @@ Future<bool> AsteroidRenderer::addAsteroidAsync(glm::mat4 modelMatrix, glm::vec3
 	});
 	return result;
 }
-
 void AsteroidRenderer::draw(MvpShader s){
 	for(auto it = m_asteroids.begin(); it != m_asteroids.end();it++){
 		if((*it)->generated){
 			s.setModel((*it)->modelMatrix);
 			(*it)->tfGeometry.draw();
+		}
+	}
+	
+}
+
+void AsteroidRenderer::drawBoundingBoxes(MvpShader s){
+	s.setModel(glm::mat4());
+	for(auto it = m_asteroids.begin(); it != m_asteroids.end();it++){
+		if((*it)->generated){
+			buildAndRender((*it)->BoundingBox);
 		}
 	}
 }

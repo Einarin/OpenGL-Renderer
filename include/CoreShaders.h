@@ -46,4 +46,10 @@ class TexturedShader : public CoreShader
 	bool init();
 };
 
+class ColorPosShader : public CoreShader
+{
+public:
+	bool init();
+};
+
 } //namespace gl

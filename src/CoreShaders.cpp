@@ -67,4 +67,28 @@ bool TexturedShader::init(){
 	return success;
 }
 
+bool ColorPosShader::init(){
+	bool success = true;
+	m_shader = Shader::Allocate();
+	auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	auto fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+	success &= vs->compile("#version 330\n"
+				"uniform mat4 modelMatrix;\n"
+				"uniform mat4 viewMatrix;\n"
+				"uniform mat4 projMatrix;\n"
+				"in vec3 position;\n"
+				"void main(void){\n"
+				"gl_Position = projMatrix * viewMatrix * modelMatrix * vec4(position,1.0);\n"
+				"}\n");
+	success &= fs->compileFromFile("glsl/color.frag");
+	m_shader->addAttrib("position",0);
+	m_shader->attachStage(vs);
+	m_shader->attachStage(fs);
+	success &= m_shader->link();
+	m_shader->bind();
+	float greenColor[] = {0.0f,1.0f,0.0f,1.0f};
+	glUniform4fv(m_shader->getUniformLocation("color"),1,greenColor);
+	return success;
+}
+
 } //namespace gl

@@ -5,6 +5,13 @@
 
 namespace gl{
 	template<class T>
+	class Basic_BB{
+	public:
+		bool empty;
+		T corners[8];
+	};
+
+	template<class T>
 	class Basic_AABB{
 	protected:
 		bool mEmpty;
@@ -90,13 +97,17 @@ namespace gl{
 		void buildAndRender();
 	};*/
 	typedef Basic_AABB<glm::vec2> AABB2;
+	typedef Basic_BB<glm::vec3> BB3;
 	void buildAndRender(AABB3 aabb);
 
 	/*template<typename M, class T>
 	Basic_AABB<T> operator*(M transform, const Basic_AABB<T>& aabb){
 		return Basic_AABB<T>(transform * aabb.mMinCorner, transform * aabb.mMaxCorner);
 	}*/
-	AABB3&& operator*(glm::mat4 transform, const AABB3& aabb);
+	AABB3 operator*(glm::mat4 transform, const AABB3& aabb);
+	BB3 operator*(glm::mat4 transform, const BB3& bb);
 
 	void drawAABB3(const AABB3& aabb);	
+	BB3 BB3fromAABB3(const AABB3& aabb);
+	AABB3 AABB3fromBB3(const BB3& bb);
 }

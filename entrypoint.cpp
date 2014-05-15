@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
 	//camera.SetPosition(vec3(0.0,0.0,0.0));
 	//camera.SetTarget(vec3(-4.f,-4.f,-4.f));
 	camera.SetNearDistance(0.01f);
-	camera.SetViewDistance(20.f);
+	camera.SetViewDistance(20000.f);
 	camera.SetTarget(vec3(0.0,0.0,0.0));
 	camera.SetAspectRatio(static_cast<float>(width)/static_cast<float>(height));
 
@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
 	AsteroidRenderer aRenderer;
 	if(!aRenderer.setup()) DebugBreak();
 	Future<bool> asteroidsGenerated;
-    /*CpuPool.async([&aRenderer,asteroidsGenerated]() mutable{
+    CpuPool.async([&aRenderer,asteroidsGenerated]() mutable{
 		std::mt19937 mtgen;
 		std::uniform_real_distribution<float> dist(1.f,2.f);
         for(int q=0;q<5;q++){
@@ -171,7 +171,7 @@ int main(int argc, char* argv[])
 	/*while(!result.complete()){
 		glPool.processMainQueueUnit();
 	}*/
-    aRenderer.addAsteroidAsync(mat4(),vec3(0.f));
+    aRenderer.addAsteroidAsync(translate(mat4(),vec3(0.f,1.f,0.f)),vec3(0.f));
 	
 	std::shared_ptr<Model> model = assetManager.loadModel("assets/fighter.obj");
 	std::shared_ptr<Model> model2 = assetManager.loadModel("assets/missile.obj");
@@ -214,7 +214,9 @@ int main(int argc, char* argv[])
 	TexturedShader ts;
 	if(!ts.init())
 		DebugBreak();
-
+	ColorPosShader boundingBoxShader;
+	boundingBoxShader.init();
+	MvpShader mvpbb(boundingBoxShader);
 	TextRenderer* textRenderer = textMan.getTextRenderer("DejaVuSans.ttf",24);
 	textRenderer->loadAscii();
 	vec2 end = textRenderer->addText("Hello World!",vec2(5,5),vec4(1.0,1.0,1.0,1.0));
@@ -334,9 +336,13 @@ int main(int argc, char* argv[])
 			//mns.setModel(mat4());
 			//ps.draw();
 		}
+		mvpbb.bind();
+		mvpbb.setView(camera.GetViewMatrix());
+		mvpbb.setProjection(camera.GetProjectionMatrix());
+		aRenderer.drawBoundingBoxes(mvpbb);
 
 		if(model.use_count() > 0 && model->ready()){
-			model->ModelMatrix = translate(mat4(),vec3(-5.f,-3.f, 6.f));
+			model->ModelMatrix = rotate(translate(mat4(),vec3(-5.f,-3.f, 6.f)),-20.f,vec3(0.f,1.f,0.f));
 			ts.bind();
 			glUniform4fv(((ShaderRef)ts)->getUniformLocation("light"), 1, value_ptr(light.position));
 			LitTexMvpShader dts = ts.litTexMvpShader;
@@ -494,7 +500,9 @@ int main(int argc, char* argv[])
 
 	//close window and shutdown glfw
 	//for some reason this is hideously slow sometimes (seems to be hanging on something...)
+	/*double startClose = glfwGetTime();
 	glfwDestroyWindow(window); 
-	glfwTerminate();
+	double windowClose = glfwGetTime() - startClose;
+	glfwTerminate();*/
 	return 0;
 }
