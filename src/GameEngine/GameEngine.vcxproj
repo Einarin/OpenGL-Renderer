@@ -41,10 +41,12 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(HOMEDRIVE)\local\boost_1_55_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(HOMEDRIVE)\local\Theron-6.00.02\Include;$(HOMEDRIVE)\local\Theron-6.00.02\Include\External;$(HOMEDRIVE)\local\boost_1_55_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(HOMEDRIVE)\local\Theron-6.00.02\Bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Theron.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -63,8 +65,12 @@
   <ItemGroup>
     <ClInclude Include="AbstractEvent.h" />
     <ClInclude Include="AbstractSimulator.h" />
+    <ClInclude Include="Component.h" />
     <ClInclude Include="Controllable.h" />
+    <ClInclude Include="GameObject.h" />
     <ClInclude Include="Grid.h" />
+    <ClInclude Include="OrderedSet.h" />
+    <ClInclude Include="TimeQueue.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameEngine.cpp" />
