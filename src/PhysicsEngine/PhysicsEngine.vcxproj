@@ -41,7 +41,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SystemDrive)\local\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SystemDrive)\local\Eigen;$(HOMEDRIVE)\local\boost_1_55_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -61,8 +61,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="EigenPlayground.cpp" />
+    <ClCompile Include="PhysicsComponent.cpp" />
+    <ClCompile Include="Tests.cpp" />
     <ClCompile Include="EigenSamples.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="IntegrationMethod.h" />
+    <ClInclude Include="Observables.h" />
+    <ClInclude Include="RK4Integrator.h" />
+    <ClInclude Include="VectorField.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
