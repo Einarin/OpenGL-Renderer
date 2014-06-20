@@ -2,18 +2,22 @@
 /// TODO this could wrapped with ProtoBuf/Blink/Capn
 /// TODO support descriptor for Units (speed, mass, acceleration). If using boost, must check that it is serializable and can be sent "over the wire"
 /// TODO use Eigen to make all the quantities vectors
-
+#include <Eigen/Dense>
 #include <functional>
 
-typedef std::function<float(const State&, const float t)> AccelerationFunction;
+typedef std::function<Vector3d(const State&, const float t)> AccelerationFunction;
+
+using namespace Eigen;
 
 struct State {
-	float x; // position
-	float v; // velocity
+	Vector3d x; // position
+	Vector3d v; // velocity
+	float m; // mass
 };
  
 struct Derivative
 {
-	float dx; // dx/dt = velocity
-	float dv; // dv/dt = acceleration 
+	Vector3d dx; // dx/dt = velocity
+	Vector3d dv; // dv/dt = acceleration 
+	float dm; // dm/dt = change in mass
 };

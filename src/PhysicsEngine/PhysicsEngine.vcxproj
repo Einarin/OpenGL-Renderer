@@ -41,7 +41,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SystemDrive)\local\Eigen;$(HOMEDRIVE)\local\boost_1_55_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Frank\Documents\Game\include\Catch;$(SystemDrive)\local\Eigen;$(HOMEDRIVE)\local\boost_1_55_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -61,11 +61,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CollisionDetection.cpp" />
+    <ClCompile Include="CollisionResolution.cpp" />
+    <ClCompile Include="ObjectMovement.cpp" />
     <ClCompile Include="PhysicsComponent.cpp" />
     <ClCompile Include="Tests.cpp" />
     <ClCompile Include="EigenSamples.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BaseAccelerationFunctions.h" />
     <ClInclude Include="IntegrationMethod.h" />
     <ClInclude Include="Observables.h" />
     <ClInclude Include="RK4Integrator.h" />
