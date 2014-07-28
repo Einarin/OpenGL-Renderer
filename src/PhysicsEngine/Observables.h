@@ -5,9 +5,12 @@
 #include <Eigen/Dense>
 #include <functional>
 
-typedef std::function<Vector3d(const State&, const float t)> AccelerationFunction;
-
 using namespace Eigen;
+
+struct State;
+struct Derivative;
+
+typedef std::function<Vector3d(const State, const float)> AccelerationFunction;
 
 struct State {
 	Vector3d x; // position

@@ -4,11 +4,9 @@
 
 class RK4Integrator: public IntegrationMethod {
 public: 
-	RK4Integrator(AccelerationFunction& accelerationFunction) : IntegrationMethod()
-	{
-		acceleration = accelerationFunction;
-	}
-
+	RK4Integrator(AccelerationFunction accelerationFunction) : IntegrationMethod(accelerationFunction)
+	{}
+	
 	Derivative evaluate(const State& initial, float t, float dt, const Derivative &d)
 	{
 		// New state position and velocity
@@ -19,7 +17,7 @@ public:
 		// New derivative
 		Derivative d_new;
 		d_new.dx = state.v;
-		d_new.dv = acceleration(&state, t + dt);
+		d_new.dv = acceleration(state, t + dt);
 
 		return d_new;
 	}
@@ -42,7 +40,7 @@ public:
 		state.x = state.x + dxdt * dt;
 		state.v = state.v + dvdt * dt;
 	}
-
+	
 
 	//Derivative evaluate(const State& initial, float t, float dt, const Derivative &d)
 	//{

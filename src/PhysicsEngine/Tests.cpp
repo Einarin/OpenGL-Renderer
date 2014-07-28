@@ -21,16 +21,26 @@ TEST_CASE( "RK4 constant acceleration", "[rk4constant]" ) {
 
 	REQUIRE(rk4.evaluate()
 }
+
+
 */
+Vector3d constantAcceleration(const State&, const float t)
+{
+	return Vector3d(1,0,0); 
+}
+
 void main()
 {
-	AccelerationFunction acceleration = []() { return Vector3d::Constant(1,0,0); };
-	RK4Integrator rk4(acceleration);
+	//Vector3d(const State&, const float t)
+	AccelerationFunction accelerationFunction = [=](const State state, const float t) {
+		return constantAcceleration(state, t);
+	};
+	RK4Integrator rk4(accelerationFunction);
 	State state;
 	Derivative d;
+
 	state.x = Vector3d::Constant(0,0,0);
 	state.v = Vector3d::Constant(0,0,0);
-	d.dv = Vector3d::Constant(0,0,0);
-	d.dx = acceleration(&state, 1);
+
 	//eval 3x, then integrate
 }
