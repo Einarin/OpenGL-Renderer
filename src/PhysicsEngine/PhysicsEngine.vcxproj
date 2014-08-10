@@ -41,10 +41,11 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>C:\Users\Frank\Documents\Game\include\Catch;$(SystemDrive)\local\Eigen;$(HOMEDRIVE)\local\boost_1_55_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(HOMEDRIVE)\local\Catch;$(SystemDrive)\local\Eigen;$(HOMEDRIVE)\local\boost_1_55_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -70,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseAccelerationFunctions.h" />
+    <ClInclude Include="VerletIntegrator.h" />
     <ClInclude Include="IntegrationMethod.h" />
     <ClInclude Include="Observables.h" />
     <ClInclude Include="RK4Integrator.h" />

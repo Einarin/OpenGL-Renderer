@@ -24,3 +24,25 @@ struct Derivative
 	Vector3d dv; // dv/dt = acceleration 
 	float dm; // dm/dt = change in mass
 };
+
+bool operator==(const State& lhs, const State& rhs)
+{
+	return lhs.x == rhs.x && lhs.v == rhs.v && lhs.m == rhs.m;
+}
+
+bool operator==(const Derivative& lhs, const Derivative & rhs)
+{
+	return lhs.dx == rhs.dx && lhs.dv == rhs.dv && lhs.dm == rhs.dm;
+}
+
+ostream& operator<< (ostream &out, State &state)
+{
+	out << state.x << endl << state.v;
+	return out;
+}
+
+ostream& operator<< (ostream &out, Derivative &derivative)
+{
+	out << derivative.dx << endl << derivative.dv;
+	return out;
+}
