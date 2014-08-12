@@ -26,7 +26,6 @@ const unsigned char drawInds[] = {
 	4,5, 4,6, 5,7, 6,7
 };
 void buildAndRender(AABB3 aabb){
-	//if(mEmpty) return;
 	VertexArrayObject vao;
 	vao.bind();
 	vao.addAndBindBuffer(GL_ELEMENT_ARRAY_BUFFER);

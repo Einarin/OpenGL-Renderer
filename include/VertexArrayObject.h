@@ -11,7 +11,7 @@ public:
 	VertexArrayObject();
 	~VertexArrayObject();
 	void bind();
-	void addAndBindBuffer(int target);
+	unsigned int addAndBindBuffer(int target);
 };
 
 }

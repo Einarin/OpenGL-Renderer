@@ -149,10 +149,10 @@ int main(int argc, char* argv[])
 	AsteroidRenderer aRenderer;
 	if(!aRenderer.setup()) DebugBreak();
 	Future<bool> asteroidsGenerated;
-    CpuPool.async([&aRenderer,asteroidsGenerated]() mutable{
+    /*CpuPool.async([&aRenderer,asteroidsGenerated]() mutable{
 		std::mt19937 mtgen;
 		std::uniform_real_distribution<float> dist(1.f,2.f);
-        for(int q=0;q<5;q++){
+        for(int q=0;q<50;q++){
 			glm::vec3 position(dist(mtgen)-1.5f,dist(mtgen)-1.5f,dist(mtgen)-1.5f);
 			if(length(position) < 0.1f) //we don't want asteroids at the origin
 				continue;
@@ -161,16 +161,17 @@ int main(int argc, char* argv[])
 			mat4 modelMat = scale(mat4(),uniformScale*vec3(dist(mtgen),dist(mtgen),dist(mtgen)));
 			modelMat = translate(rotate(modelMat,3.14159f*0.5f*dist(mtgen),glm::vec3(dist(mtgen),dist(mtgen),dist(mtgen))),position);
 			auto tmp = &aRenderer;
-			//CpuPool.await<bool>(
+			CpuPool.await<bool>(
 				glQueue.async<Future<bool>>([=]()->Future<bool>{
 					return tmp->addAsteroidAsync(modelMat,position);
-			});//);
+			}));
 		}
 		asteroidsGenerated.set(true);
 	});
-	/*while(!result.complete()){
-		glPool.processMainQueueUnit();
+	/*while(!asteroidsGenerated.isDone()){
+		glQueue.processQueueUnit();
 	}*/
+	//aRenderer.buildTree();
     aRenderer.addAsteroidAsync(translate(mat4(),vec3(0.f,1.f,0.f)),vec3(0.f));
 	
 	std::shared_ptr<Model> model = assetManager.loadModel("assets/fighter.obj");
@@ -204,6 +205,24 @@ int main(int argc, char* argv[])
 	light.position = vec3(2.0,-2.0,2.0);
 
 	cout << "compiling shaders...\n";
+
+	auto noiseShader = Shader::Allocate();
+	auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	auto fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+	vs->compile("#version 330\n"
+					"in vec2 position;\n"
+					"out vec2 texCoord;\n"
+					"void main(void){\n"
+					"texCoord = 0.5*(position+1.0);\n"
+					"gl_Position = vec4(position,0.0,1.0);\n"
+					"}\n");
+	fs->compileFromFile("glsl/crater.frag");
+	noiseShader->attachStage(vs);
+	noiseShader->attachStage(fs);
+	noiseShader->link();
+	Billboard noisebb;
+	noisebb.init();
+	noisebb.download();
 
 	LightingShader ls;
 	ls.init();
@@ -362,7 +381,7 @@ int main(int argc, char* argv[])
 		}
 		model->drawBoundingBoxes(&camera);
 		if(model2.use_count() > 0 && model2->ready()){
-			model2->ModelMatrix = translate(rotate(mat4(),180.f,vec3(0.f,1.f,0.f)),vec3(-5.f,-3.f,-4.f));
+			model2->ModelMatrix = translate(rotate(mat4(),210.f,vec3(0.f,1.f,0.f)),vec3(-5.f,-13.f,-6.f));
 			ts.bind();
 			glUniform4fv(((ShaderRef)ts)->getUniformLocation("light"), 1, value_ptr(light.position));
 			LitTexMvpShader dts = ts.litTexMvpShader;
@@ -389,7 +408,8 @@ int main(int argc, char* argv[])
 		glEnable(GL_BLEND);
 		//tex->draw();
 		//depthTex->draw();
-
+		//noiseShader->bind();
+		//noisebb.draw();
 		
 		textRenderer->draw(orthoMatrix);
 		checkGlError("draw hello world");

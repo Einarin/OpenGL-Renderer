@@ -45,45 +45,47 @@ void APIENTRY OpenglErrorCallback(GLenum source,
 						 const void* userParam)
 {
 	bool interrupt = false;
+	std::string text;
 	switch(severity){
 	case GL_DEBUG_SEVERITY_HIGH:
-		cout << "High Severity ";
+		text = "High Severity ";
 		interrupt = true;
 		break;
 	case GL_DEBUG_SEVERITY_MEDIUM:
-		cout << "Medium Severity ";
+		text = "Medium Severity ";
 		break;
 	case GL_DEBUG_SEVERITY_LOW:
-		cout << "Low Severity ";
+		text = "Low Severity ";
 		break;
 	case GL_DEBUG_SEVERITY_NOTIFICATION:
-		cout << "Notification ";
+		text = "Notification ";
 		break;
 	}
 	switch(type){
 	case GL_DEBUG_TYPE_ERROR:
-		cout << "Error: ";
+		text += "Error: ";
 		break;
 	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-		cout << "Deprecated: ";
+		text += "Deprecated: ";
 		break;
 	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-		cout << "Undefined Behavior: ";
+		text += "Undefined Behavior: ";
 		break;
 	case GL_DEBUG_TYPE_PORTABILITY:
-		cout << "Portability Warning: ";
+		text += "Portability Warning: ";
 		break;
 	case GL_DEBUG_TYPE_PERFORMANCE:
-		cout << "Performance Warning: ";
+		text += "Performance Warning: ";
 		break;
 	case GL_DEBUG_TYPE_MARKER:
-		cout << "Marker: ";
+		text += "Marker: ";
 		break;
 	case GL_DEBUG_TYPE_OTHER:
 	default:
-		cout <<"Unknown: ";
+		return;
+		text += "Unknown: ";
 	}
-	cout << message << endl;
+	cout << text << message << endl;
 	switch(source){
 	case GL_DEBUG_SOURCE_SHADER_COMPILER:
 		interrupt = true;
