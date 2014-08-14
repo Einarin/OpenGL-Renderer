@@ -37,11 +37,12 @@
 #if defined(_WIN32) || defined(_WIN64)
 
 #include <math.h>
-
+#if _MSC_VER < 1700
 double round (float v)
 {
 	return floor(v+0.5f);
 }
+#endif
 
 // strndup() is not available on Windows
 char *strndup( const char *s1, size_t n)
