@@ -41,7 +41,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(HOMEDRIVE)\local\Theron-6.00.02\Include;$(HOMEDRIVE)\local\Theron-6.00.02\Include\External;$(HOMEDRIVE)\local\boost_1_55_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(HOMEDRIVE)\local\Theron-6.00.02\Include;$(HOMEDRIVE)\local\Theron-6.00.02\Include\External;$(HOMEDRIVE)\local\boost_1_55_0;C:\local\mixins\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -69,6 +69,7 @@
     <ClInclude Include="Controllable.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="Grid.h" />
+    <ClInclude Include="ObjectManager.h" />
     <ClInclude Include="OrderedSet.h" />
     <ClInclude Include="TimeQueue.h" />
   </ItemGroup>

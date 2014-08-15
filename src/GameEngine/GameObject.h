@@ -5,26 +5,36 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <unordered_map>
+#include <iterator>
 #include "Component.h"
 
 typedef boost::uuids::uuid UID;
+typedef Component* ComponentPtr;
 
 class GameObject : public Theron::Actor
 {
 public:
-	GameObject(Theron::Framework &framework) : Theron::Actor(framework)
+
+	friend class Component;
+
+	explicit GameObject(Theron::Framework &framework) : Theron::Actor(framework)
 	{
-		//RegisterHandle
+		RegisterHandler(this, &GameObject::Handler);
 	}
 
-	Component* GetComponent(UID id);
+	ComponentPtr GetComponent(int id);
+	void AddComponent(const ComponentPtr comp);
+	bool HasComponent(int id);
 
-	void AddComponent(Component *comp);
-	bool HasComponent(UID id);
 private:
 	UID id;
 	//Level* level?
-	std::unordered_map<UID, Component> components;
+	std::unordered_map<int, Component*> components;
+
+	void Handler(const int &message, const Theron::Address from )
+	{
+		Send(message, from);
+	}
 };
 
 #endif

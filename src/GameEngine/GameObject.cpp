@@ -1,17 +1,16 @@
 #include "GameObject.h"
 
-
-Component* GameObject::GetComponent(UID id)
+ComponentPtr GameObject::GetComponent(int id)
 {
-	return 0;
+	return components[id];
 }
 
-void  GameObject::AddComponent(Component* comp)
+void  GameObject::AddComponent(const ComponentPtr comp)
 {
 	return;
 }
 
-bool GameObject::HasComponent(UID id)
+bool GameObject::HasComponent(int id)
 {
-	return false;
+	return components.count(id) != 0;
 }
