@@ -1,16 +1,26 @@
 #include "GameObject.h"
 
-ComponentPtr GameObject::GetComponent(int id)
+template <typename T>
+std::shared_ptr<T> GameObject::GetComponent()
 {
-	return components[id];
+	std::type_index index(typeid(T));
+
+	if(components.count(index))
+	{
+		return components[index];
+	}
+
+	return NULL;
 }
 
-void  GameObject::AddComponent(const ComponentPtr comp)
+template <typename T>
+void  GameObject::AddComponent(const Component* component)
 {
-	return;
+	components[std::type_index(typeid(*component))] = component;
 }
 
-bool GameObject::HasComponent(int id)
+template <typename T>
+bool GameObject::HasComponent()
 {
-	return components.count(id) != 0;
+	return components.count(std::type_index(typeid(T)));
 }

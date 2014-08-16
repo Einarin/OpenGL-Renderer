@@ -4,12 +4,15 @@
 #include <Theron/Theron.h>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
+#include <typeinfo>
+#include <typeindex>
 #include <unordered_map>
 #include <iterator>
 #include "Component.h"
 
 typedef boost::uuids::uuid UID;
 typedef Component* ComponentPtr;
+//typedef boost::mixin::object Mixin;
 
 class GameObject : public Theron::Actor
 {
@@ -22,14 +25,19 @@ public:
 		RegisterHandler(this, &GameObject::Handler);
 	}
 
-	ComponentPtr GetComponent(int id);
-	void AddComponent(const ComponentPtr comp);
-	bool HasComponent(int id);
+	template <typename T>
+	std::shared_ptr<T> GetComponent();
+
+	template <typename T>
+	void AddComponent(const Component* component);
+
+	template <typename T>
+	bool HasComponent();
 
 private:
 	UID id;
-	//Level* level?
-	std::unordered_map<int, Component*> components;
+
+	std::unordered_map<std::type_index, std::shared_ptr<Component> > components;
 
 	void Handler(const int &message, const Theron::Address from )
 	{
