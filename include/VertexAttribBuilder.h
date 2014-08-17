@@ -4,6 +4,7 @@
 namespace gl {
 enum AttribDataTypes{
 	FLOAT_ATTRIB,
+	INT_ATTRIB,
 	PADDING_ATTRIB
 };
 

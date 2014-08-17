@@ -11,6 +11,8 @@
 #include <fstream>
 #include <cstdint>
 #include <deque>
+#include <map>
+#include <queue>
 //for file modification
 #ifdef _WIN32
 #include <Windows.h>
@@ -77,9 +79,9 @@ Model::~Model(){
 	if(meshbuff) delete[] meshbuff;
 }
 
-Model::Model() : m_loaded(false),m_downloaded(false),m_cached(false),meshbuff(nullptr){
+Model::Model() : m_loaded(false), m_downloaded(false), m_cached(false), m_hasBones(false), meshbuff(nullptr){
 }
-Model::Model(std::string filename) : m_loaded(false),m_downloaded(false),m_cached(false),meshbuff(nullptr){
+Model::Model(std::string filename) : m_loaded(false), m_downloaded(false), m_cached(false), m_hasBones(false), meshbuff(nullptr){
 	open(filename);
 }
 bool Model::open(std::string filename){
@@ -126,7 +128,7 @@ bool Model::open(std::string filename){
 	importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,aiPrimitiveType_POINT | aiPrimitiveType_LINE);
 	importer.SetProgressHandler(new CoutProgressHandler());
 	const aiScene* scene = importer.ReadFile(filename
-								,aiProcess_CalcTangentSpace 
+								, aiProcess_CalcTangentSpace 
 								| aiProcess_ValidateDataStructure
 								| aiProcess_Triangulate 
 								| aiProcess_JoinIdenticalVertices
@@ -246,7 +248,25 @@ bool Model::open(std::string filename){
 			
 		}
 	}
+	//we have to do a first pass over the meshes to built a list of bones
+	int boneCount = 0;
+	for (int i = 0; i < scene->mNumMeshes; i++){
+		aiMesh* mesh = scene->mMeshes[i];
+		if (mesh->HasBones()){
+			m_hasBones = true;
+			for (int j = 0; j < mesh->mNumBones; j++){
+				std::string name = mesh->mBones[j]->mName.C_Str();
+				auto it = boneMap.find(name);
+				if (it == boneMap.end()){
+					boneMap[mesh->mBones[j]->mName.C_Str()] = boneCount++;
+					glm::mat4* offset = (glm::mat4*)&mesh->mBones[j]->mOffsetMatrix;
+					bones.push_back(*offset);
+				}
+			}
+		}
+	}
 	
+	//Now that we loaded all the support structures walk the scene graph for real
 	buildFromNode(scene, scene->mRootNode, glm::mat4(),&rootPart);
 	calcAABB();
 	for(auto it = sProcessSteps.begin();it != sProcessSteps.end();it++){
@@ -310,6 +330,7 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 	output.name = aim.mName.C_Str();
 	output.hasNormals = aim.HasNormals();
 	output.hasTangents = aim.HasTangentsAndBitangents();
+	output.hasBones = aim.HasBones();
 	output.numUVChannels = aim.GetNumUVChannels();
 	output.numVertexColorChannels = aim.GetNumColorChannels();
 	output.materialIndex = aim.mMaterialIndex;
@@ -317,6 +338,7 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 	output.ownsBuffers = true;
 	output.indSize = aim.mNumFaces*3;
 	output.indices = new unsigned int[output.indSize];
+	
 	unsigned int pos=0;
 	for(int i=0;i<(int)aim.mNumFaces;i++){
 		for(int j=0;j<(int)aim.mFaces[j].mNumIndices;j++){
@@ -325,6 +347,18 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 	}
 	for(int i=0;i<AI_MAX_NUMBER_OF_TEXTURECOORDS;i++){
 		output.numUVComponents[i] = aim.mNumUVComponents[i];
+	}
+	//we need to figure out what bones apply to each vertex
+	//this is inefficient, but fuck it
+	std::vector<std::priority_queue<std::pair<float, int>>> storage;
+	for (int i = 0; i < aim.mNumBones; i++){
+		std::string name = aim.mBones[i]->mName.C_Str();
+		int boneId = boneMap[name];
+		for (int j = 0; j < aim.mBones[i]->mNumWeights; j++){
+			int index = aim.mBones[i]->mWeights[j].mVertexId;
+			float weight = aim.mBones[i]->mWeights[j].mWeight;
+			storage[index].push(std::make_pair(weight, boneId));
+		}
 	}
 	output.vertSize = aim.mNumVertices;
 	output.vertices = new vertex[output.vertSize];
@@ -349,7 +383,13 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 				//RGBA_COPY(v.colors[j],aim.mColors[j][i]);
 			}
 		}
+		for (int j = 0; j < VERTEX_MAX_BONES; j++){
+			v.bones[j] = storage[i].top().second;
+			v.weights[j] = storage[i].top().first;
+			storage[i].pop();
+		}
 	}
+	
 }
 
 void Model::initPart(ModelPart& part)
