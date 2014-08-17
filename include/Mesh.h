@@ -8,6 +8,11 @@
 
 namespace gl{
 
+	class Bone{
+	public:
+		std::string name;
+	};
+
 	class Mesh{
 	public:
 		struct MeshHeader{
@@ -33,6 +38,7 @@ namespace gl{
 		bool ownsBuffers;
 		bool hasNormals;
 		bool hasTangents;
+		bool hasBones;
 		unsigned int drawCount;
 		unsigned int numVertexColorChannels;
 		unsigned int numUVChannels;

@@ -16,6 +16,11 @@ VertexAttribBuilder& VertexAttribBuilder::attrib(AttribDataTypes type, int count
 	case FLOAT_ATTRIB:
 		a.type = GL_FLOAT;
 		typesize = 4;
+		break;
+	case INT_ATTRIB:
+		a.type = GL_INT;
+		typesize = 4;
+		break;
 	}
 	a.size = typesize*count;
 	_attribs.push_back(a);
@@ -46,8 +51,13 @@ void VertexAttribBuilder::build() const{
 	int offset = 0;
 	int ind = 0;
 	for(int i=0; i<(int)_attribs.size();i++){
-		if(_attribs[i].type != PADDING_ATTRIB){
-			glVertexAttribPointer(ind,_attribs[i].count,_attribs[i].type,false,_size,(const GLvoid*)offset);
+		if (_attribs[i].type != PADDING_ATTRIB){
+			if(_attribs[i].type == FLOAT_ATTRIB){
+				glVertexAttribPointer(ind,_attribs[i].count,_attribs[i].type,false,_size,(const GLvoid*)offset);
+			}
+			if (_attribs[i].type == INT_ATTRIB){
+				glVertexAttribIPointer(ind, _attribs[i].count, _attribs[i].type, _size, (const GLvoid*)offset);
+			}
 			glEnableVertexAttribArray(ind);
 			ind++;
 		}

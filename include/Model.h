@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 namespace gl {
 	
@@ -81,13 +82,16 @@ protected:
 			}
 		}
 	};
+	
 	std::string filepath;
 	std::vector<TexRef> textures;
 	std::vector<Light> lights;
 	std::vector<Material> materials;
+	std::vector<glm::mat4> bones;
 	ModelPart rootPart;
+	std::map<std::string, int> boneMap;
 	char* meshbuff;
-	bool m_loaded,m_downloaded,m_cached;
+	bool m_loaded,m_downloaded,m_cached,m_hasBones;
 	void loadTextures(const aiScene* scene);
 	void buildFromNode(const aiScene* scene, aiNode* node, glm::mat4 transform,ModelPart* currentPart);
 	void buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& output); //potential optimization, only build each index once
