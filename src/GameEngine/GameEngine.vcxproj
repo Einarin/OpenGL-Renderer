@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -19,12 +19,14 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -41,7 +43,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(HOMEDRIVE)\local\Theron-6.00.02\Include;$(HOMEDRIVE)\local\Theron-6.00.02\Include\External;$(HOMEDRIVE)\local\boost_1_55_0;C:\local\mixins\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(HOMEDRIVE)\local\Theron-6.00.02\Include;$(HOMEDRIVE)\local\Theron-6.00.02\Include\External;$(HOMEDRIVE)\local\boost_1_55_0;C:\local\mixins\include;$(HOMEDRIVE)\local\events-0_08;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -63,20 +65,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="AbstractEvent.h" />
-    <ClInclude Include="AbstractSimulator.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="Controllable.h" />
     <ClInclude Include="GameObject.h" />
-    <ClInclude Include="Grid.h" />
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="Position.h" />
+    <ClInclude Include="ObjectFactory.h" />
+    <ClInclude Include="ObjectLists.h" />
     <ClInclude Include="ObjectManager.h" />
-    <ClInclude Include="OrderedSet.h" />
-    <ClInclude Include="TimeQueue.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameEngine.cpp" />
     <ClCompile Include="GameObject.cpp" />
-    <ClCompile Include="Moveable.h" />
     <ClCompile Include="PC.cpp" />
     <ClCompile Include="SpacialObject.cpp" />
   </ItemGroup>

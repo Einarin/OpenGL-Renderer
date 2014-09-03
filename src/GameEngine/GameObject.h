@@ -1,9 +1,10 @@
-#ifndef GAMENEGINE_H_
-#define GAMENEGINE_H_
+#ifndef GAMEOBJECT_H_
+#define GAMEOBJECT_H_
 
 #include <Theron/Theron.h>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
+#include <boost/variant.hpp>
 #include <typeinfo>
 #include <typeindex>
 #include <unordered_map>
@@ -11,13 +12,10 @@
 #include "Component.h"
 
 typedef boost::uuids::uuid UID;
-typedef Component* ComponentPtr;
-//typedef boost::mixin::object Mixin;
 
 class GameObject : public Theron::Actor
 {
 public:
-
 	friend class Component;
 
 	explicit GameObject(Theron::Framework &framework) : Theron::Actor(framework)
@@ -34,8 +32,12 @@ public:
 	template <typename T>
 	bool HasComponent();
 
+	virtual GameObject* factory() = 0;
+
 private:
 	UID id;
+
+	//boost::variant<
 
 	std::unordered_map<std::type_index, std::shared_ptr<Component> > components;
 
