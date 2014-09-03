@@ -191,6 +191,7 @@
     <ClCompile Include="src\TransformFeedback.cpp" />
     <ClCompile Include="src\VertexArrayObject.cpp" />
     <ClCompile Include="src\VertexAttribBuilder.cpp" />
+    <ClCompile Include="src\VertexBuffer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

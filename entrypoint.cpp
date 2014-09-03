@@ -174,8 +174,8 @@ int main(int argc, char* argv[])
 	//aRenderer.buildTree();
     aRenderer.addAsteroidAsync(translate(mat4(),vec3(0.f,1.f,0.f)),vec3(0.f));
 	
-	std::shared_ptr<Model> model = assetManager.loadModel("assets/goblet.obj");
-	std::shared_ptr<Model> model2 = assetManager.loadModel("assets/missile.obj");
+	std::shared_ptr<Model> model = assetManager.loadModel("assets/missile.obj");
+	std::shared_ptr<Model> model2 = assetManager.loadModel("assets/MakeHuman/woman.obj");
 
     /*CpuPool.async([&](){
 		model = new Model("assets/missile.obj");
@@ -358,7 +358,7 @@ int main(int argc, char* argv[])
 		mvpbb.bind();
 		mvpbb.setView(camera.GetViewMatrix());
 		mvpbb.setProjection(camera.GetProjectionMatrix());
-		aRenderer.drawBoundingBoxes(mvpbb);
+		//aRenderer.drawBoundingBoxes(mvpbb);
 
 		if(model.use_count() > 0 && model->ready()){
 			model->ModelMatrix = rotate(translate(mat4(),vec3(-5.f,-3.f, 6.f)),-20.f,vec3(0.f,1.f,0.f));
@@ -379,7 +379,7 @@ int main(int argc, char* argv[])
 				model->draw(dns);
 			}
 		}
-		model->drawBoundingBoxes(&camera);
+		//model->drawBoundingBoxes(&camera);
 		if(model2.use_count() > 0 && model2->ready()){
 			model2->ModelMatrix = translate(rotate(mat4(),210.f,vec3(0.f,1.f,0.f)),vec3(-5.f,-13.f,-6.f));
 			ts.bind();
@@ -399,7 +399,7 @@ int main(int argc, char* argv[])
 				model2->draw(dns);
 			}
 		}
-		model2->drawBoundingBoxes(&camera);
+		//model2->drawBoundingBoxes(&camera);
 		star.modelMatrix = translate(mat4(),-vec3(light.position));
 		star.draw(&camera);
 		FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);

@@ -1,6 +1,7 @@
 #pragma once
 #include "glincludes.h"
-#include <assimp/mesh.h>
+
+#error This file is obselete, use VertexBuffer.h instead
 
 //This file contains the definitions for vertex formats used
 

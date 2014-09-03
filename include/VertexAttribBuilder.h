@@ -20,10 +20,14 @@ private:
 	std::vector<Attrib> _attribs;
 public:
 	VertexAttribBuilder(void);
+	//add attributes of type {FLOAT_ATTRIB,PADDING_ATTRIB}
 	VertexAttribBuilder& attrib(AttribDataTypes type, int count);
+	//add padding for memory in the buffer not used by any attributes
 	VertexAttribBuilder& pad(int bytes);
+	//set the vertex size explicitly. If this isn't called the size is calculated automatically
 	VertexAttribBuilder& setSize(unsigned int size);
-	void build();
+	//makes all the actual OpenGL calls. Doesn't modify the object so it can be called repeatedly
+	void build() const;
 	~VertexAttribBuilder(void);
 };
 

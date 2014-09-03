@@ -24,7 +24,7 @@ shared_ptr<Model> AssetManager::loadModel(string filename){
 				});
 				if(!ptr->wasCached()){
 					std::cout << "saving optimized representation to disk...\n";
-					ptr->save(Model::cachename(filename));
+					//ptr->save(Model::cachename(filename));
 				}
 			} else {
 				cout << "request for asset " << filename << " failed" << endl;

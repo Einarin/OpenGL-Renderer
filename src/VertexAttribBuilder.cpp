@@ -42,7 +42,7 @@ VertexAttribBuilder& VertexAttribBuilder::setSize(unsigned int size){
 	return *this;
 }
 
-void VertexAttribBuilder::build(){
+void VertexAttribBuilder::build() const{
 	int offset = 0;
 	int ind = 0;
 	for(int i=0; i<(int)_attribs.size();i++){

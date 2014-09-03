@@ -12,7 +12,7 @@ namespace gl{
 uint32 Mesh::serialize(char** inbuff){
 	uint32 bufflen = sizeof(MeshHeader)
 			  + (name.size()+1)*sizeof(char)
-			  + vertSize * sizeof(vertex)
+			  + vertices.sizeInBytes()
 			  + indSize * sizeof(unsigned int);
 	char* buff = new char[bufflen];
 	*inbuff = buff;
@@ -29,11 +29,12 @@ uint32 Mesh::serialize(char** inbuff){
 	head->nameoff = sizeof(MeshHeader);
 	strcpy((buff+head->nameoff),name.c_str());
 	head->vertoff = sizeof(MeshHeader) + (name.size()+1)*sizeof(char);
+	//TODO:This should probably be replaced by explicit serialization support in VertexBuffer so it's more robust
 	head->vertsize = vertSize;
-	memcpy(buff+head->vertoff,&vertices[0],vertSize * sizeof(vertex));
+	memcpy(buff + head->vertoff, vertices.buffPtr(), vertices.vertSizeBytes());
 	head->indoff = sizeof(MeshHeader)
 			  + (name.size()+1)*sizeof(char)
-			  + vertSize * sizeof(vertex);
+			  + vertices.sizeInBytes();
 	head->indsize = indSize;
 	memcpy(buff+head->indoff,&indices[0],indSize * sizeof(unsigned int));
 	return bufflen;
@@ -54,8 +55,15 @@ void Mesh::deserialize(char* buff){
 	assert(vertSize==0);
 	assert(indSize==0);
 	ownsBuffers = false;
-	vertices = (gl::vertex*)(buff+head->vertoff);
+	//TODO:This should probably be replaced by explicit serialization support in VertexBuffer so it's more robust
+	VertexBufferBuilder vbb;
+	vbb.hasNormal(hasNormals)
+		.hasTangent(hasTangents)
+		.hasTexCoord3D(numUVChannels) //shares Model's assumption that all UV channels are 3D
+		.hasVertColor(numVertexColorChannels);
+	vertices = vbb.wrapUnownedBuffer(buff+head->vertoff);
 	vertSize = head->vertsize;
+	assert(vertSize == vertices.vertSizeBytes());//If this fails the VertexBuffer creation above probably doesn't match the one in class Model
 	indices = (unsigned int*)(buff+head->indoff);
 	indSize = head->indsize;
 	/*ownsBuffers = true;
@@ -71,10 +79,10 @@ void Mesh::deserialize(char* buff){
 
 void Mesh::copy(const Mesh& other)
 {
+	//who calls this anyway? making a deep copy of a mesh seems like a bad idea...
 	ownsBuffers = true;
 	vertSize = other.vertSize;
-	vertices = new vertex[vertSize];
-	memcpy(&vertices[0],&other.vertices[0],vertSize * sizeof(vertex));
+	vertices = other.vertices.duplicate();
 	indSize = other.indSize;
 	indices = new unsigned int[indSize];
 	memcpy(&indices[0],&other.indices[0],indSize * sizeof(unsigned int));
@@ -93,10 +101,10 @@ void Mesh::copy(const Mesh& other)
 void Mesh::calcAABB(){
 	if(vertSize > 0){
 		vec3 minp,maxp;
-		minp = maxp = vertices[0].pos.xyz();
+		minp = maxp = vertices[0].pos();
 		for(int i=1;i<vertSize;i++){
-			minp = min(minp,vertices[i].pos.xyz());
-			maxp = max(maxp,vertices[i].pos.xyz());
+			minp = min(minp,vertices[i].pos());
+			maxp = max(maxp,vertices[i].pos());
 		}
 		BoundingBox = AABB3(minp,maxp);
 	}
@@ -110,7 +118,7 @@ void RenderableMesh::init(){
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	checkGlError("bind");
-	VertexAttribBuilder b;
+	/*VertexAttribBuilder b;
 	b.setSize(sizeof(vertex))
 		.attrib(FLOAT_ATTRIB,3)
 		.pad(4)
@@ -123,6 +131,7 @@ void RenderableMesh::init(){
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)12);
 	glEnableVertexAttribArray(1);*/
+	vertices.configureAttributes();
 	checkGlError("attribs");
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	glBindVertexArray(0);
@@ -132,7 +141,7 @@ void RenderableMesh::init(){
 void RenderableMesh::download(){
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	checkGlError("glBindBuffer verts");
-	glBufferData(GL_ARRAY_BUFFER,vertSize * sizeof(vertex),&vertices[0],GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertices.sizeInBytes(), vertices.buffPtr(), GL_STATIC_DRAW);
 #ifdef _DEBUG
 	glBindBuffer(GL_ARRAY_BUFFER,0);
 #endif

@@ -1,9 +1,10 @@
 #pragma once
-#include "Vertex.h"
+#include "VertexBuffer.h"
 #include "Geometry.h"
 #include "AABB.h"
 #include <vector>
 #include <string>
+#include <assimp/mesh.h>
 
 namespace gl{
 
@@ -23,7 +24,7 @@ namespace gl{
 			unsigned int numUVComponents[AI_MAX_NUMBER_OF_TEXTURECOORDS];
 		};
 		std::string name;
-		vertex* vertices;
+		VertexBuffer vertices;
 		unsigned int vertSize;
 		unsigned int* indices;
 		unsigned int indSize;
@@ -40,7 +41,6 @@ namespace gl{
 		{}
 		~Mesh(){
 			if(ownsBuffers){
-				delete[] vertices;
 				delete[] indices;
 			}
 		}
@@ -52,7 +52,6 @@ namespace gl{
 	public:
         const Mesh& operator=(const Mesh& other){
 			if(ownsBuffers){
-				delete[] vertices;
 				delete[] indices;
 			}
 			copy(other);

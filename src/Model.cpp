@@ -323,30 +323,42 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 			output.indices[pos++] = aim.mFaces[i].mIndices[j];
 		}
 	}
-	for(int i=0;i<AI_MAX_NUMBER_OF_TEXTURECOORDS;i++){
+	for (int i = 0; i<AI_MAX_NUMBER_OF_TEXTURECOORDS; i++){
 		output.numUVComponents[i] = aim.mNumUVComponents[i];
 	}
 	output.vertSize = aim.mNumVertices;
-	output.vertices = new vertex[output.vertSize];
+	//output.vertices = new vertex[output.vertSize];
+	//Configure a vertex buffer to match our file
+	VertexBufferBuilder vbb;
+	vbb.vertexCount(output.vertSize)
+		.hasNormal(output.hasNormals)
+		.hasTangent(output.hasTangents)
+		.hasTexCoord3D(output.numUVChannels) //OPT:for now we assume all UV coords are 3D
+		.hasVertColor(output.numVertexColorChannels);
+	//Now generate the actual buffer
+	output.vertices = vbb.build();
 	for(unsigned int i=0;i<aim.mNumVertices;i++){
-		vertex& v = output.vertices[i];
-		VEC_COPY(v.pos,aim.mVertices[i]);
+		Vertex v(output.vertices[i]);
+		//VEC_COPY(v.pos(),aim.mVertices[i]);
+		output.vertices[i].pos().x = aim.mVertices[i].x;
+		v.pos().y = aim.mVertices[i].y;
+		v.pos().z = aim.mVertices[i].z;
 		//v.pos.w = 1.f;
 		if(output.hasNormals){
-			VEC_COPY(v.norm,aim.mNormals[i]);
+			VEC_COPY(v.norm(),aim.mNormals[i]);
 		}
 		if(output.hasTangents){
-			VEC_COPY(v.tan,aim.mTangents[i]);
+			VEC_COPY(v.tan(),aim.mTangents[i]);
 			//VEC_COPY(v.bitan,aim.mBitangents[i]);
 		}
-		for(int j=0;j<VERTEX_MAX_TEXCOORDS;j++){
+		for (int j = 0; j<AI_MAX_NUMBER_OF_TEXTURECOORDS; j++){
 			if(aim.HasTextureCoords(j)){
-				VEC_COPY(v.tc[j],aim.mTextureCoords[j][i]);
+				VEC_COPY(v.tc3(j),aim.mTextureCoords[j][i]);
 			}
 		}
-		for(int j=0;j<VERTEX_MAX_TEXCOLORS;j++){
+		for (int j = 0; j<AI_MAX_NUMBER_OF_COLOR_SETS; j++){
 			if(aim.HasVertexColors(j)){
-				//RGBA_COPY(v.colors[j],aim.mColors[j][i]);
+				RGBA_COPY(v.color(j),aim.mColors[j][i]);
 			}
 		}
 	}
@@ -456,7 +468,7 @@ unsigned int Model::typenum(){
 	typesize += sizeof(FlatMaterial);
 	typesize += sizeof(Mesh);
 	typesize += sizeof(RenderableMesh);
-	typesize += sizeof(vertex);
+	typesize += sizeof(VertData);
 	typesize += sizeof(Mesh::MeshHeader);
 	return typesize;
 }
