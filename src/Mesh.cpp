@@ -30,8 +30,9 @@ uint32 Mesh::serialize(char** inbuff){
 	strcpy((buff+head->nameoff),name.c_str());
 	head->vertoff = sizeof(MeshHeader) + (name.size()+1)*sizeof(char);
 	//TODO:This should probably be replaced by explicit serialization support in VertexBuffer so it's more robust
-	head->vertsize = vertSize;
-	memcpy(buff + head->vertoff, vertices.buffPtr(), vertices.vertSizeBytes());
+	head->vertCount = vertices.vertexCount();
+	head->vertsize = vertices.vertSizeBytes();
+	memcpy(buff + head->vertoff, vertices.buffPtr(), vertices.sizeInBytes());
 	head->indoff = sizeof(MeshHeader)
 			  + (name.size()+1)*sizeof(char)
 			  + vertices.sizeInBytes();
@@ -41,6 +42,9 @@ uint32 Mesh::serialize(char** inbuff){
 }
 
 void Mesh::deserialize(char* buff){
+	//make sure we don't already have data
+	assert(vertSize == 0);
+	assert(indSize == 0);
 	MeshHeader* head = reinterpret_cast<MeshHeader*>(buff);
 	hasNormals = (head->flags & HAS_NORMAL) != 0;
 	hasTangents = (head->flags & HAS_TANGENT) != 0;
@@ -52,29 +56,19 @@ void Mesh::deserialize(char* buff){
 		numUVComponents[i] = head->numUVComponents[i];
 	}
 	name = buff+head->nameoff;
-	assert(vertSize==0);
-	assert(indSize==0);
 	ownsBuffers = false;
 	//TODO:This should probably be replaced by explicit serialization support in VertexBuffer so it's more robust
 	VertexBufferBuilder vbb;
 	vbb.hasNormal(hasNormals)
 		.hasTangent(hasTangents)
 		.hasTexCoord3D(numUVChannels) //shares Model's assumption that all UV channels are 3D
-		.hasVertColor(numVertexColorChannels);
+		.hasVertColor(numVertexColorChannels)
+		.vertexCount(head->vertCount);
 	vertices = vbb.wrapUnownedBuffer(buff+head->vertoff);
-	vertSize = head->vertsize;
-	assert(vertSize == vertices.vertSizeBytes());//If this fails the VertexBuffer creation above probably doesn't match the one in class Model
+	vertSize = vertices.vertSizeBytes();
+	assert(head->vertsize == vertSize); //If this fails than our computed VertexBuffer didn't match the original storing one. This shouldn't ever happen...
 	indices = (unsigned int*)(buff+head->indoff);
 	indSize = head->indsize;
-	/*ownsBuffers = true;
-	assert(vertSize==0);
-	vertSize = head->vertsize;
-	vertices = new vertex[vertSize];
-	memcpy(&vertices[0],buff+head->vertoff,head->vertsize * sizeof(vertex));
-	assert(indSize==0);
-	indSize = head->indsize;
-	indices = new unsigned int[indSize];
-	memcpy(&indices[0],buff+head->indoff,head->indsize * sizeof(unsigned int));*/
 }
 
 void Mesh::copy(const Mesh& other)

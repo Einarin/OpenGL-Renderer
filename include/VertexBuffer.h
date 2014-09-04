@@ -70,7 +70,7 @@ namespace gl {
 		}
 		~VertData(){
 			if (m_ownsBuffer){
-				delete[] m_buffer;
+				_aligned_free(m_buffer);
 			}
 		}
 	};
@@ -174,7 +174,7 @@ namespace gl {
 				//TODO:DebugBreak();
 			}
 		}
-		inline int size() const{
+		inline int vertexCount() const{
 			return m_data.m_vertexCount;
 		}
 		inline int vertSizeBytes() const{

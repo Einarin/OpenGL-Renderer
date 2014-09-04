@@ -2,6 +2,9 @@
 
 namespace gl {
 	VertData VertexBufferBuilder::assemble(){
+		//Elder wizardry at work here
+		//	When adding new data types extra care must be taken
+		//	to ensure that alignment isn't violated for any combination of data types
 		VertData vbuff;
 
 		int sizeAccum = m_posSize * sizeof(float);

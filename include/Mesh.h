@@ -13,7 +13,8 @@ namespace gl{
 		struct MeshHeader{
 			unsigned int nameoff;
 			unsigned int vertoff;
-			unsigned int vertsize;
+			unsigned int vertsize; //this isn't strictly needed but it's used to verify the computed length calculated by VertexBuffer matches the length of the stored data
+			unsigned int vertCount;
 			unsigned int indoff;
 			unsigned int indsize;
 			unsigned int flags;

@@ -175,7 +175,7 @@ int main(int argc, char* argv[])
     aRenderer.addAsteroidAsync(translate(mat4(),vec3(0.f,1.f,0.f)),vec3(0.f));
 	
 	std::shared_ptr<Model> model = assetManager.loadModel("assets/missile.obj");
-	std::shared_ptr<Model> model2 = assetManager.loadModel("assets/MakeHuman/woman.obj");
+	std::shared_ptr<Model> model2 = assetManager.loadModel("assets/missile.obj");
 
     /*CpuPool.async([&](){
 		model = new Model("assets/missile.obj");
