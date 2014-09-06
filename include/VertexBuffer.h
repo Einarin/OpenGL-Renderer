@@ -143,7 +143,13 @@ namespace gl {
 		//Default constructor provided only to let this be stored by value
 		VertexBuffer() : m_valid(false)
 		{ }
+#if _MSC_VER < 1700
+	private:
+		VertexBuffer(VertexBuffer& other);
+	public:
+#else
 		VertexBuffer(VertexBuffer& other) = delete;
+#endif
 		//By providing this as a member function rather than a construtor we avoid accidental expensive copy operations
 		VertexBuffer duplicate() const{
 			VertexBuffer vb;
