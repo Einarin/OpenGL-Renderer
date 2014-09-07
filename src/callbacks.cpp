@@ -19,6 +19,7 @@ void onResizeWindow(GLFWwindow* window, int w, int h){
 	float aspect = static_cast<float>(w)/static_cast<float>(h);
 	projectionMatrix = glm::perspective(45.f,aspect,-1.f,1.f);
 	camera.SetAspectRatio(aspect);
+	hdr.setup(glm::ivec2(w, h));
 }
 using glm::vec3;
 //menu keys

@@ -21,6 +21,7 @@
 #include "CoreShaders.h"
 #include "FrameBufferObject.h"
 #include "AssetManager.h"
+#include "HighDynamicRangeResolve.h"
 
 using namespace std;
 using namespace gl;
@@ -31,6 +32,7 @@ Billboard* bb;
 Camera camera;
 glm::mat4 projectionMatrix;
 glm::mat4 orthoMatrix;
+HighDynamicRangeResolve hdr;
 int levels = 5;
 int tessFactor = 50;
 double fpsTarget = 60.0;
@@ -126,6 +128,10 @@ int main(int argc, char* argv[])
 	camera.SetTarget(vec3(0.0,0.0,0.0));
 	camera.SetAspectRatio(static_cast<float>(width)/static_cast<float>(height));
 
+	
+	hdr.init();
+	hdr.setup(glm::ivec2(width, height));
+
 	cout << "generating assets...\n";
 	
 	//Sphere cube(32,vec2(0.0,0.0),vec2(1.0));
@@ -175,7 +181,7 @@ int main(int argc, char* argv[])
     aRenderer.addAsteroidAsync(translate(mat4(),vec3(0.f,1.f,0.f)),vec3(0.f));
 	
 	std::shared_ptr<Model> model = assetManager.loadModel("assets/missile.obj");
-	std::shared_ptr<Model> model2 = assetManager.loadModel("assets/missile.obj");
+	std::shared_ptr<Model> model2 = assetManager.loadModel("assets/MakeHuman/woman.obj");
 
     /*CpuPool.async([&](){
 		model = new Model("assets/missile.obj");
@@ -246,7 +252,7 @@ int main(int argc, char* argv[])
 	fbo.init();
 	fbo.Size = ivec2(1280,800);
 	//TexRef tex = TextureManager::Instance()->texFromFile("Hello.png");
-	TexRef tex = TextureManager::Instance()->backedTex(GL_RGBA,fbo.Size,GL_UNSIGNED_BYTE);
+	TexRef tex = TextureManager::Instance()->backedTex(GL_RGBA, fbo.Size, GL_FLOAT, GL_RGBA16F);
 	TexRef depthTex = TextureManager::Instance()->backedTex(GL_DEPTH_COMPONENT,fbo.Size,GL_FLOAT);
 	checkGlError("backedTex");
 	fbo.attachTexture(GL_DRAW_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,tex);
@@ -322,7 +328,10 @@ int main(int argc, char* argv[])
 
 		checkGlError("start main loop");
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		//bind fullscreen HDR buffer
 		//fbo.bind(GL_DRAW_FRAMEBUFFER);
+		hdr.bind();
 		
 		//draw
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -406,6 +415,7 @@ int main(int argc, char* argv[])
 		glDisable(GL_DEPTH_TEST);
 		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 		glEnable(GL_BLEND);
+		hdr.draw();
 		//tex->draw();
 		//depthTex->draw();
 		//noiseShader->bind();

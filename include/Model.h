@@ -58,10 +58,12 @@ protected:
 				specularTex = tm->texFromFile(specularFile);
 			}
 			if(!normalFile.empty()){
-				normalTex = tm->texFromFile(normalFile);
+				//normals are not sRGB encoded
+				normalTex = tm->texFromFile(normalFile,false);
 			}
 			if(!displacementFile.empty()){
-				displacementTex = tm->texFromFile(displacementFile);
+				//displacements are not sRGB encoded
+				displacementTex = tm->texFromFile(displacementFile,false);
 			}
 		}
 		void init(){

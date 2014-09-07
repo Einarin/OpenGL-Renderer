@@ -1,6 +1,8 @@
+#pragma once
 #include "glincludes.h"
 #include "Geometry.h"
 #include "Camera.h"
+#include "HighDynamicRangeResolve.h"
 
 void onGlfwError(int error, const char* description);
 void onResizeWindow(GLFWwindow* window, int w, int h);
@@ -12,3 +14,4 @@ void onCursorMoved(GLFWwindow* window, double xpos, double ypos);
 extern gl::Billboard* bb;
 extern gl::Camera camera;
 extern glm::mat4 projectionMatrix;
+extern gl::HighDynamicRangeResolve hdr;
