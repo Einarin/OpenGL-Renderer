@@ -1,5 +1,4 @@
 #include "VertexAttribBuilder.h"
-#include "Debug.h"
 #include <glm/glm.hpp>
 #include <memory>
 #include <vector>
