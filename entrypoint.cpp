@@ -22,6 +22,7 @@
 #include "FrameBufferObject.h"
 #include "AssetManager.h"
 #include "HighDynamicRangeResolve.h"
+#include "ParticleSimulator.h"
 
 using namespace std;
 using namespace gl;
@@ -127,8 +128,7 @@ int main(int argc, char* argv[])
 	camera.SetViewDistance(20000.f);
 	camera.SetTarget(vec3(0.0,0.0,0.0));
 	camera.SetAspectRatio(static_cast<float>(width)/static_cast<float>(height));
-
-	
+		
 	hdr.init();
 	hdr.setup(glm::ivec2(width, height));
 
@@ -174,11 +174,11 @@ int main(int argc, char* argv[])
 		}
 		asteroidsGenerated.set(true);
 	});
-	/*while(!asteroidsGenerated.isDone()){
+	while(!asteroidsGenerated.isDone()){
 		glQueue.processQueueUnit();
-	}*/
+	}//*/
 	//aRenderer.buildTree();
-    aRenderer.addAsteroidAsync(translate(mat4(),vec3(0.f,1.f,0.f)),vec3(0.f));
+    auto astMade = aRenderer.addAsteroidAsync(translate(mat4(),vec3(0.f,1.f,0.f)),vec3(0.f));
 	
 	std::shared_ptr<Model> model = assetManager.loadModel("assets/missile.obj");
 	std::shared_ptr<Model> model2 = assetManager.loadModel("assets/MakeHuman/woman.obj");
@@ -288,10 +288,17 @@ int main(int argc, char* argv[])
 		cursorGrabbed = true;
 	}*/
 
+	ParticleSimulator particles;
+	particles.setup(1000000);
+
 	while (!glfwWindowShouldClose(window))
 	{
 		//know when we got to the top of the render loop
 		double frameStart = glfwGetTime();
+
+		//kick off gpu transform feedback calculations
+		particles.update();
+
 		//input handling
 		glfwPollEvents();
 		handleKeys(window);
@@ -332,11 +339,13 @@ int main(int argc, char* argv[])
 		//bind fullscreen HDR buffer
 		//fbo.bind(GL_DRAW_FRAMEBUFFER);
 		hdr.bind();
-		
+
 		//draw
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		checkGlError("clear screen");
-		
+		if (wireframe){
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		}
 		skybox.draw(&camera);
 		checkGlError("draw skybox");
 		glEnable(GL_DEPTH_TEST);
@@ -410,11 +419,18 @@ int main(int argc, char* argv[])
 		}
 		//model2->drawBoundingBoxes(&camera);
 		star.modelMatrix = translate(mat4(),-vec3(light.position));
+		
+		particles.draw(camera);
 		star.draw(&camera);
+
+		//End scene drawing
 		FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);
 		glDisable(GL_DEPTH_TEST);
 		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 		glEnable(GL_BLEND);
+		if (wireframe){
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
 		hdr.draw();
 		//tex->draw();
 		//depthTex->draw();
@@ -458,7 +474,7 @@ int main(int argc, char* argv[])
 						//do we have GPU memory?
 						int freeMem = FreeGpuMemoryMB();
 						//Obviously we need MOAR ASTEROIDS!
-						if(freeMem > 100000 && asteroidsGenerated.isDone() && asteroidsGenerated){
+						if(false && freeMem > 100000 && asteroidsGenerated.isDone() && asteroidsGenerated){
 							const int count = 5;
 							cout << "Generating " << count << " asteroids with " << freeMem << " bytes available" << endl;
 							CpuPool.async([&aRenderer,asteroidsGenerated,count,time]() mutable{

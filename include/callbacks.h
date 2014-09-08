@@ -11,7 +11,10 @@ void handleKeys(GLFWwindow* window);
 void onCursorMoved(GLFWwindow* window, double xpos, double ypos);
 
 //global variables ftw
+//from entrypoint.cpp
 extern gl::Billboard* bb;
 extern gl::Camera camera;
 extern glm::mat4 projectionMatrix;
 extern gl::HighDynamicRangeResolve hdr;
+//from callbacks.cpp
+extern int wireframe;

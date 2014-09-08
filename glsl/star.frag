@@ -292,5 +292,5 @@ void main( void )
 	float alpha = theta * mix(noise,1.0,theta);
 	vec3 albedo;// = lava();
 	albedo = 100.0*vec3(pow(theta,2),pow(theta,3.25),pow(theta,8));
-	FragColor = vec4(albedo,alpha);//vec3(dc+0.15)//vec4(angle,maxd, 0.5+gl_FragCoord.z,1.0);//vec4(color*vec3(snoise(vec3(texCoords.xy,texCoords.z+time))+1.0)*0.5,1.0);//angle * specular + diffuse;
+	FragColor = max(vec4(albedo,alpha),vec4(0.));//vec3(dc+0.15)//vec4(angle,maxd, 0.5+gl_FragCoord.z,1.0);//vec4(color*vec3(snoise(vec3(texCoords.xy,texCoords.z+time))+1.0)*0.5,1.0);//angle * specular + diffuse;
 }

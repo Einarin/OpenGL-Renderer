@@ -8,7 +8,9 @@ VertexArrayObject::VertexArrayObject(){
 }
 
 VertexArrayObject::~VertexArrayObject(){
-	glDeleteBuffers(ownedBuffers.size(),&ownedBuffers[0]);
+	if (ownedBuffers.size() > 0){
+		glDeleteBuffers(ownedBuffers.size(), &ownedBuffers[0]);
+	}
 	glDeleteVertexArrays(0,&vao);
 }
 

@@ -135,6 +135,7 @@
     <ClInclude Include="include\FrameBufferObject.h" />
     <ClInclude Include="include\ft2build.h" />
     <ClInclude Include="include\Geometry.h" />
+    <ClInclude Include="include\HighDynamicRangeResolve.h" />
     <ClInclude Include="include\Property.h" />
     <ClInclude Include="include\glincludes.h" />
     <ClInclude Include="include\ImageLoader.h" />
@@ -159,11 +160,13 @@
     <ClInclude Include="include\Vertex.h" />
     <ClInclude Include="include\VertexArrayObject.h" />
     <ClInclude Include="include\VertexAttribBuilder.h" />
+    <ClInclude Include="ParticleSimulator.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="entrypoint.cpp" />
     <ClCompile Include="lz4-r112\lz4.c" />
     <ClCompile Include="lz4-r112\lz4hc.c" />
+    <ClCompile Include="ParticleSimulator.cpp" />
     <ClCompile Include="src\AABB.cpp" />
     <ClCompile Include="src\AssetManager.cpp" />
     <ClCompile Include="src\AsteroidRenderer.cpp" />
@@ -175,6 +178,7 @@
     <ClCompile Include="src\FrameBufferObject.cpp" />
     <ClCompile Include="src\Geometry.cpp" />
     <ClCompile Include="src\glCommon.cpp" />
+    <ClCompile Include="src\HighDynamicRangeResolve.cpp" />
     <ClCompile Include="src\ImageLoader.cpp" />
     <ClCompile Include="src\MathUtilities.cpp" />
     <ClCompile Include="src\Mesh.cpp" />

@@ -28,6 +28,10 @@ public:
 	VertexAttribBuilder& setSize(unsigned int size);
 	//makes all the actual OpenGL calls. Doesn't modify the object so it can be called repeatedly
 	void build() const;
+	//returns the auto-calculated vertex size
+	unsigned int getAutoSize(){
+		return _size;
+	}
 	~VertexAttribBuilder(void);
 };
 

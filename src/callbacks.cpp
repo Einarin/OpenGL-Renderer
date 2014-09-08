@@ -9,6 +9,7 @@
 #endif
 
 int shader=0;
+int wireframe;
 
 void onGlfwError(int error, const char* description){
 	std::cout << "GLFW error " << error << ": " << description << std::endl;
@@ -43,12 +44,11 @@ void onKeyPressed(GLFWwindow* window, int key, int scancode, int action, int mod
 		cursorGrabbed = !cursorGrabbed;
 	}
 	if(key == GLFW_KEY_Y && action == GLFW_PRESS){
-		static int wireframe;
 		if(wireframe == 0){
-			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+			//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 			wireframe = 1;
 		} else {
-			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+			//glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 			wireframe = 0;
 		}
 	}
