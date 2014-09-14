@@ -56,7 +56,7 @@ void main(void)
 	{
 		accel += attractors[i].z*gravity(attractors[i].xy);
 	}*/
-	accel += gravity(vec3(0.));
+	accel += 0.001 * gravity(vec3(0.));
 
 	//vec2 rotation = vec2(0.);
 	float bound = length(vec2(1.0,aspect));
@@ -71,13 +71,15 @@ void main(void)
 	
 	vec3 pos = in_Position.xyz + (0.00001 * ex_Velocity.xyz);
 	if(abs(pos.x) > 1) {
-		ex_Velocity.x = abs(ex_Velocity.x) * -sign(pos.x) * randvel(ex_Velocity.xyz);
+		ex_Velocity.xyz = vec3(abs(ex_Velocity.x) * -sign(pos.x),ex_Velocity.yz) * randvel(ex_Velocity.xyz);
 	}
 	if(abs(pos.y) > 1) {
-		ex_Velocity.y = abs(ex_Velocity.y) * -sign(pos.y) * randvel(ex_Velocity.xyz);
+		//ex_Velocity.y = abs(ex_Velocity.y) * -sign(pos.y) + randvel(ex_Velocity.xyz);
+		ex_Velocity.xyz = vec3(abs(ex_Velocity.y) * -sign(pos.y),ex_Velocity.yz) * randvel(ex_Velocity.xyz);
 	}
 	if(abs(pos.z) > 1) {
-		ex_Velocity.z = abs(ex_Velocity.z) * -sign(pos.z) * randvel(ex_Velocity.xyz);
+		ex_Velocity.z = abs(ex_Velocity.z) * -sign(pos.z) + randvel(ex_Velocity.xyz);
+		ex_Velocity.xyz = vec3(abs(ex_Velocity.z) * -sign(pos.z),ex_Velocity.yz) * randvel(ex_Velocity.xyz);
 	}
 	//pos += 0.01 * mix(rotation,vec2(0.),clamp(length(in_Position.xy)/aspect,0.,1.));
 	//ex_Position.xy = in_Position.xy + accel;
