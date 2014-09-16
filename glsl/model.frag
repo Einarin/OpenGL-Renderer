@@ -34,7 +34,7 @@ void main( void )
 	//float disp = texCoords.w*0.33333;
 	//abs(dot(normalize(texCoords.rgb),norm))
 	
-	color = ambient + 0.75*(diff * diffuse + spec * specular);//vec3(1.0-disp,0.0,disp);//vec3(abs(tan.x));//vec3(0.8,0.4,0.8);
+	color = ambient + (100.0/length(lightvec.xyz))*(diff * diffuse + spec * specular);//vec3(1.0-disp,0.0,disp);//vec3(abs(tan.x));//vec3(0.8,0.4,0.8);
 	//color = *vec3();
 	float theta = abs(dot(eye,norm));
 	float scale = 1.0;

@@ -58,7 +58,9 @@ extern "C" {
 #elif defined(_WIN32) || defined(_WIN64) 
     /* does not exist on windows */
     char * strndup( const char *s1, size_t n);
+#if _MSC_VER < 1700 //VS 2010 lacks round apparently
     double round (float v);
+#endif
 #    pragma warning (disable: 4244) // suspend warnings
 #endif // _WIN32 || _WIN64
 

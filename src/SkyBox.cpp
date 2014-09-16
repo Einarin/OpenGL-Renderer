@@ -139,7 +139,7 @@ void SkyBox::setImageAsync(std::string basepngfilename){
 			glm::ivec2 size = imgSize;
 			GlTextureCubeMap* ptr = &cubemap;
 			glQueue.async([=](){//OpenGL work must be done on GL thread
-				ptr->setup(GL_RGBA,size,GL_UNSIGNED_BYTE,faces[j]);
+				ptr->setup(GL_RGBA,size,GL_UNSIGNED_BYTE,faces[j],GL_SRGB);
 				ptr->setImage(GL_RGBA,size,GL_UNSIGNED_BYTE,faces[j],data);
 				free(data);
 			});

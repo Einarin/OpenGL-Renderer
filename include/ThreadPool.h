@@ -15,6 +15,8 @@
 #if _MSC_VER < 1700
 #undef USE_STD_THREAD
 #endif
+//no version of MSVC has thread_local
+#define thread_local __declspec(thread)
 #endif
 
 //GCC < 4.8 doesn't have thread_local
@@ -45,7 +47,6 @@ using std::thread;
 #define ACQUIRE_MUTEX(m) while(WaitForSingleObject(m,INFINITE)!=0) { }
 #define TRY_MUTEX(m) 0==WaitForSingleObject(m,10)
 #define RELEASE_MUTEX(m) ReleaseMutex(m)
-#define thread_local __declspec(thread)
 #define THREAD_ID DWORD
 typedef HANDLE thread;
 #endif
@@ -158,6 +159,22 @@ public:
 	WorkerThreadData(): blocked(false){
 		mutex = NEW_MUTEX;
 	}
+#if _MSC_VER <= 1800
+	WorkerThreadData(WorkerThreadData&& rhs) : mthread(std::move(rhs.mthread))
+												   , threadId(std::move(rhs.threadId))
+												   , mutex(std::move(rhs.mutex))
+												   , blocked(std::move(rhs.blocked))
+												   , workData(std::move(rhs.workData))
+	{	}
+#else
+	WorkerThreadData(WorkerThreadData&& rhs) = default;
+#endif
+#if _MSC_VER < 1700
+private:
+	WorkerThreadData(const WorkerThreadData & rhs);
+#else
+	WorkerThreadData(const WorkerThreadData & rhs) = delete;
+#endif
 };
 
 struct DispatchData{

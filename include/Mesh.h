@@ -1,9 +1,10 @@
 #pragma once
-#include "Vertex.h"
+#include "VertexBuffer.h"
 #include "Geometry.h"
 #include "AABB.h"
 #include <vector>
 #include <string>
+#include <assimp/mesh.h>
 
 namespace gl{
 
@@ -12,7 +13,8 @@ namespace gl{
 		struct MeshHeader{
 			unsigned int nameoff;
 			unsigned int vertoff;
-			unsigned int vertsize;
+			unsigned int vertsize; //this isn't strictly needed but it's used to verify the computed length calculated by VertexBuffer matches the length of the stored data
+			unsigned int vertCount;
 			unsigned int indoff;
 			unsigned int indsize;
 			unsigned int flags;
@@ -23,7 +25,7 @@ namespace gl{
 			unsigned int numUVComponents[AI_MAX_NUMBER_OF_TEXTURECOORDS];
 		};
 		std::string name;
-		vertex* vertices;
+		VertexBuffer vertices;
 		unsigned int vertSize;
 		unsigned int* indices;
 		unsigned int indSize;
@@ -40,7 +42,6 @@ namespace gl{
 		{}
 		~Mesh(){
 			if(ownsBuffers){
-				delete[] vertices;
 				delete[] indices;
 			}
 		}
@@ -52,7 +53,6 @@ namespace gl{
 	public:
         const Mesh& operator=(const Mesh& other){
 			if(ownsBuffers){
-				delete[] vertices;
 				delete[] indices;
 			}
 			copy(other);

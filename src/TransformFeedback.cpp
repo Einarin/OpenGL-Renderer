@@ -106,7 +106,11 @@ void TransformFeedback::draw(){
 	glBindVertexArray(0);
 }
 void TransformFeedback::draw(int count){
+	if (m_vao){
+		glBindVertexArray(m_vao);
+	}
 	glDrawArrays(m_primitiveType,0,count);
+	glBindVertexArray(0);
 }
 
 TransformFeedback::~TransformFeedback(void)

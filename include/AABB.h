@@ -26,14 +26,14 @@ namespace gl{
 		Basic_AABB(T minCorner, T maxCorner):mEmpty(false),isEmpty(mEmpty),
 			mMinCorner(minCorner),mMaxCorner(maxCorner)
 		{}
-		bool contains(T point){
+		bool contains(T point) const{
 			return point >= mMinCorner && point <= mMaxCorner;
 		}
-		bool contains(Basic_AABB<T> other){
+		bool contains(Basic_AABB<T> other) const{
 			return mMinCorner <= other.mMinCorner && mMaxCorner >= other.mMaxCorner;
 		}
 		template<typename V>
-		Basic_AABB<T> operator+(V val){
+		Basic_AABB<T> operator+(V val) const{
 			return Basic_AABB<T>(mMinCorner+val,mMaxCorner+val);
 		}
 		const Basic_AABB<T>& operator=(const Basic_AABB<T>& rhs){
@@ -49,6 +49,12 @@ namespace gl{
 				mMinCorner = glm::min(mMinCorner,rhs.mMinCorner);
 				mMaxCorner = glm::max(mMaxCorner,rhs.mMaxCorner);
 			}
+		}
+		inline int tricmp(int index, float val){
+			return val < mMinCorner[index]?-1:val>mMaxCorner[index]?1:0;
+		}
+		glm::vec3 center() const{
+			return 0.5f*mMinCorner + 0.5f*mMaxCorner;
 		}
 	};
 

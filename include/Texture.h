@@ -43,11 +43,12 @@ protected:
 	TextureManager() {}
 public:
 	static TextureManager* Instance();
-	virtual TexRef texFromFile(std::string image)=0;
-	virtual TexRef texFromPngBytestream(char* buff, int bytes)=0;
-	virtual TexRef texFromRGBA8888(char* buff, glm::ivec2 size)=0;
+	virtual TexRef texFromFile(std::string image, bool sRGB = true) = 0;
+	virtual TexRef texFromPngBytestream(char* buff, int bytes, bool sRGB = true) = 0;
+	virtual TexRef texFromRGBA8888(char* buff, glm::ivec2 size, bool sRGB = true) = 0;
 	virtual TexRef unbackedTex()=0;
 	virtual TexRef backedTex(unsigned int format,glm::ivec2 size, unsigned int datatype)=0;
+	virtual TexRef backedTex(unsigned int format, glm::ivec2 size, unsigned int datatype, unsigned int internalFormat) = 0;
 	virtual TexRef depthTex(unsigned int format,glm::ivec2 size, unsigned int datatype)=0;
 	virtual TexRef missingTex()=0;
 	virtual void contextLost()=0;
@@ -55,11 +56,12 @@ public:
 
 class GlTextureManager : public TextureManager {
 public:
-	virtual TexRef texFromFile(std::string image);
-	virtual TexRef texFromPngBytestream(char* buff, int bytes);
-	virtual TexRef texFromRGBA8888(char* buff, glm::ivec2 size);
+	virtual TexRef texFromFile(std::string image, bool sRGB = true);
+	virtual TexRef texFromPngBytestream(char* buff, int bytes, bool sRGB = true);
+	virtual TexRef texFromRGBA8888(char* buff, glm::ivec2 size, bool sRGB = true);
 	virtual TexRef unbackedTex();
-	virtual TexRef backedTex(unsigned int format,glm::ivec2 size, unsigned int datatype);
+	virtual TexRef backedTex(unsigned int format, glm::ivec2 size, unsigned int datatype);
+	virtual TexRef backedTex(unsigned int format, glm::ivec2 size, unsigned int datatype, unsigned int internalFormat);
 	virtual TexRef depthTex(unsigned int format,glm::ivec2 size, unsigned int datatype);
 	virtual TexRef missingTex();
 	virtual void contextLost();
@@ -107,6 +109,7 @@ public:
 	virtual void dealloc();
 	virtual void unreferenced();
 	void setup(GLint format,glm::ivec2 size,GLenum datatype);
+	void setup(GLint format, glm::ivec2 size, GLenum datatype, unsigned int internalFormat);
 	void setImage(GLint format,glm::ivec2 size,GLenum datatype,void* data);
 	void draw();
 	protected:
@@ -131,6 +134,7 @@ public:
 	virtual void alloc();
 	virtual void dealloc();
 	void setup(GLint format,glm::ivec2 texSize,GLenum datatype,GLenum face);
+	void setup(GLint format, glm::ivec2 texSize, GLenum datatype, GLenum face,GLint internalFormat);
 	void setImage(GLint format,glm::ivec2 size,GLenum datatype,GLenum face,void* data);
 	void draw(){
 	//TODO: unimplemented
@@ -140,6 +144,7 @@ public:
 class FileBackedGlTexture2D : public GlTexture2D {
 public:
 	std::string filename;
+	bool sRGB;
 	virtual void init();
 	virtual void bind();
 };

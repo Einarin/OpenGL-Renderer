@@ -1,19 +1,35 @@
 #pragma once
 #include "glincludes.h"
-#include <assimp/mesh.h>
+
+#error This file is obselete, use VertexBuffer.h instead
+
+//This file contains the definitions for vertex formats used
 
 #define VERTEX_MAX_TEXCOORDS 1 //AI_MAX_NUMBER_OF_TEXTURECOORDS
 #define VERTEX_MAX_TEXCOLORS 1 //AI_MAX_NUMBER_OF_COLOR_SETS
 
 namespace gl{
-
-	class vertex{
+	class VertexTextured{
 	public:
-		glm::vec4 pos;
-		glm::vec4 norm;
-		glm::vec4 tan;
-		glm::vec4 tc[VERTEX_MAX_TEXCOORDS];
+		glm::vec3 pos;
+		glm::vec2 tc[VERTEX_MAX_TEXCOORDS];
+		static void configAttrib();
+	};
+	class VertexProcedural{
+	public:
+		glm::vec3 pos;
+		glm::vec3 norm;
+		glm::vec3 tan;
+		static void configAttrib();
+	};
+	class VertexModel{
+	public:
+		glm::vec3 pos;
+		glm::vec3 norm;
+		glm::vec3 tan;
+		glm::vec2 tc[VERTEX_MAX_TEXCOORDS];
 		glm::vec4 colors[VERTEX_MAX_TEXCOLORS];
+		static void configAttrib();
 	};
 	/*template<typename numType>
 	class SmartVertexBuffer{

@@ -104,6 +104,17 @@ void GlTexture2D::setup(GLint format,ivec2 texSize,GLenum datatype)
 	checkGlError("GlTexture2D::setup()");
     backed = true;
 }
+void GlTexture2D::setup(GLint format, ivec2 texSize, GLenum datatype, unsigned int internalFormat)
+{
+	if (!allocated){
+		alloc();
+	}
+	size = texSize;
+	glBindTexture(type, id);
+	glTexImage2D(type, 0, internalFormat, size.x, size.y, 0, format, datatype, 0);
+	checkGlError("GlTexture2D::setup()");
+	backed = true;
+}
 void GlTexture2D::setImage(GLint format,ivec2 texSize,GLenum datatype,void* data)
 {
 	if(!backed || size != texSize){
@@ -228,9 +239,10 @@ void GlTexture2D::unreferenced(){
 	//TODO: something?
 }
 
-TexRef GlTextureManager::texFromFile(std::string file){
+TexRef GlTextureManager::texFromFile(std::string file,bool sRGB){
 	FileBackedGlTexture2D* tex = new FileBackedGlTexture2D();
 	tex->filename = file;
+	tex->sRGB = sRGB;
 	return TexRef(tex);
 }
 TexRef GlTextureManager::unbackedTex(){
@@ -240,6 +252,12 @@ TexRef GlTextureManager::backedTex(unsigned int format,glm::ivec2 size, unsigned
 	auto ptr = new GlTexture2D();
 	ptr->init();
 	ptr->setup(format,size,datatype);
+	return TexRef(ptr);
+}
+TexRef GlTextureManager::backedTex(unsigned int format, glm::ivec2 size, unsigned int datatype, unsigned int internalFormat){
+	auto ptr = new GlTexture2D();
+	ptr->init();
+	ptr->setup(format, size, datatype, internalFormat);
 	return TexRef(ptr);
 }
 TexRef GlTextureManager::depthTex(unsigned int format,glm::ivec2 size, unsigned int datatype){
@@ -255,10 +273,10 @@ TexRef GlTextureManager::missingTex(){
 		defaultTex = std::shared_ptr<GlTexture2D>(ptr);
 		ptr->init();
 		unsigned char data[] = {
+			0,255,0,
 			255,0,255,
-			0,255,0,
-			0,255,0,
-			255,0,255};
+			255,0,255,
+			0,255,0};
 		ptr->setImage(GL_RGB,ivec2(2,2),GL_UNSIGNED_BYTE,data);
 		ptr->nearestInterpolation();
 	}
@@ -268,16 +286,20 @@ void GlTextureManager::contextLost()
 {
 	//TODO: need to call init on all Textures when the context is lost
 }
-TexRef GlTextureManager::texFromPngBytestream(char* buff, int size){
+TexRef GlTextureManager::texFromPngBytestream(char* buff, int size, bool sRGB){
 	GlTexture2D* tex = new GlTexture2D();
+	assert(sRGB && "sRGB not implemented for this loading method");
 	if(!loadGlTex2dFromPngBytestream(tex,buff,size)){
 		std::cout << "Loading image from PNG bytestream failed, texture will be invalid\n";
 	}
 	return TexRef(tex);
 }
-TexRef GlTextureManager::texFromRGBA8888(char* buff, glm::ivec2 size){
+TexRef GlTextureManager::texFromRGBA8888(char* buff, glm::ivec2 size, bool sRGB){
 	GlTexture2D* tex = new GlTexture2D();
-	tex->setImage(GL_RGBA8,size,GL_UNSIGNED_BYTE,(void*)buff);
+	if (sRGB){
+		tex->setup(GL_RGBA8, size, GL_UNSIGNED_INT, GL_SRGB_ALPHA);
+	}
+	tex->setImage(GL_RGBA8, size, GL_UNSIGNED_BYTE, (void*)buff);
 	return TexRef(tex);
 }
 void FileBackedGlTexture2D::init(){
@@ -294,6 +316,9 @@ void FileBackedGlTexture2D::init(){
 		auto obj = this;
 		imageDataFromPngFile(filename,&size,&data,&dataLen);
 		glQueue.async([=](){
+			if (sRGB){
+				obj->setup(GL_RGBA, size, GL_UNSIGNED_BYTE, GL_SRGB);
+			}
 			obj->setImage(GL_RGBA,size,GL_UNSIGNED_BYTE,data);
 			free(data);
 		});
@@ -342,9 +367,20 @@ void GlTextureCubeMap::setup(GLint format,ivec2 texSize,GLenum datatype,GLenum f
 	}
 	size = texSize;
     glBindTexture(type, id);
-    glTexImage2D(face,0,format,size.x,size.y,0,format,datatype,0);
+    glTexImage2D(face,0,GL_SRGB,size.x,size.y,0,format,datatype,0);
 	checkGlError("GlTexture2D::setup()");
     backed = true;
+}
+void GlTextureCubeMap::setup(GLint format, ivec2 texSize, GLenum datatype, GLenum face, GLint internalFormat)
+{
+	if (!allocated){
+		alloc();
+	}
+	size = texSize;
+	glBindTexture(type, id);
+	glTexImage2D(face, 0, internalFormat, size.x, size.y, 0, format, datatype, 0);
+	checkGlError("GlTexture2D::setup()");
+	backed = true;
 }
 void GlTextureCubeMap::setImage(GLint format,ivec2 texSize,GLenum datatype,GLenum face,void* data)
 {

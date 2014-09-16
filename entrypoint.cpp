@@ -21,6 +21,8 @@
 #include "CoreShaders.h"
 #include "FrameBufferObject.h"
 #include "AssetManager.h"
+#include "HighDynamicRangeResolve.h"
+#include "ParticleSimulator.h"
 
 using namespace std;
 using namespace gl;
@@ -31,6 +33,7 @@ Billboard* bb;
 Camera camera;
 glm::mat4 projectionMatrix;
 glm::mat4 orthoMatrix;
+HighDynamicRangeResolve hdr;
 int levels = 5;
 int tessFactor = 50;
 double fpsTarget = 60.0;
@@ -125,6 +128,9 @@ int main(int argc, char* argv[])
 	camera.SetViewDistance(20000.f);
 	camera.SetTarget(vec3(0.0,0.0,0.0));
 	camera.SetAspectRatio(static_cast<float>(width)/static_cast<float>(height));
+		
+	hdr.init();
+	hdr.setup(glm::ivec2(width, height));
 
 	cout << "generating assets...\n";
 	
@@ -149,10 +155,10 @@ int main(int argc, char* argv[])
 	AsteroidRenderer aRenderer;
 	if(!aRenderer.setup()) DebugBreak();
 	Future<bool> asteroidsGenerated;
-    CpuPool.async([&aRenderer,asteroidsGenerated]() mutable{
+    /*CpuPool.async([&aRenderer,asteroidsGenerated]() mutable{
 		std::mt19937 mtgen;
 		std::uniform_real_distribution<float> dist(1.f,2.f);
-        for(int q=0;q<5;q++){
+        for(int q=0;q<50;q++){
 			glm::vec3 position(dist(mtgen)-1.5f,dist(mtgen)-1.5f,dist(mtgen)-1.5f);
 			if(length(position) < 0.1f) //we don't want asteroids at the origin
 				continue;
@@ -161,20 +167,21 @@ int main(int argc, char* argv[])
 			mat4 modelMat = scale(mat4(),uniformScale*vec3(dist(mtgen),dist(mtgen),dist(mtgen)));
 			modelMat = translate(rotate(modelMat,3.14159f*0.5f*dist(mtgen),glm::vec3(dist(mtgen),dist(mtgen),dist(mtgen))),position);
 			auto tmp = &aRenderer;
-			//CpuPool.await<bool>(
+			CpuPool.await<bool>(
 				glQueue.async<Future<bool>>([=]()->Future<bool>{
 					return tmp->addAsteroidAsync(modelMat,position);
-			});//);
+			}));
 		}
 		asteroidsGenerated.set(true);
 	});
-	/*while(!result.complete()){
-		glPool.processMainQueueUnit();
-	}*/
-    aRenderer.addAsteroidAsync(translate(mat4(),vec3(0.f,1.f,0.f)),vec3(0.f));
+	while(!asteroidsGenerated.isDone()){
+		glQueue.processQueueUnit();
+	}//*/
+	//aRenderer.buildTree();
+    auto astMade = aRenderer.addAsteroidAsync(translate(mat4(),vec3(0.f,1.f,0.f)),vec3(0.f));
 	
-	std::shared_ptr<Model> model = assetManager.loadModel("assets/fighter.obj");
-	std::shared_ptr<Model> model2 = assetManager.loadModel("assets/missile.obj");
+	std::shared_ptr<Model> model = assetManager.loadModel("assets/missile.obj");
+	std::shared_ptr<Model> model2 = assetManager.loadModel("assets/MakeHuman/woman.obj");
 
     /*CpuPool.async([&](){
 		model = new Model("assets/missile.obj");
@@ -205,6 +212,24 @@ int main(int argc, char* argv[])
 
 	cout << "compiling shaders...\n";
 
+	auto noiseShader = Shader::Allocate();
+	auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	auto fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+	vs->compile("#version 330\n"
+					"in vec2 position;\n"
+					"out vec2 texCoord;\n"
+					"void main(void){\n"
+					"texCoord = 0.5*(position+1.0);\n"
+					"gl_Position = vec4(position,0.0,1.0);\n"
+					"}\n");
+	fs->compileFromFile("glsl/crater.frag");
+	noiseShader->attachStage(vs);
+	noiseShader->attachStage(fs);
+	noiseShader->link();
+	Billboard noisebb;
+	noisebb.init();
+	noisebb.download();
+
 	LightingShader ls;
 	ls.init();
 	MvpShader mls = ls;
@@ -227,7 +252,7 @@ int main(int argc, char* argv[])
 	fbo.init();
 	fbo.Size = ivec2(1280,800);
 	//TexRef tex = TextureManager::Instance()->texFromFile("Hello.png");
-	TexRef tex = TextureManager::Instance()->backedTex(GL_RGBA,fbo.Size,GL_UNSIGNED_BYTE);
+	TexRef tex = TextureManager::Instance()->backedTex(GL_RGBA, fbo.Size, GL_FLOAT, GL_RGBA16F);
 	TexRef depthTex = TextureManager::Instance()->backedTex(GL_DEPTH_COMPONENT,fbo.Size,GL_FLOAT);
 	checkGlError("backedTex");
 	fbo.attachTexture(GL_DRAW_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,tex);
@@ -263,10 +288,17 @@ int main(int argc, char* argv[])
 		cursorGrabbed = true;
 	}*/
 
+	ParticleSimulator particles;
+	particles.setup(1000000);
+
 	while (!glfwWindowShouldClose(window))
 	{
 		//know when we got to the top of the render loop
 		double frameStart = glfwGetTime();
+
+		//kick off gpu transform feedback calculations
+		particles.update();
+
 		//input handling
 		glfwPollEvents();
 		handleKeys(window);
@@ -303,12 +335,17 @@ int main(int argc, char* argv[])
 
 		checkGlError("start main loop");
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//fbo.bind(GL_DRAW_FRAMEBUFFER);
 		
+		//bind fullscreen HDR buffer
+		//fbo.bind(GL_DRAW_FRAMEBUFFER);
+		hdr.bind();
+
 		//draw
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		checkGlError("clear screen");
-		
+		if (wireframe){
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		}
 		skybox.draw(&camera);
 		checkGlError("draw skybox");
 		glEnable(GL_DEPTH_TEST);
@@ -339,7 +376,7 @@ int main(int argc, char* argv[])
 		mvpbb.bind();
 		mvpbb.setView(camera.GetViewMatrix());
 		mvpbb.setProjection(camera.GetProjectionMatrix());
-		aRenderer.drawBoundingBoxes(mvpbb);
+		//aRenderer.drawBoundingBoxes(mvpbb);
 
 		if(model.use_count() > 0 && model->ready()){
 			model->ModelMatrix = rotate(translate(mat4(),vec3(-5.f,-3.f, 6.f)),-20.f,vec3(0.f,1.f,0.f));
@@ -360,9 +397,9 @@ int main(int argc, char* argv[])
 				model->draw(dns);
 			}
 		}
-		model->drawBoundingBoxes(&camera);
+		//model->drawBoundingBoxes(&camera);
 		if(model2.use_count() > 0 && model2->ready()){
-			model2->ModelMatrix = translate(rotate(mat4(),180.f,vec3(0.f,1.f,0.f)),vec3(-5.f,-3.f,-4.f));
+			model2->ModelMatrix = translate(rotate(mat4(),210.f,vec3(0.f,1.f,0.f)),vec3(-5.f,-13.f,-6.f));
 			ts.bind();
 			glUniform4fv(((ShaderRef)ts)->getUniformLocation("light"), 1, value_ptr(light.position));
 			LitTexMvpShader dts = ts.litTexMvpShader;
@@ -380,16 +417,25 @@ int main(int argc, char* argv[])
 				model2->draw(dns);
 			}
 		}
-		model2->drawBoundingBoxes(&camera);
+		//model2->drawBoundingBoxes(&camera);
 		star.modelMatrix = translate(mat4(),-vec3(light.position));
+		
+		particles.draw(camera);
 		star.draw(&camera);
+
+		//End scene drawing
 		FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);
 		glDisable(GL_DEPTH_TEST);
 		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 		glEnable(GL_BLEND);
+		if (wireframe){
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
+		hdr.draw();
 		//tex->draw();
 		//depthTex->draw();
-
+		//noiseShader->bind();
+		//noisebb.draw();
 		
 		textRenderer->draw(orthoMatrix);
 		checkGlError("draw hello world");
@@ -428,7 +474,7 @@ int main(int argc, char* argv[])
 						//do we have GPU memory?
 						int freeMem = FreeGpuMemoryMB();
 						//Obviously we need MOAR ASTEROIDS!
-						if(freeMem > 100000 && asteroidsGenerated.isDone() && asteroidsGenerated){
+						if(false && freeMem > 100000 && asteroidsGenerated.isDone() && asteroidsGenerated){
 							const int count = 5;
 							cout << "Generating " << count << " asteroids with " << freeMem << " bytes available" << endl;
 							CpuPool.async([&aRenderer,asteroidsGenerated,count,time]() mutable{
