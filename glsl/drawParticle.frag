@@ -7,8 +7,9 @@
 //uniform sampler2D framedata;
 //uniform vec2 framesize;
 //uniform int rendermode;
+uniform sampler2D tex;
 
-in  vec4 ex_Color;
+in  vec2 texCoord;
 out vec4 out_Color;
 
 void main(void)
@@ -24,5 +25,7 @@ void main(void)
 	//intensity = clamp((intensity*1.11111111)-0.1,0.0,1.0);
         //vec3 color = vec3(intensity);//vec3(intensity * intensity) * vec3(0.95,1.0,1.0);
         //vec3 color = clamp(2.0*vec3(intensity-0.5,pow(abs(intensity-0.5),3),pow(0.5-intensity*0.5,2)),0.0,1.0);
-	out_Color = vec4(ex_Color);
+	vec4 color = texture2D(tex,texCoord);
+	if(color.a < 1.0) discard;
+	out_Color = color;
 }

@@ -99,27 +99,27 @@ void onKeyPressed(GLFWwindow* window, int key, int scancode, int action, int mod
 void handleKeys(GLFWwindow* window){
 	if(glfwGetKey(window,GLFW_KEY_W) == GLFW_PRESS){
 		//camera.moveLocal(vec3(0.f,0.f,0.01f));
-		camera.MoveForward(0.02f);
+		camera.MoveForward(0.1f);
 	}
 	if(glfwGetKey(window,GLFW_KEY_A) == GLFW_PRESS){
 		//camera.moveLocal(vec3(0.01f,0.f,0.0f));
-		camera.StrafeLeft(0.02f);
+		camera.StrafeLeft(0.1f);
 	}
 	if(glfwGetKey(window,GLFW_KEY_S) == GLFW_PRESS){
 		//camera.moveLocal(vec3(0.f,0.f,-0.01f));
-		camera.MoveBackward(0.02f);
+		camera.MoveBackward(0.1f);
 	}
 	if(glfwGetKey(window,GLFW_KEY_D) == GLFW_PRESS){
 		//camera.moveLocal(vec3(-0.01f,0.f,0.f));
-		camera.StrafeRight(0.02f);
+		camera.StrafeRight(0.1f);
 	}
 	if(glfwGetKey(window,GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
 		//camera.moveLocal(vec3(0.f,-0.01f,0.f));
-		camera.MoveUp(0.21f);
+		camera.MoveUp(0.1f);
 	}
 	if(glfwGetKey(window,GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS){
 		//camera.moveLocal(vec3(0.f,0.01f,0.f));
-		camera.MoveDown(0.02f);
+		camera.MoveDown(0.1f);
 	}
 	if(glfwGetKey(window,GLFW_KEY_Q) == GLFW_PRESS){
 		camera.RollCounterClockwise(3.14159f/36.f);

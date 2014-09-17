@@ -31,7 +31,9 @@ bool ShaderStage::compile(std::string source)
 	GLchar* buff = new GLchar[length];
 	glGetShaderInfoLog(id,length,&length,buff);
 	//do something with error log
-	std::cout << buff << std::endl;
+	if (strlen(buff) > 0){
+		std::cout << buff << std::endl;
+	}
 	delete[] buff;
 	if (compiled != GL_TRUE)
 	{
@@ -48,6 +50,7 @@ bool ShaderStage::compileFromFile(std::string filename){
 	}
 	std::istreambuf_iterator<char> eos;
 	std::string s(std::istreambuf_iterator<char>(file), eos);
+	std::cout << "compiling " << filename << std::endl;
 	return compile(s);
 }
 
@@ -95,7 +98,9 @@ bool Shader::link(){
 	GLchar* buff = new GLchar[length];
 	glGetProgramInfoLog(id,length,&length,buff);
 	//do something with error log
-	std::cout << buff << std::endl;
+	if (strlen(buff) > 0){
+		std::cout << buff << std::endl;
+	}
 	delete[] buff;
 	if(linked != GL_TRUE)
 	{

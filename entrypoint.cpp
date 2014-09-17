@@ -268,6 +268,8 @@ int main(int argc, char* argv[])
 //	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glCullFace(GL_BACK);
 	glEnable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	double time = glfwGetTime();
 	double fpstime = time;
 	int fpsCount = 10;
@@ -289,7 +291,7 @@ int main(int argc, char* argv[])
 	}*/
 
 	ParticleSimulator particles;
-	particles.setup(1000000);
+	particles.setup(100);
 
 	while (!glfwWindowShouldClose(window))
 	{

@@ -10,9 +10,10 @@ class ParticleSimulator
 protected:
 	std::vector<TransformFeedback> m_feedbackBuffers;
 	int m_activeBuffer;
-	bool m_started;
+	int m_particleCount;
 	ShaderRef m_drawShader;
 	ShaderRef m_processShader;
+	TexRef m_bbtex;
 public:
 	ParticleSimulator();
 	void setup(int particleCount);

@@ -163,7 +163,7 @@ void GlTexture2D::draw(){
 			"uniform sampler2D tex;\n"
 			"void main(void){\n"
 			"vec4 frag = texture(tex,texCoord);\n"
-			"FragColor = vec4(frag.rgb,1.0);\n"
+			"FragColor = vec4(frag.rgba);\n"
 			"}\n");
 		shader->attachStage(vs);
 		shader->attachStage(fs);
@@ -317,7 +317,7 @@ void FileBackedGlTexture2D::init(){
 		imageDataFromPngFile(filename,&size,&data,&dataLen);
 		glQueue.async([=](){
 			if (sRGB){
-				obj->setup(GL_RGBA, size, GL_UNSIGNED_BYTE, GL_SRGB);
+				obj->setup(GL_RGBA, size, GL_UNSIGNED_BYTE, GL_SRGB_ALPHA);
 			}
 			obj->setImage(GL_RGBA,size,GL_UNSIGNED_BYTE,data);
 			free(data);

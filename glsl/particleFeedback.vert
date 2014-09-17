@@ -56,7 +56,9 @@ void main(void)
 	{
 		accel += attractors[i].z*gravity(attractors[i].xy);
 	}*/
-	accel += 0.001 * gravity(vec3(0.));
+	//accel += 0.01 * gravity(vec3(0.));
+	const float maxAccel = 10.0;
+	//accel = clamp(accel,vec3(-maxAccel),vec3(maxAccel));
 
 	//vec2 rotation = vec2(0.);
 	float bound = length(vec2(1.0,aspect));
