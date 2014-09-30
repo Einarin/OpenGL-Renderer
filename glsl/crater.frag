@@ -269,6 +269,17 @@ vec3 coord = vec3(10.0*texCoord.xy,1.0);
 	vec3 val = Cellular3D_Pos(coord);
 	//val.x = 1.0-abs(distance(coord,10*val));
 	//val = coord+val;//0.1;
-		
-	gl_FragColor = vec4(val,1.0);
+	vec2 bounds = min(rand.xy,vec2(1.0)-rand.xy);
+	float bound = min(bounds.x,bounds.y);
+	float depth;
+	if(bound < 0.1){
+		//no crater here
+		gl_FragColor = vec4(1.0);
+	} else {
+		float dist = length(rand.xy-fract(coord.xy));
+		dist = min(dist,1.0);
+		dist *= 1.0/bound;
+		depth = craterfunc(dist);
+		gl_FragColor = vec4(vec3(dist),1.0);
+	}
 }
