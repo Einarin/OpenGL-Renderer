@@ -396,4 +396,14 @@ void GlTextureCubeMap::setImage(GLint format,ivec2 texSize,GLenum datatype,GLenu
 	}
 }
 
+void GlTextureCubeMap::setInterpolation(){
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, interpolation);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, interpolation);
+}
+
+void GlTextureCubeMap::setMapping(){
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, mapMode );
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, mapMode );
+}
+
 } // namespace gl
