@@ -104,7 +104,9 @@ public:
 	Model(std::string filename);
 	~Model();
 	static void addProcessing(std::function<void(Model*)> f);
-	static inline std::string cachename(std::string filename);
+	static inline std::string cachename(std::string filename){
+		return filename+".mcache";
+	}
 	bool open(std::string filename);
 	void save(std::string filename);
 	inline bool ready(){

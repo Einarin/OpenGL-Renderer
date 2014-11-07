@@ -272,11 +272,16 @@ TexRef GlTextureManager::missingTex(){
 		auto ptr = new GlTexture2D();
 		defaultTex = std::shared_ptr<GlTexture2D>(ptr);
 		ptr->init();
-		unsigned char data[] = {
+		/*unsigned char data[] = {
 			0,255,0,
 			255,0,255,
 			255,0,255,
-			0,255,0};
+			0,255,0};*/
+		unsigned char data[] = {
+			128,128,128,
+			128,128,128,
+			128,128,128,
+			128,128,128};
 		ptr->setImage(GL_RGB,ivec2(2,2),GL_UNSIGNED_BYTE,data);
 		ptr->nearestInterpolation();
 	}

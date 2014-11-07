@@ -69,10 +69,6 @@ public:
 	}
 };
 
-std::string Model::cachename(std::string filename){
-	return filename+".mcache";
-}
-
 Model::~Model(){
 	if(meshbuff) delete[] meshbuff;
 }
@@ -140,6 +136,7 @@ bool Model::open(std::string filename){
 								| aiProcess_FindDegenerates
 								| aiProcess_FindInvalidData
 								| aiProcess_SortByPType
+								| aiProcess_Debone
 								);
 	std::cout << "processing " << filename << " scene..." << std::endl;
 	if(scene == NULL){

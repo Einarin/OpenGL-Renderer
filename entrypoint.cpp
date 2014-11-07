@@ -33,12 +33,18 @@ Billboard* bb;
 Camera camera;
 glm::mat4 projectionMatrix;
 glm::mat4 orthoMatrix;
+int width, height;
 HighDynamicRangeResolve hdr;
 int levels = 5;
 int tessFactor = 50;
 double fpsTarget = 60.0;
 extern bool fullscreen;
 extern bool cursorGrabbed;
+bool hasFocus = true;
+
+void focusFunc(GLFWwindow* window,int focus){
+	hasFocus = focus == GL_TRUE;
+}
 
 int main(int argc, char* argv[])
 {
@@ -61,7 +67,7 @@ int main(int argc, char* argv[])
 		const GLFWvidmode* mode = glfwGetVideoMode(primary);
 		window = glfwCreateWindow(mode->width, mode->height, "Game", primary, NULL);
 	} else {
-		window = glfwCreateWindow(1280, 800, "Game", NULL/*glfwGetPrimaryMonitor()*/, NULL);
+		window = glfwCreateWindow(1280, 1280, "Game", NULL/*glfwGetPrimaryMonitor()*/, NULL);
 	}
 	if (!window)
 	{
@@ -94,12 +100,12 @@ int main(int argc, char* argv[])
 	glfwSetKeyCallback(window, onKeyPressed);
 	glfwSetWindowSizeCallback(window, onResizeWindow);
 	glfwSetCursorPosCallback(window, onCursorMoved);
+	glfwSetWindowFocusCallback(window,focusFunc);
 	
 	glClearColor(0.0f,0.0f,0.0f,1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
-	int width, height;
 	glfwGetFramebufferSize(window, &width, &height);
 	glViewport(0, 0, width, height);
 	orthoMatrix = glm::ortho(0.f,static_cast<float>(width),0.f,static_cast<float>(height),-1.f,1.f);
@@ -181,7 +187,7 @@ int main(int argc, char* argv[])
     auto astMade = aRenderer.addAsteroidAsync(translate(mat4(),vec3(0.f,1.f,0.f)),vec3(0.f));
 	
 	std::shared_ptr<Model> model = assetManager.loadModel("assets/missile.obj");
-	std::shared_ptr<Model> model2 = assetManager.loadModel("assets/MakeHuman/woman.obj");
+	std::shared_ptr<Model> model2 = assetManager.loadModel("assets/falcon2.obj");
 
     /*CpuPool.async([&](){
 		model = new Model("assets/missile.obj");
@@ -291,7 +297,7 @@ int main(int argc, char* argv[])
 	}*/
 
 	ParticleSimulator particles;
-	particles.setup(100);
+	//particles.setup(100);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -299,7 +305,7 @@ int main(int argc, char* argv[])
 		double frameStart = glfwGetTime();
 
 		//kick off gpu transform feedback calculations
-		particles.update();
+		//particles.update();
 
 		//input handling
 		glfwPollEvents();
@@ -401,7 +407,8 @@ int main(int argc, char* argv[])
 		}
 		//model->drawBoundingBoxes(&camera);
 		if(model2.use_count() > 0 && model2->ready()){
-			model2->ModelMatrix = translate(rotate(mat4(),210.f,vec3(0.f,1.f,0.f)),vec3(-5.f,-13.f,-6.f));
+			//model2->ModelMatrix = translate(rotate(mat4(),210.f,vec3(0.f,1.f,0.f)),vec3(-5.f,-13.f,-6.f));
+			model2->ModelMatrix = translate(rotate(mat4(),210.f,vec3(0.f,1.f,0.f)),vec3(-5.f,0.f,-6.f));
 			ts.bind();
 			glUniform4fv(((ShaderRef)ts)->getUniformLocation("light"), 1, value_ptr(light.position));
 			LitTexMvpShader dts = ts.litTexMvpShader;
@@ -422,7 +429,7 @@ int main(int argc, char* argv[])
 		//model2->drawBoundingBoxes(&camera);
 		star.modelMatrix = translate(mat4(),-vec3(light.position));
 		
-		particles.draw(camera);
+		//particles.draw(camera);
 		star.draw(&camera);
 
 		//End scene drawing
@@ -436,8 +443,8 @@ int main(int argc, char* argv[])
 		hdr.draw();
 		//tex->draw();
 		//depthTex->draw();
-		//noiseShader->bind();
-		//noisebb.draw();
+		noiseShader->bind();
+		noisebb.draw();
 		
 		textRenderer->draw(orthoMatrix);
 		checkGlError("draw hello world");
@@ -507,9 +514,9 @@ int main(int argc, char* argv[])
 							if(dt > 5){ //lets not oversleep!
 								//cout << "s " << dt << " ";
 #ifdef USE_STD_THREAD
-								std::this_thread::sleep_for(std::chrono::milliseconds(dt));
+								std::this_thread::sleep_for(std::chrono::milliseconds(dt-1));
 #else
-								Sleep(dt);
+								Sleep(dt-1);
 #endif
 							}
 						}
@@ -540,6 +547,15 @@ int main(int argc, char* argv[])
 		fps->draw(orthoMatrix);
 		checkGlError("draw text");
 		glfwSwapBuffers(window);
+		
+		if(!hasFocus){ //if we don't have focus lower framerate to be nice to the system
+#ifdef USE_STD_THREAD
+								std::this_thread::sleep_for(std::chrono::milliseconds(50));
+#else
+								Sleep(50);
+#endif
+		}
+
 		fpstime = glfwGetTime()-frameStart;
 	}
 	//delete dynamic allocations

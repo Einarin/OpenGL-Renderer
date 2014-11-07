@@ -19,15 +19,18 @@ void onResizeWindow(GLFWwindow* window, int w, int h){
 	glViewport(0,0,(GLsizei)w,(GLsizei)h);
 	float aspect = static_cast<float>(w)/static_cast<float>(h);
 	projectionMatrix = glm::perspective(45.f,aspect,-1.f,1.f);
+	orthoMatrix = glm::ortho(0.f,static_cast<float>(w),0.f,static_cast<float>(h),-1.f,1.f);
 	camera.SetAspectRatio(aspect);
 	hdr.setup(glm::ivec2(w, h));
+	width = w;
+	height = h;
 }
 using glm::vec3;
 //menu keys
 #ifdef _DEBUG
 bool fullscreen = false;
 #else
-bool fullscreen = true;
+bool fullscreen = false;
 #endif
 bool cursorGrabbed = false;
 void onKeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods){

@@ -258,8 +258,19 @@ float craterDist(vec3 point){
 
 float craterfunc(float x)
 {
-	x = x * 10.9314;
-	return 0.00001* pow(x,4) - 0.00055 * pow(x,3) + 0.00729*x*x - 0.02252*x - 0.0493;
+	x = x  *  10.9314;
+	return 0.00001* (x*x*x*x) - 0.00055 * (x*x*x) + 0.00729*x*x - 0.02252*x - 0.0493;
+	//return 0.00109314 * pow(x,4) - 0.00601227 * pow(x,3) + 0.0796899*x*x - 0.246175*x - 0.538918;
+}
+
+float craterRadialDerivative(float x)
+{
+	return (0.000437256 * pow(x,3)) - (0.01803681 * pow(x,2)) + (0.159398 * x) - 0.246175;
+}
+
+float craterRadialNegInvDerivative(float x)
+{
+	return -2286.99 / ( pow(x,3) - (41.25 * pow(x,2)) + (364.4999 * x) - 563);
 }
 
 void main(void){
@@ -272,14 +283,19 @@ vec3 coord = vec3(10.0*texCoord.xy,1.0);
 	vec2 bounds = min(rand.xy,vec2(1.0)-rand.xy);
 	float bound = min(bounds.x,bounds.y);
 	float depth;
+	float dist;
 	if(bound < 0.1){
 		//no crater here
-		gl_FragColor = vec4(1.0);
+		dist = 1.0;
+		depth = 0.0;
 	} else {
-		float dist = length(rand.xy-fract(coord.xy));
-		dist = min(dist,1.0);
+		dist = length(rand.xy-fract(coord.xy));
 		dist *= 1.0/bound;
-		depth = craterfunc(dist);
-		gl_FragColor = vec4(vec3(dist),1.0);
+		//dist = min(dist,1.0);
+		depth = craterfunc(min(dist,1.0));
+		//depth = mix(1.0,depth,max(min(dist-1.0,0.0),1.0));
 	}
+	//depth *= 5.0;
+	depth += 0.5;
+	gl_FragColor = vec4(vec3(depth),1.0);
 }

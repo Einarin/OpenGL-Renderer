@@ -24,7 +24,7 @@ void main( void )
   //vec3 specular = vec3(0.8);
   float diff = max(-dot(light,norm),0);
   vec3 reflect = 2* dot(light,norm) * norm - light;
-  float spec = max(pow(-dot(reflect,eye),shininess),0);
+  float spec = max(pow(dot(reflect,eye),10.0*shininess),0);
   vec3 color;
   if(gl_FrontFacing){
 	color = vec3(0.,0.,1.);

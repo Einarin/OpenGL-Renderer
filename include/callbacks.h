@@ -15,6 +15,8 @@ void onCursorMoved(GLFWwindow* window, double xpos, double ypos);
 extern gl::Billboard* bb;
 extern gl::Camera camera;
 extern glm::mat4 projectionMatrix;
+extern glm::mat4 orthoMatrix;
+extern int width, height;
 extern gl::HighDynamicRangeResolve hdr;
 //from callbacks.cpp
 extern int wireframe;

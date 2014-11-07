@@ -133,6 +133,8 @@ public:
         */
 	virtual void alloc();
 	virtual void dealloc();
+	void setInterpolation();
+	void setMapping();
 	void setup(GLint format,glm::ivec2 texSize,GLenum datatype,GLenum face);
 	void setup(GLint format, glm::ivec2 texSize, GLenum datatype, GLenum face,GLint internalFormat);
 	void setImage(GLint format,glm::ivec2 size,GLenum datatype,GLenum face,void* data);
