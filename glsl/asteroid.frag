@@ -263,7 +263,7 @@ vec3 lava()
   pattern += 0.25 * length(F.xy);
   dt *= 1.5;
   cellular(64.0*(st+ft), F, d1d2); // Returns vectors to points
-  pattern += sin(dt+(2.0*3.1415*st.x))*F.x;
+  pattern += sin(dt.x+(2.0*3.1415*st.x))*F.x;
   dt *= 1.5;
   float pattern2 = snoise(vec3(st+dt+ft,50.0));
   dt *= 1.5;
