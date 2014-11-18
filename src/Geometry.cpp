@@ -64,6 +64,10 @@ void Billboard::download(){
 #endif
 }
 
+void Billboard::bindVao(){
+	glBindVertexArray(vao);
+}
+
 void Billboard::position(glm::vec2 topLeft, glm::vec2 topRight, glm::vec2 botLeft, glm::vec2 botRight)
 {
 	corners[0].pos = vec4(topLeft,0,1);

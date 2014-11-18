@@ -72,6 +72,7 @@ namespace gl{
 		Billboard(float topLeftX, float topLeftY, float width, float height);
 		virtual void init();
 		virtual void download();
+		void bindVao();
 		void position(glm::vec2 topLeft, glm::vec2 topRight, glm::vec2 botLeft, glm::vec2 botRight);
 		void move(float topLeftX, float topLeftY, float width, float height);
 		void move(float topLeftX, float topLeftY);

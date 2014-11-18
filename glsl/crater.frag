@@ -1,5 +1,7 @@
 #version 330
 in vec2 texCoord;
+out vec4 FragColor;
+
 vec4 FAST32_hash_3D_Cell( vec3 gridcell )	//	generates 4 different random numbers for the single given cell point
 {
     //    gridcell is assumed to be an integer coordinate
@@ -297,5 +299,5 @@ vec3 coord = vec3(10.0*texCoord.xy,1.0);
 	}
 	//depth *= 5.0;
 	depth += 0.5;
-	gl_FragColor = vec4(vec3(depth),1.0);
+	FragColor = vec4(vec3(depth),1.0);
 }

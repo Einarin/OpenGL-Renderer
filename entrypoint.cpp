@@ -285,6 +285,38 @@ int main(int argc, char* argv[])
 	bool drawNormals = false;
 	bool changingNormals = false;
 
+	auto tvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	auto tcs = ShaderStage::Allocate(GL_TESS_CONTROL_SHADER);
+	auto tes = ShaderStage::Allocate(GL_TESS_EVALUATION_SHADER);
+	auto tfs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+	tvs->compileFromFile("glsl/terrain.vert");
+	tcs->compileFromFile("glsl/terrain.tcs");
+	tes->compileFromFile("glsl/terrain.tes");
+	tfs->compileFromFile("glsl/color.frag");
+	auto tess = Shader::Allocate();
+	tess->attachStage(tvs);
+	tess->attachStage(tcs);
+	tess->attachStage(tes);
+	tess->attachStage(tfs);
+	if (!tess->link()) DebugBreak();
+	tess->bind();
+	glUniform2f(tess->getUniformLocation("screen_size"), width, height);
+	glUniformMatrix4fv(tess->getUniformLocation("mvp"), 1,0,
+		glm::value_ptr(glm::mat4()));
+	glUniform1f(tess->getUniformLocation("lod_factor"), 5.0f);
+	glUniform4fv(tess->getUniformLocation("color"),1,
+		glm::value_ptr(glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)));
+
+	Billboard tessbb(vec3(-1, -1, 0),
+					 vec3(1, 1, 0),
+					 vec3(1, -1, 0),
+					 vec3(-1, 1, 0)
+
+	);
+	tessbb.init();
+	tessbb.download();
+
+
 	//finish loading before we jump into the main loop
 	if(glQueue.processQueueUnit() || !asteroidsGenerated.isDone())
 	{
@@ -428,6 +460,19 @@ int main(int argc, char* argv[])
 		}
 		//model2->drawBoundingBoxes(&camera);
 		star.modelMatrix = translate(mat4(),-vec3(light.position));
+
+		tess->bind();
+		glPatchParameteri(GL_PATCH_VERTICES, 4);
+		glUniform2f(tess->getUniformLocation("screen_size"), width, height);
+		glUniformMatrix4fv(tess->getUniformLocation("mvp"), 1,0,
+			glm::value_ptr(
+				glm::scale(camera.GetProjectionMatrix()*camera.GetViewMatrix(),
+				glm::vec3(0.1f))
+			)
+		);
+		tessbb.bindVao();
+		glDrawArrays(GL_PATCHES, 0, 4);
+
 		
 		//particles.draw(camera);
 		star.draw(&camera);
@@ -443,8 +488,8 @@ int main(int argc, char* argv[])
 		hdr.draw();
 		//tex->draw();
 		//depthTex->draw();
-		noiseShader->bind();
-		noisebb.draw();
+		//noiseShader->bind();
+		//noisebb.draw();
 		
 		textRenderer->draw(orthoMatrix);
 		checkGlError("draw hello world");
