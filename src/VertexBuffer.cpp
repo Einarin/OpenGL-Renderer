@@ -55,13 +55,13 @@ namespace gl {
 		vbuff.m_ownsBuffer = true;
 		return VertexBuffer(std::move(vbuff));
 	}
-	VertexBuffer VertexBufferBuilder::wrapBuffer(char* buffer){
+	VertexBuffer VertexBufferBuilder::useBuffer(char* buffer){
 		VertData vbuff = assemble();
 		vbuff.m_buffer = buffer;
 		vbuff.m_ownsBuffer = true;
 		return VertexBuffer(std::move(vbuff));
 	}
-	VertexBuffer VertexBufferBuilder::wrapUnownedBuffer(char* buffer){
+	VertexBuffer VertexBufferBuilder::fillUnownedBuffer(char* buffer){
 		VertData vbuff = assemble();
 		vbuff.m_buffer = buffer;
 		vbuff.m_ownsBuffer = false;

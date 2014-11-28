@@ -1,3 +1,4 @@
+#pragma once
 #include "VertexAttribBuilder.h"
 #include <glm/glm.hpp>
 #include <memory>
@@ -163,6 +164,10 @@ namespace gl {
 		}
 		
 		friend class Vertex;
+
+		inline bool isValid(){
+			return m_valid;
+		}
 		
 		inline Vertex operator[](int index){
 			if (!m_valid){
@@ -240,11 +245,11 @@ namespace gl {
 			return *this;
 		}
 		VertexBuffer build();
-		//Expects a pointer aligned to a 16 byte boundary
-		//Takes ownership of the passed in buffer
-		VertexBuffer wrapBuffer(char* buffer);
-		//Expects a pointer aligned to a 16 byte boundary
-		//Does not take ownership of the passed in buffer
-		VertexBuffer wrapUnownedBuffer(char* buffer);
+		///Expects a pointer aligned to a 16 byte boundary
+		///Takes ownership of the passed in buffer
+		VertexBuffer useBuffer(char* buffer);
+		///Expects a pointer aligned to a 16 byte boundary
+		///Does not take ownership of the passed in buffer
+		VertexBuffer fillUnownedBuffer(char* buffer);
 	};
 }

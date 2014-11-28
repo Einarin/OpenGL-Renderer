@@ -64,7 +64,7 @@ void Mesh::deserialize(char* buff){
 		.hasTexCoord3D(numUVChannels) //shares Model's assumption that all UV channels are 3D
 		.hasVertColor(numVertexColorChannels)
 		.vertexCount(head->vertCount);
-	vertices = vbb.wrapUnownedBuffer(buff+head->vertoff);
+	vertices = vbb.fillUnownedBuffer(buff+head->vertoff);
 	vertSize = vertices.vertSizeBytes();
 	assert(head->vertsize == vertSize); //If this fails than our computed VertexBuffer didn't match the original storing one. This shouldn't ever happen...
 	indices = (unsigned int*)(buff+head->indoff);

@@ -1,6 +1,6 @@
 #version 420
-in vec4 position;
-in vec4 texCoord;
+layout(location = 0) in vec3 position;
+layout(location = 2) in vec3 texCoord;
 uniform sampler2D terrain;
 
 void main(void){
@@ -8,6 +8,6 @@ void main(void){
     float height = 1.0f;//texture(terrain, texcoord).a;
     vec4 displaced = vec4(
         position.x, position.y,
-        height, 1.0);
+        position.z, 1.0);
     gl_Position = displaced;
 }

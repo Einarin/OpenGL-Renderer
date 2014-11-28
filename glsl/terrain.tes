@@ -1,5 +1,6 @@
 #version 420
-layout(quads, fractional_odd_spacing, ccw) in;
+//fractional_odd_spacing
+layout(quads, equal_spacing, ccw) in;
 
 out vec2 texcoord;
 out float depth;
@@ -66,7 +67,7 @@ void main(){
     vec4 b = mix(gl_in[2].gl_Position, gl_in[3].gl_Position, u);
     vec4 position = mix(a, b, v);
     texcoord = position.xy;
-    float height = -20.0f - crater(vec3(2.0*texcoord,1.0));//texture(terrain, texcoord).a;
-    gl_Position = mvp * vec4(texcoord, height, 1.0);
+    float height = 5.0f - crater(vec3(position.xyz));//texture(terrain, texcoord).a;
+    gl_Position = mvp * vec4(height*(position.xyz),1.0);//vec4(texcoord, height, 1.0);
     depth = gl_Position.z;
 }

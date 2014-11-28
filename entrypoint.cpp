@@ -23,6 +23,7 @@
 #include "AssetManager.h"
 #include "HighDynamicRangeResolve.h"
 #include "ParticleSimulator.h"
+#include "TessGeometry.h"
 
 using namespace std;
 using namespace gl;
@@ -184,7 +185,7 @@ int main(int argc, char* argv[])
 		glQueue.processQueueUnit();
 	}//*/
 	//aRenderer.buildTree();
-    auto astMade = aRenderer.addAsteroidAsync(translate(mat4(),vec3(0.f,1.f,0.f)),vec3(0.f));
+    auto astMade = aRenderer.addAsteroidAsync(translate(mat4(),vec3(0.f,10.f,0.f)),vec3(0.f));
 	
 	std::shared_ptr<Model> model = assetManager.loadModel("assets/missile.obj");
 	std::shared_ptr<Model> model2 = assetManager.loadModel("assets/falcon2.obj");
@@ -315,7 +316,8 @@ int main(int argc, char* argv[])
 	);
 	tessbb.init();
 	tessbb.download();
-
+	TessCube tessCube;
+	tessCube.tesselate(glm::mat4(), 1.0f, camera);
 
 	//finish loading before we jump into the main loop
 	if(glQueue.processQueueUnit() || !asteroidsGenerated.isDone())
@@ -470,9 +472,9 @@ int main(int argc, char* argv[])
 				glm::vec3(0.1f))
 			)
 		);
-		tessbb.bindVao();
-		glDrawArrays(GL_PATCHES, 0, 4);
-
+		//tessbb.bindVao();
+		//glDrawArrays(GL_PATCHES, 0, 4);
+		tessCube.draw();
 		
 		//particles.draw(camera);
 		star.draw(&camera);

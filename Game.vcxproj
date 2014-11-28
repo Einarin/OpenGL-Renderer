@@ -190,6 +190,7 @@
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\SkyBox.cpp" />
     <ClCompile Include="src\StarRenderer.cpp" />
+    <ClCompile Include="src\TessGeometry.cpp" />
     <ClCompile Include="src\Text.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\ThreadPool.cpp" />
