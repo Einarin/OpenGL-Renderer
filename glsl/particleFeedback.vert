@@ -80,7 +80,7 @@ void main(void)
 		ex_Velocity.xyz = vec3(abs(ex_Velocity.y) * -sign(pos.y),ex_Velocity.yz) * randvel(ex_Velocity.xyz);
 	}
 	if(abs(pos.z) > 1) {
-		ex_Velocity.z = abs(ex_Velocity.z) * -sign(pos.z) + randvel(ex_Velocity.xyz);
+		//ex_Velocity.z = abs(ex_Velocity.z) * -sign(pos.z) + randvel(ex_Velocity.xyz);
 		ex_Velocity.xyz = vec3(abs(ex_Velocity.z) * -sign(pos.z),ex_Velocity.yz) * randvel(ex_Velocity.xyz);
 	}
 	//pos += 0.01 * mix(rotation,vec2(0.),clamp(length(in_Position.xy)/aspect,0.,1.));

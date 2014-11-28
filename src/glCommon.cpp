@@ -106,7 +106,9 @@ static unsigned int sFreeTexMemNum;
 
 int FreeGpuMemoryMB(){
 	int mem[] = {0,0,0,0};
-	glGetIntegerv(sFreeTexMemNum,mem);
+	if (sFreeTexMemNum){
+		glGetIntegerv(sFreeTexMemNum, mem);
+	}
 	return mem[0];
 }
 
