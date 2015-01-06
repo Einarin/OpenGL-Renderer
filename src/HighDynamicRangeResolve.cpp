@@ -4,6 +4,7 @@ namespace gl {
 
 	bool HighDynamicRangeResolve::init(){
 		m_fbo.init();
+		m_bloomFbo.init();
 		m_bb.init();
 		m_bb.download();
 		m_shader = Shader::Allocate();
@@ -23,15 +24,31 @@ namespace gl {
 		success &= m_shader->link();
 		m_shader->bind();
 		glUniform1i(m_shader->getUniformLocation("tex"), 0);
+		glUniform1i(m_shader->getUniformLocation("bloomTex"), 1);
+
+		m_bloomShader = Shader::Allocate();
+		auto bfs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+		success &= bfs->compileFromFile("glsl/bloom.frag");
+		m_bloomShader->attachStage(vs);
+		m_bloomShader->attachStage(bfs);
+		success &= m_bloomShader->link();
+		m_bloomShader->bind();
+		glUniform1i(m_bloomShader->getUniformLocation("tex"), 0);
+
 		m_initialized = success;
 		return success;
 	}
 
 	void HighDynamicRangeResolve::setup(glm::ivec2 size){
 		m_fbo.Size = size;
+		m_bloomTex = TextureManager::Instance()->backedTex(GL_RGB, size / 2, GL_FLOAT, GL_RGB16F);
 		m_fpTex = TextureManager::Instance()->backedTex(GL_RGBA, m_fbo.Size, GL_FLOAT, GL_RGBA16F);
 		m_fbo.attachTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_fpTex);
 		m_fbo.attachDepthRenderbuffer(GL_DEPTH_COMPONENT);
+
+		m_bloomFbo.Size = size/2;
+		m_bloomFbo.attachTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_bloomTex);
+		m_bloomFbo.attachDepthRenderbuffer(GL_DEPTH_COMPONENT);
 	}
 
 	void HighDynamicRangeResolve::bind(){
@@ -39,9 +56,17 @@ namespace gl {
 	}
 
 	void HighDynamicRangeResolve::draw(){
-		m_shader->bind();
+		m_bloomFbo.bind(GL_DRAW_FRAMEBUFFER);
+		glViewport(0, 0, m_bloomFbo.Size.x, m_bloomFbo.Size.y);
 		glActiveTexture(GL_TEXTURE0);
 		m_fpTex->bind();
+		m_bloomShader->bind();
+		m_bb.draw();
+		FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);
+		glViewport(0, 0, m_fbo.Size.x, m_fbo.Size.y);
+		glActiveTexture(GL_TEXTURE1);
+		m_bloomTex->bind();
+		m_shader->bind();
 		m_bb.draw();
 	}
 }

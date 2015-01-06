@@ -52,9 +52,9 @@ float crater(vec3 coord){
 		dist *= 1.0/bound;
 		//dist = min(dist,1.0);
 		depth = craterfunc(min(dist,1.0));
-		//depth = mix(1.0,depth,max(min(dist-1.0,0.0),1.0));
+		depth = mix(1.0,depth,max(min(dist-1.0,0.0),1.0));
 	}
-	//depth *= 5.0;
+	depth *= 10.0;
 	depth += 0.5;
 	return depth;
 }
@@ -67,7 +67,7 @@ void main(){
     vec4 b = mix(gl_in[2].gl_Position, gl_in[3].gl_Position, u);
     vec4 position = mix(a, b, v);
     texcoord = position.xy;
-    float height = 5.0f - crater(vec3(position.xyz));//texture(terrain, texcoord).a;
-    gl_Position = mvp * vec4(height*(position.xyz),1.0);//vec4(texcoord, height, 1.0);
+    float height = 5.0f + crater(vec3(position.xyz));//texture(terrain, texcoord).a;
+    gl_Position = mvp * vec4(height*normalize(position.xyz),1.0);//vec4(texcoord, height, 1.0);
     depth = gl_Position.z;
 }

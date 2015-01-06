@@ -331,7 +331,7 @@ int main(int argc, char* argv[])
 	}*/
 
 	ParticleSimulator particles;
-	//particles.setup(100);
+	particles.setup(100);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -339,7 +339,7 @@ int main(int argc, char* argv[])
 		double frameStart = glfwGetTime();
 
 		//kick off gpu transform feedback calculations
-		//particles.update();
+		particles.update();
 
 		//input handling
 		glfwPollEvents();
@@ -474,9 +474,9 @@ int main(int argc, char* argv[])
 		);
 		//tessbb.bindVao();
 		//glDrawArrays(GL_PATCHES, 0, 4);
-		tessCube.draw();
+		tessCube.draw(tess);
 		
-		//particles.draw(camera);
+		particles.draw(camera);
 		star.draw(&camera);
 
 		//End scene drawing

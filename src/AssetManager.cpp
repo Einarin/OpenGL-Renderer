@@ -6,15 +6,20 @@ using namespace std;
 
 namespace gl{
 
-shared_ptr<Model> AssetManager::loadModel(string filename){
-	auto ptr = mcache[filename].lock();
+std::string AssetManager::resolveLocation(std::string name){
+	return name;
+}
+
+shared_ptr<Model> AssetManager::loadModel(string name){
+	auto ptr = m_modelCache[name].lock();
 	if(ptr.use_count() == 0){ //no object or old object expired
-		cout << filename << " was loaded from disk" << endl;
+		std::string filename = resolveLocation(name);
+		cout << name << " was loaded from " << filename << endl;
 		ptr = shared_ptr<Model>(new Model());
-		mcache[filename] = ptr;
+		m_modelCache[name] = ptr;
 		//asynchronous loading FTW!
 		CpuPool.async([=](){
-			if(ptr->open(filename)){
+			if (ptr->open(filename)){
 				//successfully got file from disk
 				//presumably we want to use the object we got so queue loading it to the GPU
 				auto p = ptr; //There must be a better fix for this
@@ -32,6 +37,21 @@ shared_ptr<Model> AssetManager::loadModel(string filename){
 			}
 		});
 	}
+	return ptr;
+}
+
+std::shared_ptr<GlTexture> AssetManager::loadTexture(std::string name, bool sRGB){
+	auto ptr = m_textureCache[name].lock();
+	if (ptr.use_count() == 0){
+		std::string filename = resolveLocation(name);
+		cout << name << " was loaded from " << filename << endl;
+		auto tex = std::shared_ptr<FileBackedGlTexture2D>(new FileBackedGlTexture2D());
+		tex->filename = filename;
+		tex->sRGB = sRGB;
+		m_textureCache[name] = tex;
+		return tex;
+	}
+	//already loaded
 	return ptr;
 }
 
