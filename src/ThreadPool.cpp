@@ -93,7 +93,7 @@ ThreadPool::ThreadPool():sharedState(new DispatchData){
 	sharedState->stop = false;
 	sharedState->workerThreads.resize(numberOfThreads);
 
-	sharedState->dispatchMutex = NEW_MUTEX;
+	NEW_MUTEX(sharedState->dispatchMutex);
 	//sharedState->dispatchSemaphore = CreateSemaphore(NULL,0,numberOfThreads,NULL);
 
 	for(int i=0;i<numberOfThreads;i++)
@@ -124,7 +124,7 @@ ThreadPool::ThreadPool(int numberOfThreads):sharedState(new DispatchData){
 	sharedState->stop = false;
 	sharedState->workerThreads.resize(numberOfThreads);
 
-	sharedState->dispatchMutex = NEW_MUTEX;
+	NEW_MUTEX(sharedState->dispatchMutex);
 	//sharedState->dispatchSemaphore = CreateSemaphore(NULL,0,numberOfThreads,NULL);
 
 	for(int i=0;i<numberOfThreads;i++)
@@ -189,7 +189,7 @@ void ThreadPool::async(std::function<void()> workUnit){
 }
 
 WorkQueue::WorkQueue(){
-	queueMutex = NEW_MUTEX;
+	NEW_MUTEX(queueMutex);
 }
 
 void WorkQueue::async(std::function<void()> workUnit){

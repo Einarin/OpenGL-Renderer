@@ -316,7 +316,7 @@ void FileBackedGlTexture2D::init(){
 	}*/
 	IoPool.async([=](){
 		glm::ivec2 size;
-		char* data;
+		char* data = nullptr;
 		int dataLen;
 		auto obj = this;
 		imageDataFromPngFile(filename,&size,&data,&dataLen);
@@ -325,7 +325,9 @@ void FileBackedGlTexture2D::init(){
 				obj->setup(GL_RGBA, size, GL_UNSIGNED_BYTE, GL_SRGB_ALPHA);
 			}
 			obj->setImage(GL_RGBA,size,GL_UNSIGNED_BYTE,data);
-			free(data);
+			if (data){
+				free(data);
+			}
 		});
 	});
 }

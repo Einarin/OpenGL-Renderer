@@ -115,8 +115,12 @@ void Billboard::draw(){
 
 Billboard::~Billboard()
 {
-	glDeleteBuffers(1,&vbo);
-	glDeleteVertexArrays(1,&vao);
+	if (vbo) {
+		glDeleteBuffers(1, &vbo);
+	}
+	if (vao) {
+		glDeleteVertexArrays(1, &vao);
+	}
 }
 
 void StarBox::init()

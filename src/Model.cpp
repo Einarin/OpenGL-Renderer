@@ -115,9 +115,9 @@ bool Model::open(std::string filename){
 	rootPart.name = filename+" root node";
 	Assimp::Importer importer;
 	//remove properties we don't care about to aid optimization
-	importer.SetPropertyInteger(AI_CONFIG_PP_RRM_EXCLUDE_LIST,
+	/*importer.SetPropertyInteger(AI_CONFIG_PP_RRM_EXCLUDE_LIST,
 								aiComponent_CAMERAS |
-								aiComponent_COLORS );
+								aiComponent_COLORS );*/
 	importer.SetPropertyInteger(AI_CONFIG_PP_FD_REMOVE, 1);
 	importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,aiPrimitiveType_POINT | aiPrimitiveType_LINE);
 	importer.SetProgressHandler(new CoutProgressHandler());
@@ -201,8 +201,64 @@ bool Model::open(std::string filename){
 			case aiShadingMode_Phong:
 				std::cout << "Phong\n";
 				break;
+			case aiShadingMode_Blinn:
+				std::cout << "Blinn-Phong\n";
+				break;
+			case aiShadingMode_Toon:
+				std::cout << "Toon\n";
+				break;
+			case aiShadingMode_OrenNayar:
+				std::cout << "Oren-Nayar\n";
+				break;
+			case aiShadingMode_Minnaert:
+				std::cout << "Minnaert\n";
+				break;
+			case aiShadingMode_CookTorrance:
+				std::cout << "Cook-Torrance\n";
+				break;
+			case aiShadingMode_Fresnel:
+				std::cout << "Fresnel\n";
+				break;
+			case aiShadingMode_NoShading:
+				std::cout << "No Shading\n";
+				break;
 			default:
-				std::cout << "advanced...\n";
+				std::cout << "unknown(" << shadingModel << ")\n";
+				for (int j = 0; j < assmat->mNumProperties; j++) {
+					std::cout << assmat->mProperties[j]->mKey.C_Str() << " : ";
+					switch (assmat->mProperties[j]->mType) {
+					case aiPTI_Float:
+					{
+						float* buf = (float*)malloc(assmat->mProperties[j]->mDataLength);
+						memcpy(buf, assmat->mProperties[j]->mData, assmat->mProperties[j]->mDataLength);
+						for (int k = 0; k < assmat->mProperties[j]->mDataLength / sizeof(float); k++) {
+							std::cout << buf[k] << ",";
+						}
+						std::cout << std::endl;
+						break;
+					}
+					case aiPTI_Integer:
+					{
+						int* buf = (int*)malloc(assmat->mProperties[j]->mDataLength);
+						memcpy(buf, assmat->mProperties[j]->mData, assmat->mProperties[j]->mDataLength);
+						for (int k = 0; k < assmat->mProperties[j]->mDataLength / sizeof(int); k++) {
+							std::cout << buf[k] << ",";
+						}
+						std::cout << std::endl;
+						break;
+					}
+					case aiPTI_String:
+						std::cout << (assmat->mProperties[j]->mData + 4) << std::endl;
+						break;
+					case aiPTI_Buffer:
+					default:
+						for (int k = 0; k < assmat->mProperties[j]->mDataLength; k++) {
+							std::cout << std::hex << (int)assmat->mProperties[j]->mData[k] << " ";
+						}
+						std::cout << std::endl;
+						break;
+					}
+				}
 			}
 			aiString file;
 			if(AI_SUCCESS == assmat->Get(AI_MATKEY_TEXTURE_DIFFUSE(0),file)){

@@ -30,7 +30,7 @@
 #include <thread>
 #include <mutex>
 #define MUTEX std::unique_ptr<std::mutex>
-#define NEW_MUTEX std::unique_ptr<std::mutex>(new std::mutex)
+#define NEW_MUTEX(m) m = std::unique_ptr<std::mutex>(new std::mutex)
 #define ACQUIRE_MUTEX(m) m->lock()
 #define TRY_MUTEX(m) m->try_lock()
 #define RELEASE_MUTEX(m) m->unlock()
@@ -42,8 +42,9 @@ using std::thread;
 #ifdef _WIN32
 #define WIN32_CONCURRENCY
 #include "windows.h"
-#define MUTEX HANDLE
-#define NEW_MUTEX CreateMutex(NULL,FALSE,NULL)
+#define MUTEX CRITICAL_SECTION
+//#define NEW_MUTEX CreateMutex(NULL,FALSE,NULL)
+#define NEW_MUTEX(m) InitializeCriticalSetion(m)
 #define ACQUIRE_MUTEX(m) while(WaitForSingleObject(m,INFINITE)!=0) { }
 #define TRY_MUTEX(m) 0==WaitForSingleObject(m,10)
 #define RELEASE_MUTEX(m) ReleaseMutex(m)
@@ -157,7 +158,7 @@ public:
 	bool blocked;
 	std::queue<std::function<void()>> workData; 
 	WorkerThreadData(): blocked(false){
-		mutex = NEW_MUTEX;
+		NEW_MUTEX(mutex);
 	}
 #if _MSC_VER <= 1800
 	WorkerThreadData(WorkerThreadData&& rhs) : mthread(std::move(rhs.mthread))
@@ -312,3 +313,67 @@ Future<void> WorkQueue::async<void>(std::function<void()> func);
 extern ThreadPool CpuPool;
 extern ThreadPool IoPool;
 extern WorkQueue glQueue;
+
+#ifdef TEST
+
+int fib(ThreadPool& pool, int x){
+	if(x < 2) {
+		return 1;
+	}
+	return pool.await(pool.async<int>([&pool,x]()->int{return fib(pool, x-1);}))
+		+ pool.await(pool.async<int>([&pool,x]()->int{return fib(pool, x-2);}));
+}
+
+bool testThreadpool(std::ostream& out){
+	WorkQueue mainQueue;
+	ThreadPool pool1(1);
+	ThreadPool pool2(2);
+
+	out << "Testing thread pool" << std::endl;
+	MUTEX blockStart;
+	NEW_MUTEX(blockStart);
+	ACQUIRE_MUTEX(blockStart);
+	int count = 0;
+	int count2 = 0;
+	bool success = true;
+	//test serial execution and basic use of Futures
+	Future<bool> result1 = pool1.async<bool>([&blockStart,&out,&count]()->bool{
+		ACQUIRE_MUTEX(blockStart);
+		out << "result 1" << std::endl;
+		count++;
+		RELEASE_MUTEX(blockStart);
+		return count == 1;
+	});
+	pool1.async([&out,&count2](){
+		out << "result 2" << std::endl;
+		count2++;
+	});
+	Future<void> result3 = pool1.async<void>([&out,&count2](){
+		out << "result 3" << std::endl;
+		count2++;
+	});
+	success &= (count == 0);
+	success &= (count2 == 0);
+	out << "start: " << (success ? "true" : "false") << std::endl;
+	RELEASE_MUTEX(blockStart);
+	success &= result1.wait();
+	success &= (count == 1);
+	result3.wait();
+	success &= (count2 == 2);
+	//test parallel execution with an abusive workload and implicit conversion of Futures
+	const int fibDepth = 20;
+	Future<int> output[fibDepth];
+	for (int i = 0; i < fibDepth; i++) {
+		output[i] = pool2.async<int>([&pool2, i]()->int {return fib(pool2, i); });
+	}
+	int correctVals[] = { 1,1,2,3,5,8,13,21,34,55,89,144,233,377,610,987,1597,2584,4181,6765};
+	for (int i = 0; i < fibDepth; i++) {
+		//out << "status: " << (success ? "true" : "false") << std::endl;
+		//out << i << " = " << pool2.await(output[i]) << std::endl;
+		success &= (output[i] == correctVals[i]);
+	}
+
+	out << "finish: " << (success ? "true" : "false") << std::endl;
+	return success;
+}
+#endif

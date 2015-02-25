@@ -23,7 +23,7 @@ namespace gl {
 #if _MSC_VER <= 1800 //MSVC doesn't generate automatic move constructors :(
 		VertData(VertData&& o) : m_ownsBuffer(o.m_ownsBuffer), m_attrib(std::move(o.m_attrib)), m_buffer(o.m_buffer),
 			m_vertexCount(o.m_vertexCount), m_vertSize(o.m_vertSize), m_normOffset(o.m_normOffset), m_tanOffset(o.m_tanOffset),
-			m_tcOffset(std::move(o.m_tcOffset)), m_colorOffset(std::move(m_colorOffset))
+			m_tcOffset(std::move(o.m_tcOffset)), m_colorOffset(std::move(o.m_colorOffset))
 		{
 			o.m_ownsBuffer = false;
 			o.m_buffer = nullptr;
@@ -41,7 +41,7 @@ namespace gl {
 			m_normOffset = o.m_normOffset;
 			m_tanOffset = o.m_tanOffset;
 			m_tcOffset = std::move(o.m_tcOffset);
-			m_colorOffset = std::move(o.m_tcOffset);
+			m_colorOffset = std::move(o.m_colorOffset);
 			//finally, clean up the temporary
 			o.m_ownsBuffer = false;
 			o.m_buffer = nullptr;
@@ -50,7 +50,7 @@ namespace gl {
 		void operator=(const VertData& o){
 			//If we don't own our buffer assume the caller knows what they're doing since we don't :)
 			if (m_ownsBuffer){
-				delete[] m_buffer;
+				_aligned_free(m_buffer);
 				if (o.m_ownsBuffer){
 					//allocate a new buffer and copy the contents
 					int bufferSize = o.m_vertSize*o.m_vertexCount;

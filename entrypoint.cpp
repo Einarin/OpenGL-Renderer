@@ -1,3 +1,5 @@
+#define TEST
+
 #include "glincludes.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -24,6 +26,7 @@
 #include "HighDynamicRangeResolve.h"
 #include "ParticleSimulator.h"
 #include "TessGeometry.h"
+#include "Scene.h"
 
 using namespace std;
 using namespace gl;
@@ -49,6 +52,13 @@ void focusFunc(GLFWwindow* window,int focus){
 
 int main(int argc, char* argv[])
 {
+	if (argc == 2 && std::string(argv[1]) == "--test") {
+		bool testSuccess = true;
+		testSuccess &= testThreadpool(cout);
+		cout << "Test results: " << (testSuccess ? "true" : "false") << std::endl;
+		return testSuccess ? 0 : 1;
+	}
+
 	GLFWwindow* window;
 
 	glfwSetErrorCallback(onGlfwError);
@@ -187,8 +197,13 @@ int main(int argc, char* argv[])
 	//aRenderer.buildTree();
     auto astMade = aRenderer.addAsteroidAsync(translate(mat4(),vec3(0.f,10.f,0.f)),vec3(0.f));
 	
-	std::shared_ptr<Model> model = assetManager.loadModel("assets/missile.obj");
-	std::shared_ptr<Model> model2 = assetManager.loadModel("assets/falcon2.obj");
+	//std::shared_ptr<Model> model = assetManager.loadModel("assets/Suit Helmet.fbx");
+	//std::shared_ptr<Model> model = assetManager.loadModel("E:/Downloads/dragon_adult_flycycle.obj");
+	//std::shared_ptr<Model> model(new Model("E:/Downloads/dragon_adult_flycycle.obj"));
+	//std::cout << "saving optimized representation to disk...\n";
+	//model->save(Model::cachename("E:/Downloads/dragon_adult_flycycle.obj"));
+	//std::shared_ptr<Model> model2 = assetManager.loadModel("assets/falcon3.fbx");
+	SceneLoader scene("assets/testScene.xml",assetManager);
 
     /*CpuPool.async([&](){
 		model = new Model("assets/missile.obj");
@@ -420,7 +435,30 @@ int main(int argc, char* argv[])
 		mvpbb.setProjection(camera.GetProjectionMatrix());
 		//aRenderer.drawBoundingBoxes(mvpbb);
 
-		if(model.use_count() > 0 && model->ready()){
+		for (Scene::SceneModel& smodel : scene) {
+			auto& model = smodel.model;
+			if (model.use_count() > 0 && model->ready()) {
+				model->ModelMatrix = smodel.localTransform;
+				ts.bind();
+				glUniform4fv(((ShaderRef)ts)->getUniformLocation("light"), 1, value_ptr(light.position));
+				LitTexMvpShader dts = ts.litTexMvpShader;
+				dts.setView(camera.GetViewMatrix());
+				dts.setProjection(camera.GetProjectionMatrix());
+				checkGlError("create DiffuseTexMvpShader");
+				dts.bind();
+				model->draw(dts);
+				/*mls.bind();
+				mls.setModel(mat4());
+				model->draw();*/
+				if (drawNormals) {
+					mns.bind();
+					LitTexMvpShader dns = ns;
+					model->draw(dns);
+				}
+			}
+		}
+
+		/*if(model.use_count() > 0 && model->ready()){
 			model->ModelMatrix = rotate(translate(mat4(),vec3(-5.f,-3.f, 6.f)),-20.f,vec3(0.f,1.f,0.f));
 			ts.bind();
 			glUniform4fv(((ShaderRef)ts)->getUniformLocation("light"), 1, value_ptr(light.position));
@@ -430,9 +468,9 @@ int main(int argc, char* argv[])
 			checkGlError("create DiffuseTexMvpShader");
 			dts.bind();
 			model->draw(dts);
-			/*mls.bind();
+			mls.bind();
 			mls.setModel(mat4());
-			model->draw();*/
+			model->draw();
 			if(drawNormals){
 				mns.bind();
 				LitTexMvpShader dns = ns;
@@ -450,16 +488,16 @@ int main(int argc, char* argv[])
 			dts.setProjection(camera.GetProjectionMatrix());
 			checkGlError("create DiffuseTexMvpShader");
 			dts.bind();
-			model2->draw(dts);
-			/*mls.bind();
+			//model2->draw(dts);
+			mls.bind();
 			mls.setModel(mat4());
-			model->draw();*/
+			model2->draw();
 			if(drawNormals){
 				mns.bind();
 				LitTexMvpShader dns = ns;
 				model2->draw(dns);
 			}
-		}
+		}*/
 		//model2->drawBoundingBoxes(&camera);
 		star.modelMatrix = translate(mat4(),-vec3(light.position));
 
@@ -506,7 +544,7 @@ int main(int argc, char* argv[])
 
 			int runs=0;
 			//process async work
-			if(glQueue.processQueueUnit() || model.use_count() > 0 && !( model->ready())){
+			if(glQueue.processQueueUnit() || assetManager.numberOfLoadsInFlight() > 0 ){
 				runs++;
 				loadingVal = 2.f;
 			}

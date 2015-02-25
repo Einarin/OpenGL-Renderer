@@ -98,6 +98,9 @@ protected:
 	void calcAABB();
 	unsigned int typenum();
 public:
+	inline void setFilePath(std::string filename) {
+		filepath = filename;
+	}
 	glm::mat4 ModelMatrix;
 	AABB3 BoundingBox;
 	Model();

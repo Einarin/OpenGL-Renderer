@@ -68,11 +68,12 @@ bool imageDataFromPngFile(std::string filepath, glm::ivec2* size, char** data, i
              * memory for 'buffer' we didn't complete the read, so we must free
              * the image:
              */
-            if (buffer == NULL)
-               png_image_free(&image);
-
-            else
-               free(buffer);
+			 if (buffer == NULL){
+				 png_image_free(&image);
+			 } else {
+				 free(buffer);
+				 buffer = NULL;
+			 }
 
 			return false;
       }

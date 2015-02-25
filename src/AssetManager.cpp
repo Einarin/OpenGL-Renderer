@@ -9,8 +9,10 @@ namespace gl{
 shared_ptr<Model> AssetManager::loadModel(string filename){
 	auto ptr = mcache[filename].lock();
 	if(ptr.use_count() == 0){ //no object or old object expired
-		cout << filename << " was loaded from disk" << endl;
+		m_loadsInFlight++;
+		cout << filename << " will load from disk" << endl;
 		ptr = shared_ptr<Model>(new Model());
+		ptr->setFilePath(filename);
 		mcache[filename] = ptr;
 		//asynchronous loading FTW!
 		CpuPool.async([=](){
@@ -21,6 +23,7 @@ shared_ptr<Model> AssetManager::loadModel(string filename){
 				glQueue.async([=](){
 					p->init();
 					p->download();
+					m_loadsInFlight--;
 				});
 				if(!ptr->wasCached()){
 					std::cout << "saving optimized representation to disk...\n";
@@ -29,8 +32,11 @@ shared_ptr<Model> AssetManager::loadModel(string filename){
 				}
 			} else {
 				cout << "request for asset " << filename << " failed" << endl;
+				m_loadsInFlight--;
 			}
 		});
+	} else {
+		cout << filename << " already resident" << endl;
 	}
 	return ptr;
 }
