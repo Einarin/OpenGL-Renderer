@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -20,12 +20,14 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -39,12 +41,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)\include;$(ProjectDir)\libpng-1.6.2;$(ProjectDir)\assimp--3.0.1270-source-only\include;$(ProjectDir)\lz4-r112;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\include;$(ProjectDir)\libpng-1.6.2;$(ProjectDir)\assimp-3.1.1\include;$(ProjectDir)\lz4-r112;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)\include;$(ProjectDir)\libpng-1.6.2;$(ProjectDir)\assimp--3.0.1270-source-only\include;$(ProjectDir)\lz4-r112;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;</IncludePath>
+    <IncludePath>$(ProjectDir)\include;$(ProjectDir)\libpng-1.6.2;$(ProjectDir)\assimp-3.1.1\include;$(ProjectDir)\lz4-r112;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;</IncludePath>
     <LibraryPath>$(ProjectDir)\lib;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -89,13 +91,8 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="assimp--3.0.1270-source-only\assimp.vcxproj">
+    <ProjectReference Include="assimp-3.1.1\assimp.vcxproj">
       <Project>{9d159060-aae0-4537-9f91-4c4c534e9dba}</Project>
-      <Private>true</Private>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
     </ProjectReference>
     <ProjectReference Include="freetype-gl\freetype-gl.vcxproj">
       <Project>{1143868b-f8ac-43e0-b473-a6f80b29b1cc}</Project>
@@ -150,6 +147,7 @@
     <ClInclude Include="include\Refcounted.h" />
     <ClInclude Include="include\RenderBufferObject.h" />
     <ClInclude Include="include\Renderer.h" />
+    <ClInclude Include="include\Scene.h" />
     <ClInclude Include="include\Semaphore.h" />
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\SkyBox.h" />
@@ -157,6 +155,7 @@
     <ClInclude Include="include\Text.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\ThreadPool.h" />
+    <ClInclude Include="include\tinyxml2.h" />
     <ClInclude Include="include\TransformFeedback.h" />
     <ClInclude Include="include\Vertex.h" />
     <ClInclude Include="include\VertexArrayObject.h" />
@@ -187,6 +186,7 @@
     <ClCompile Include="src\noise.cpp" />
     <ClCompile Include="src\Quaternion.cpp" />
     <ClCompile Include="src\RenderBufferObject.cpp" />
+    <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\SkyBox.cpp" />
     <ClCompile Include="src\StarRenderer.cpp" />
@@ -194,6 +194,7 @@
     <ClCompile Include="src\Text.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\ThreadPool.cpp" />
+    <ClCompile Include="src\tinyxml2.cpp" />
     <ClCompile Include="src\TransformFeedback.cpp" />
     <ClCompile Include="src\VertexArrayObject.cpp" />
     <ClCompile Include="src\VertexAttribBuilder.cpp" />
