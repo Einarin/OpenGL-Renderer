@@ -203,7 +203,13 @@ int main(int argc, char* argv[])
 	//std::cout << "saving optimized representation to disk...\n";
 	//model->save(Model::cachename("E:/Downloads/dragon_adult_flycycle.obj"));
 	//std::shared_ptr<Model> model2 = assetManager.loadModel("assets/falcon3.fbx");
-	SceneLoader scene("assets/testScene.xml",assetManager);
+	Scene scene;
+	scene.loadDemo(assetManager);
+	bool result = scene.saveFile("assets/testScene.xml");
+	//Scene scene2;
+	//scene2.loadFile("assets/testScene.xml", assetManager);
+	//result &= scene2.saveFile("assets/testScene2.xml");
+	cout << "status: " << (result ? "true" : "false") << endl;
 
     /*CpuPool.async([&](){
 		model = new Model("assets/missile.obj");
@@ -332,7 +338,8 @@ int main(int argc, char* argv[])
 	tessbb.init();
 	tessbb.download();
 	TessCube tessCube;
-	tessCube.tesselate(glm::mat4(), 1.0f, camera);
+	Face::buildLod(64);
+	//tessCube.tesselate(glm::mat4(), 1.0f, camera);
 
 	//finish loading before we jump into the main loop
 	if(glQueue.processQueueUnit() || !asteroidsGenerated.isDone())
@@ -346,7 +353,7 @@ int main(int argc, char* argv[])
 	}*/
 
 	ParticleSimulator particles;
-	//particles.setup(100);
+	particles.setup(100);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -354,7 +361,7 @@ int main(int argc, char* argv[])
 		double frameStart = glfwGetTime();
 
 		//kick off gpu transform feedback calculations
-		//particles.update();
+		particles.update();
 
 		//input handling
 		glfwPollEvents();
@@ -512,9 +519,9 @@ int main(int argc, char* argv[])
 		);
 		//tessbb.bindVao();
 		//glDrawArrays(GL_PATCHES, 0, 4);
-		tessCube.draw();
+		tessCube.draw(tess);
 		
-		//particles.draw(camera);
+		particles.draw(camera);
 		star.draw(&camera);
 
 		//End scene drawing

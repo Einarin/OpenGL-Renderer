@@ -303,6 +303,13 @@ public:
 		});
 		return f;
 	}
+
+	template<typename T>
+	T await(Future<T> result) {
+		while (!result.isDone()) {
+			processQueueUnit();
+		}
+	}
 	
 	bool processQueueUnit(); //returns true if work was done
 };
