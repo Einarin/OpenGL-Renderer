@@ -466,8 +466,6 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 		}
 	}
 	
-	}
-	
 }
 
 void Model::initPart(ModelPart& part)
