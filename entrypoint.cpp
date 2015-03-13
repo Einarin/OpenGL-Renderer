@@ -146,8 +146,8 @@ int main(int argc, char* argv[])
 	camera.SetTarget(vec3(0.0,0.0,0.0));
 	camera.SetAspectRatio(static_cast<float>(width)/static_cast<float>(height));
 		
-	hdr.init();
-	hdr.setup(glm::ivec2(width, height));
+	//hdr.init();
+	//hdr.setup(glm::ivec2(width, height));
 
 	cout << "generating assets...\n";
 	
@@ -157,7 +157,15 @@ int main(int argc, char* argv[])
 	skybox.download();
 	skybox.setImageAsync("assets/Skybox/skybox");
 
-	StarRenderer star;
+	TextRenderer* textRenderer = textMan.getTextRenderer("DejaVuSans.ttf", 24);
+	textRenderer->loadAscii();
+	vec2 end = textRenderer->addText("Hello World!", vec2(5, 5), vec4(1.0, 1.0, 1.0, 1.0));
+
+	checkGlError("setup text");
+
+	AssetManager assetManager;
+
+	/*StarRenderer star;
 	if(!star.load()) DebugBreak();
 
 	Cube cube;
@@ -167,7 +175,7 @@ int main(int argc, char* argv[])
 	cube.download();
 	
 	cout << "loading models...\n";
-	AssetManager assetManager;
+	
 	const unsigned int asteroidFactor=5;
 	AsteroidRenderer aRenderer;
 	if(!aRenderer.setup()) DebugBreak();
@@ -195,7 +203,7 @@ int main(int argc, char* argv[])
 		glQueue.processQueueUnit();
 	}//*/
 	//aRenderer.buildTree();
-    auto astMade = aRenderer.addAsteroidAsync(translate(mat4(),vec3(0.f,10.f,0.f)),vec3(0.f));
+    //auto astMade = aRenderer.addAsteroidAsync(translate(mat4(),vec3(0.f,10.f,0.f)),vec3(0.f));
 	
 	//std::shared_ptr<Model> model = assetManager.loadModel("assets/Suit Helmet.fbx");
 	//std::shared_ptr<Model> model = assetManager.loadModel("E:/Downloads/dragon_adult_flycycle.obj");
@@ -204,12 +212,12 @@ int main(int argc, char* argv[])
 	//model->save(Model::cachename("E:/Downloads/dragon_adult_flycycle.obj"));
 	//std::shared_ptr<Model> model2 = assetManager.loadModel("assets/falcon3.fbx");
 	Scene scene;
-	scene.loadDemo(assetManager);
-	bool result = scene.saveFile("assets/testScene.xml");
+	//scene.loadDemo(assetManager);
+	//bool result = scene.saveFile("assets/testScene.xml");
 	//Scene scene2;
 	//scene2.loadFile("assets/testScene.xml", assetManager);
 	//result &= scene2.saveFile("assets/testScene2.xml");
-	cout << "status: " << (result ? "true" : "false") << endl;
+	//cout << "status: " << (result ? "true" : "false") << endl;
 
     /*CpuPool.async([&](){
 		model = new Model("assets/missile.obj");
@@ -220,7 +228,7 @@ int main(int argc, char* argv[])
 		});
 	});//*/
 
-	bb = new Billboard(-0.5f,-0.5f,1.f,1.f);
+	/*bb = new Billboard(-0.5f,-0.5f,1.f,1.f);
 	bb->init();
 	bb->download();
 	checkGlError("geometry");
@@ -270,11 +278,6 @@ int main(int argc, char* argv[])
 	ColorPosShader boundingBoxShader;
 	boundingBoxShader.init();
 	MvpShader mvpbb(boundingBoxShader);
-	TextRenderer* textRenderer = textMan.getTextRenderer("DejaVuSans.ttf",24);
-	textRenderer->loadAscii();
-	vec2 end = textRenderer->addText("Hello World!",vec2(5,5),vec4(1.0,1.0,1.0,1.0));
-
-	checkGlError("setup text");
 
 	FramebufferObject fbo;
 	fbo.init();
@@ -292,7 +295,7 @@ int main(int argc, char* argv[])
 		DebugBreak();
 	}
 	FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);
-
+	*/
 //	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glCullFace(GL_BACK);
 	glEnable(GL_CULL_FACE);
@@ -307,7 +310,7 @@ int main(int argc, char* argv[])
 	bool drawNormals = false;
 	bool changingNormals = false;
 
-	auto tvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	/*auto tvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 	auto tcs = ShaderStage::Allocate(GL_TESS_CONTROL_SHADER);
 	auto tes = ShaderStage::Allocate(GL_TESS_EVALUATION_SHADER);
 	auto tfs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
@@ -335,10 +338,10 @@ int main(int argc, char* argv[])
 					 vec3(-1, 1, 0)
 
 	);
-	tessbb.init();
-	tessbb.download();
-	TessCube tessCube;
-	Face::buildLod(64);
+	//tessbb.init();
+	//tessbb.download();
+	//TessCube tessCube;
+	//Face::buildLod(64);
 	//tessCube.tesselate(glm::mat4(), 1.0f, camera);
 
 	//finish loading before we jump into the main loop
@@ -352,8 +355,9 @@ int main(int argc, char* argv[])
 		cursorGrabbed = true;
 	}*/
 
-	ParticleSimulator particles;
-	particles.setup(100);
+	//ParticleSimulator particles;
+	//particles.setup(100);
+	glfwSwapBuffers(window);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -361,7 +365,7 @@ int main(int argc, char* argv[])
 		double frameStart = glfwGetTime();
 
 		//kick off gpu transform feedback calculations
-		particles.update();
+		//particles.update();
 
 		//input handling
 		glfwPollEvents();
@@ -385,8 +389,8 @@ int main(int argc, char* argv[])
 			levels--;
 		}
 		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_P)){
-			aRenderer.reset();
-			asteroidsGenerated=true;
+			//aRenderer.reset();
+			//asteroidsGenerated=true;
 		}
 		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_N)){
 			if(!changingNormals){
@@ -402,7 +406,7 @@ int main(int argc, char* argv[])
 		
 		//bind fullscreen HDR buffer
 		//fbo.bind(GL_DRAW_FRAMEBUFFER);
-		hdr.bind();
+		//hdr.bind();
 
 		//draw
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -414,7 +418,7 @@ int main(int argc, char* argv[])
 		checkGlError("draw skybox");
 		glEnable(GL_DEPTH_TEST);
 		
-		mls.bind();
+		/*mls.bind();
 		mls.setView(camera.GetViewMatrix());
 		mls.setProjection(camera.GetProjectionMatrix());
 		checkGlError("set view and projection matrices");
@@ -454,9 +458,7 @@ int main(int argc, char* argv[])
 				checkGlError("create DiffuseTexMvpShader");
 				dts.bind();
 				model->draw(dts);
-				/*mls.bind();
-				mls.setModel(mat4());
-				model->draw();*/
+				
 				if (drawNormals) {
 					mns.bind();
 					LitTexMvpShader dns = ns;
@@ -506,7 +508,7 @@ int main(int argc, char* argv[])
 			}
 		}*/
 		//model2->drawBoundingBoxes(&camera);
-		star.modelMatrix = translate(mat4(),-vec3(light.position));
+		/*star.modelMatrix = translate(mat4(),-vec3(light.position));
 
 		tess->bind();
 		glPatchParameteri(GL_PATCH_VERTICES, 4);
@@ -519,11 +521,11 @@ int main(int argc, char* argv[])
 		);
 		//tessbb.bindVao();
 		//glDrawArrays(GL_PATCHES, 0, 4);
-		tessCube.draw(tess);
+		//tessCube.draw(tess);
 		
-		particles.draw(camera);
-		star.draw(&camera);
-
+		//particles.draw(camera);
+		//star.draw(&camera);
+		*/
 		//End scene drawing
 		FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);
 		glDisable(GL_DEPTH_TEST);
@@ -532,7 +534,7 @@ int main(int argc, char* argv[])
 		if (wireframe){
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
-		hdr.draw();
+		//hdr.draw();
 		//tex->draw();
 		//depthTex->draw();
 		//noiseShader->bind();
@@ -575,7 +577,7 @@ int main(int argc, char* argv[])
 						//do we have GPU memory?
 						int freeMem = FreeGpuMemoryMB();
 						//Obviously we need MOAR ASTEROIDS!
-						if(false && freeMem > 100000 && asteroidsGenerated.isDone() && asteroidsGenerated){
+						/*if(false && freeMem > 100000 && asteroidsGenerated.isDone() && asteroidsGenerated){
 							const int count = 5;
 							cout << "Generating " << count << " asteroids with " << freeMem << " bytes available" << endl;
 							CpuPool.async([&aRenderer,asteroidsGenerated,count,time]() mutable{
@@ -602,7 +604,7 @@ int main(int argc, char* argv[])
 								}
 								asteroidsGenerated.set(success);
 							});
-						} else {
+						} else*/ {
 							if(dt > 5){ //lets not oversleep!
 								//cout << "s " << dt << " ";
 #ifdef USE_STD_THREAD
@@ -617,7 +619,7 @@ int main(int argc, char* argv[])
 				}
 				time = glfwGetTime()-frameStart;
 			}
-			ss3 << aRenderer.asteroidCount() << " asteroids";
+			//ss3 << aRenderer.asteroidCount() << " asteroids";
 			fps->addText(ss3.str(),vec2(5,height-96),vec4(1.f));
 			if(runs > 0 || loadingVal > 0.f){
 				if(runs > 0) lastruns = runs;

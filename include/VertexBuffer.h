@@ -18,6 +18,8 @@ namespace gl {
 		int m_tanOffset;
 		std::vector<int> m_tcOffset;
 		std::vector<int> m_colorOffset;
+		std::vector<int> m_boneIdOffset;
+		std::vector<int> m_boneWeightOffset;
 		VertData() :m_ownsBuffer(false), m_buffer(nullptr)
 		{}
 #if _MSC_VER <= 1800 //MSVC doesn't generate automatic move constructors :(
@@ -109,6 +111,14 @@ namespace gl {
 		inline glm::vec4& color(int index){
 			char* indBase = m_vbuf->m_buffer + (m_index * m_vbuf->m_vertSize);
 			return *reinterpret_cast<glm::vec4*>(indBase + m_vbuf->m_colorOffset[index]);
+		}
+		inline int& boneId(int index) {
+			char* indBase = m_vbuf->m_buffer + (m_index * m_vbuf->m_vertSize);
+			return *reinterpret_cast<int*>(indBase + m_vbuf->m_boneIdOffset[index]);
+		}
+		inline float& boneWeight(int index) {
+			char* indBase = m_vbuf->m_buffer + (m_index * m_vbuf->m_vertSize);
+			return *reinterpret_cast<float*>(indBase + m_vbuf->m_boneWeightOffset[index]);
 		}
 		inline char* operator&() {
 			return m_vbuf->m_buffer + (m_index * m_vbuf->m_vertSize);
@@ -203,12 +213,12 @@ namespace gl {
 	protected:
 		bool m_hasNorm, m_hasTan;
 		int m_vertexCount, m_posSize,
-			m_tc2Count, m_tc3Count, m_tc4Count, m_colorCount;
+			m_tc2Count, m_tc3Count, m_tc4Count, m_colorCount, m_boneCount;
 		VertData assemble();
 	public:
 		inline VertexBufferBuilder() : m_posSize(3), //default to 3D, it's a 3D engine after all
 			m_hasNorm(false), m_hasTan(false), m_vertexCount(0),
-			m_tc2Count(0),m_tc3Count(0), m_tc4Count(0), m_colorCount(0)
+			m_tc2Count(0), m_tc3Count(0), m_tc4Count(0), m_colorCount(0), m_boneCount(0)
 		{}
 		inline VertexBufferBuilder& vertexCount(int count){
 			m_vertexCount = count;
@@ -242,6 +252,10 @@ namespace gl {
 		}
 		inline VertexBufferBuilder& hasVertColor(int colorCount){
 			m_colorCount = colorCount;
+			return *this;
+		}
+		inline VertexBufferBuilder& hasBones(int boneCount) {
+			m_boneCount = boneCount;
 			return *this;
 		}
 		VertexBuffer build();

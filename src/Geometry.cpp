@@ -274,25 +274,28 @@ void IndexedGeometry::init(){
 	glVertexAttribPointer(3, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)36);
 	glEnableVertexAttribArray(3);*/
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	glBindVertexArray(0);
+	//glBindVertexArray(0);
 	initialized = true;
 }
 
 void IndexedGeometry::download(){
 	if(!initialized ||verts.size() == 0 || indices.size() == 0)
 		DebugBreak();
+	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER,verts.size() * sizeof(vertex),&verts[0],GL_STATIC_DRAW);
 #ifdef _DEBUG
-	glBindBuffer(GL_ARRAY_BUFFER,0);
+	//glBindBuffer(GL_ARRAY_BUFFER,0);
 #endif
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	//checkGlError("glBindBuffer elements");
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER,indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
 	//checkGlError("glBufferData elements");
 #ifdef _DEBUG
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+	//glBindVertexArray(0);
 #endif
+	
 	downloaded = true;
 }
 
@@ -300,10 +303,12 @@ void IndexedGeometry::draw(){
 	if(!initialized || !downloaded)
 		return;
 	glBindVertexArray(vao);
+	//glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	glDrawElements(GL_TRIANGLES,indices.size(),GL_UNSIGNED_INT,(GLvoid*)0);
 	//glDrawArrays(GL_POINTS,0,verts.size());
 	checkGlError("drawelements");
-	glBindVertexArray(0);
+	//glBindVertexArray(0);
 }
 
 int cubeSides[6][3][3] = {

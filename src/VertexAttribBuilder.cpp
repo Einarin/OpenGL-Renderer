@@ -21,6 +21,8 @@ VertexAttribBuilder& VertexAttribBuilder::attrib(AttribDataTypes type, int count
 		a.type = GL_INT;
 		typesize = 4;
 		break;
+	default:
+		__debugbreak();
 	}
 	a.size = typesize*count;
 	_attribs.push_back(a);

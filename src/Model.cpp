@@ -402,8 +402,11 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 		output.numUVComponents[i] = aim.mNumUVComponents[i];
 	}
 	//we need to figure out what bones apply to each vertex
-	//this is inefficient, but fuck it
+	//we want to prioritize bones with the most weight, so that
+	//we drop the least important contributors if an index has too many weights
+	
 	std::vector<std::priority_queue<std::pair<float, int>>> storage;
+	storage.resize(aim.mNumVertices);
 	for (int i = 0; i < aim.mNumBones; i++){
 		std::string name = aim.mBones[i]->mName.C_Str();
 		int boneId = boneMap[name];
@@ -413,15 +416,23 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 			storage[index].push(std::make_pair(weight, boneId));
 		}
 	}
+	//Figure out the worst case for number of bones
+	int numBones = 0;
+	for (std::priority_queue<std::pair<float, int>>& q : storage) {
+		numBones = max(numBones, q.size());
+	}
+	std::cout << "will have " << numBones << "bone slots" << std::endl;
 	output.vertSize = aim.mNumVertices;
 	//output.vertices = new vertex[output.vertSize];
 	//Configure a vertex buffer to match our file
 	VertexBufferBuilder vbb;
+	
 	vbb.vertexCount(output.vertSize)
 		.hasNormal(output.hasNormals)
 		.hasTangent(output.hasTangents)
 		.hasTexCoord3D(output.numUVChannels) //OPT:for now we assume all UV coords are 3D
-		.hasVertColor(output.numVertexColorChannels);
+		.hasVertColor(output.numVertexColorChannels)
+		.hasBones(numBones);
 	//Now generate the actual buffer
 	output.vertices = vbb.build();
 	for(unsigned int i=0;i<aim.mNumVertices;i++){
@@ -448,9 +459,9 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 				RGBA_COPY(v.color(j),aim.mColors[j][i]);
 			}
 		}
-		for (int j = 0; j < VERTEX_MAX_BONES; j++){
-			v.bones[j] = storage[i].top().second;
-			v.weights[j] = storage[i].top().first;
+		for (int j = 0; j < numBones; j++){
+			v.boneId(j) = storage[i].top().second;
+			v.boneWeight(j) = storage[i].top().first;
 			storage[i].pop();
 		}
 	}

@@ -82,7 +82,7 @@ void APIENTRY OpenglErrorCallback(GLenum source,
 		break;
 	case GL_DEBUG_TYPE_OTHER:
 	default:
-		return;
+		//return;
 		text += "Unknown: ";
 		break;
 	}

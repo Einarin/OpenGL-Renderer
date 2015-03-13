@@ -162,7 +162,7 @@ namespace gl {
 							}
 						}
 						std::cout << "before " << xTess << ", " << yTess << std::endl;
-						auto result = glQueue.async<void>([=]() {
+						//auto result = glQueue.async<void>([=]() {
 							std::cout << "uploading " << xTess << ", " << yTess << std::endl;
 							auto pvao = new VertexArrayObject;
 							s_vaos[xTess][yTess] = pvao;
@@ -174,9 +174,9 @@ namespace gl {
 							glBufferData(GL_ELEMENT_ARRAY_BUFFER, xTess*yTess * 4 * sizeof(short), indexBuffer, GL_STATIC_DRAW);
 							delete[] indexBuffer;
 							delete bufferp;
-						});
+						//});
 						//result.wait();
-						glQueue.await(result);
+						//glQueue.await(result);
 						std::cout << "after " << xTess << ", " << yTess << std::endl;
 					}
 				}

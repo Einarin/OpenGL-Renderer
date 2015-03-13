@@ -6,6 +6,8 @@ namespace gl {
 
 	ParticleSimulator::ParticleSimulator() :m_feedbackBuffers(2, TransformFeedback(GL_POINTS)), m_activeBuffer(0), m_particleCount(0)
 { 
+	m_feedbackBuffers[0].setPrimitiveType(GL_POINTS);
+	m_feedbackBuffers[1].setPrimitiveType(GL_POINTS);
 	m_bbtex = TextureManager::Instance()->texFromFile("assets/Comet_Rosetta.png");
 }
 

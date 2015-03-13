@@ -43,6 +43,18 @@ namespace gl {
 			sizeAccum += 4 * sizeof(float);
 			vbuff.m_attrib.attrib(FLOAT_ATTRIB, 4);
 		}
+		vbuff.m_boneIdOffset.resize(m_boneCount);
+		for (int i = 0; i < m_boneCount; i++) {
+			vbuff.m_boneIdOffset[i] = sizeAccum;
+			sizeAccum += sizeof(int);
+			vbuff.m_attrib.attrib(INT_ATTRIB, 1);
+		}
+		vbuff.m_boneWeightOffset.resize(m_boneCount);
+		for (int i = 0; i < m_boneCount; i++) {
+			vbuff.m_boneWeightOffset[i] = sizeAccum;
+			sizeAccum += sizeof(float);
+			vbuff.m_attrib.attrib(FLOAT_ATTRIB, 1);
+		}
 		vbuff.m_vertSize = sizeAccum;
 		vbuff.m_attrib.setSize(sizeAccum);
 		vbuff.m_vertexCount = m_vertexCount;
