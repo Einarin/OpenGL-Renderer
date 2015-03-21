@@ -124,27 +124,50 @@ bool Model::open(std::string filename){
 	importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,aiPrimitiveType_POINT | aiPrimitiveType_LINE);
 	importer.SetProgressHandler(new CoutProgressHandler());
 	const aiScene* scene = importer.ReadFile(filename
-								, aiProcess_CalcTangentSpace 
-								| aiProcess_ValidateDataStructure
-								| aiProcess_Triangulate 
+								, //aiProcess_CalcTangentSpace 
+								//| aiProcess_ValidateDataStructure
+								 aiProcess_Triangulate 
 								| aiProcess_JoinIdenticalVertices
 								| aiProcess_GenSmoothNormals 
 								| aiProcess_GenUVCoords
 								| aiProcess_TransformUVCoords 
-								| aiProcess_OptimizeMeshes 
-								| aiProcess_ImproveCacheLocality
-								| aiProcess_OptimizeGraph 
-								| aiProcess_RemoveRedundantMaterials
-								| aiProcess_FindDegenerates
-								| aiProcess_FindInvalidData
-								| aiProcess_SortByPType
-								| aiProcess_Debone
+								//| aiProcess_OptimizeMeshes 
+								//| aiProcess_ImproveCacheLocality
+								//| aiProcess_OptimizeGraph 
+								//| aiProcess_RemoveRedundantMaterials
+								//| aiProcess_FindDegenerates
+								//| aiProcess_FindInvalidData
+								//| aiProcess_SortByPType
+								//| aiProcess_Debone
 								);
 	std::cout << "processing " << filename << " scene..." << std::endl;
 	if(scene == NULL){
 		std::cout << importer.GetErrorString() << std::endl;
 		return m_loaded;
 	}
+	std::cout << "Scene tree:\n";
+	std::deque<aiNode*> queue;
+	queue.push_back(scene->mRootNode);
+	queue.push_back(nullptr);
+	while (!queue.empty()) {
+		aiNode* front = queue.front();
+		queue.pop_front();
+		if (front == nullptr) {
+			std::cout << std::endl;
+			if (!queue.empty() && queue.front() != nullptr) {
+				queue.push_back(nullptr);
+			}
+			continue;
+		} else {
+			std::cout << "|";
+		}
+		std::cout << front->mName.C_Str() ;
+		for (int i = 0; i < front->mNumChildren; i++) {
+			queue.push_back(front->mChildren[i]);
+		}
+	}
+	std::cout << std::endl;
+
 	if(scene->HasTextures()){
 		std::cout << filepath << " contains " << scene->mNumTextures << "textures\n";
 		loadTextures(scene);
@@ -321,6 +344,56 @@ bool Model::open(std::string filename){
 	
 	//Now that we loaded all the support structures walk the scene graph for real
 	buildFromNode(scene, scene->mRootNode, glm::mat4(),&rootPart);
+
+	if (scene->HasAnimations()) {
+		std::cout << "Animations:\n";
+		for (int i = 0; i < scene->mNumAnimations; i++) {
+			aiAnimation* current = scene->mAnimations[i];
+			if (current->mName.length != 0) {
+				std::cout << "name: " << current->mName.C_Str() << std::endl;
+			}
+			std::cout << "duration: " << std::dec << current->mDuration << " ticks with " << current->mTicksPerSecond << " ticks per second" << std::endl;
+			std::cout << "node anims:\n";
+			for (int j = 0; j < current->mNumChannels; j++) {
+				aiNodeAnim* channel = current->mChannels[j];
+				std::cout << "name: " << channel->mNodeName.C_Str() << std::endl;
+				std::cout << "position key count: " << channel->mNumPositionKeys << std::endl;
+				std::cout << "rotation key count: " << channel->mNumRotationKeys << std::endl;
+				std::cout << "scaling key count: " << channel->mNumScalingKeys << std::endl;
+				std::cout << "pre state: ";
+				switch (channel->mPreState) {
+				case aiAnimBehaviour_CONSTANT:
+					std::cout << "constant\n";
+					break;
+				case aiAnimBehaviour_LINEAR:
+					std::cout << "linear\n";
+					break;
+				case aiAnimBehaviour_REPEAT:
+					std::cout << "repeat\n";
+					break;
+				case aiAnimBehaviour_DEFAULT:
+				default:
+					std::cout << "default\n";
+				}
+				std::cout << "post state: ";
+				switch (channel->mPostState) {
+				case aiAnimBehaviour_CONSTANT:
+					std::cout << "constant\n";
+					break;
+				case aiAnimBehaviour_LINEAR:
+					std::cout << "linear\n";
+					break;
+				case aiAnimBehaviour_REPEAT:
+					std::cout << "repeat\n";
+					break;
+				case aiAnimBehaviour_DEFAULT:
+				default:
+					std::cout << "default\n";
+				}
+			}
+		}
+	}
+
 	calcAABB();
 	for(auto it = sProcessSteps.begin();it != sProcessSteps.end();it++){
 		(*it)(this);

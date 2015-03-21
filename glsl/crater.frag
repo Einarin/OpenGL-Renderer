@@ -1,8 +1,8 @@
 #version 330
-in vec2 texCoord;
+in vec3 texcoord;
 out vec4 FragColor;
 
-vec4 FAST32_hash_3D_Cell( vec3 gridcell )	//	generates 4 different random numbers for the single given cell point
+/*vec4 FAST32_hash_3D_Cell( vec3 gridcell )	//	generates 4 different random numbers for the single given cell point
 {
     //    gridcell is assumed to be an integer coordinate
 
@@ -273,10 +273,61 @@ float craterRadialDerivative(float x)
 float craterRadialNegInvDerivative(float x)
 {
 	return -2286.99 / ( pow(x,3) - (41.25 * pow(x,2)) + (364.4999 * x) - 563);
+}*/
+
+vec4 FAST32_hash_3D_Cell( vec3 gridcell )	//	generates 4 different random numbers for the single given cell point
+{
+    //    gridcell is assumed to be an integer coordinate
+
+    //	TODO: 	these constants need tweaked to find the best possible noise.
+    //			probably requires some kind of brute force computational searching or something....
+    const vec2 OFFSET = vec2( 50.0, 161.0 );
+    const float DOMAIN = 69.0;
+    const vec4 SOMELARGEFLOATS = vec4( 635.298681, 682.357502, 668.926525, 588.255119 );
+    const vec4 ZINC = vec4( 48.500388, 65.294118, 63.934599, 63.279683 );
+
+    //	truncate the domain
+    gridcell.xyz = gridcell - floor(gridcell * ( 1.0 / DOMAIN )) * DOMAIN;
+    gridcell.xy += OFFSET.xy;
+    gridcell.xy *= gridcell.xy;
+    return fract( ( gridcell.x * gridcell.y ) * ( 1.0 / ( SOMELARGEFLOATS + gridcell.zzzz * ZINC ) ) );
+}
+
+float craterfunc(float x)
+{
+	x = x  *  10.9314;
+	return 0.00001* (x*x*x*x) - 0.00055 * (x*x*x) + 0.00729*x*x - 0.02252*x - 0.0493;
+	//return 0.00109314 * pow(x,4) - 0.00601227 * pow(x,3) + 0.0796899*x*x - 0.246175*x - 0.538918;
+}
+
+float crater(vec3 coord){
+	vec4 rand = FAST32_hash_3D_Cell(floor(coord)+0.5);
+
+	//vec3 val = Cellular3D_Pos(coord);
+	//val.x = 1.0-abs(distance(coord,10*val));
+	//val = coord+val;//0.1;
+	vec2 bounds = min(rand.xy,vec2(1.0)-rand.xy);
+	float bound = min(bounds.x,bounds.y);
+	float depth;
+	float dist;
+	if(bound < 0.1){
+		//no crater here
+		dist = 1.0;
+		depth = 0.0;
+	} else {
+		dist = length(rand.xy-fract(coord.xy));
+		dist *= 1.0/bound;
+		//dist = min(dist,1.0);
+		depth = craterfunc(min(dist,1.0));
+		depth = mix(1.0,depth,max(min(dist-1.0,0.0),1.0));
+	}
+	depth *= 10.0;
+	depth += 0.5;
+	return depth;
 }
 
 void main(void){
-vec3 coord = vec3(10.0*texCoord.xy,1.0);
+/*vec3 coord = vec3(10.0*texCoord.xy,1.0);
 	vec4 rand = FAST32_hash_3D_Cell(floor(coord)+0.5);
 
 	vec3 val = Cellular3D_Pos(coord);
@@ -299,5 +350,11 @@ vec3 coord = vec3(10.0*texCoord.xy,1.0);
 	}
 	//depth *= 5.0;
 	depth += 0.5;
-	FragColor = vec4(vec3(depth),1.0);
+	FragColor = vec4(vec3(depth),1.0);*/
+	vec3 light = vec3(2.0,-2.0,2.0);
+	float height = 5.0f + crater(texcoord);
+	//FragColor = vec4(height,abs(dFdx(height)),abs(dFdy(height)),1.0);
+	vec3 normal = cross(normalize(vec3(1.0,0.0,dFdx(height))),
+			normalize(vec3(0.0,1.0,dFdy(height))));
+	FragColor = vec4(normalize(normal),1.0);
 }

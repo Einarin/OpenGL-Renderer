@@ -132,8 +132,8 @@ namespace gl {
 		started = s_tessStarted.exchange(started, std::memory_order_acq_rel);
 		if (!started) {
 			//CpuPool.async([maxTesselation]() {
-				for (int xTess = 1; xTess < maxTesselation+1; xTess*=2) {
-					for (int yTess = 1; yTess < maxTesselation+1; yTess*=2) {
+				for (int xTess = 1; xTess < maxTesselation; xTess*=2) {
+					for (int yTess = 1; yTess < maxTesselation; yTess*=2) {
 						VertexBufferBuilder builder;
 						builder.vertexCount((xTess + 1)*(yTess + 1));
 						builder.hasNormal(true);

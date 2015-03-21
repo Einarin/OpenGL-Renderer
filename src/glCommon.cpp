@@ -82,7 +82,7 @@ void APIENTRY OpenglErrorCallback(GLenum source,
 		break;
 	case GL_DEBUG_TYPE_OTHER:
 	default:
-		//return;
+		return;
 		text += "Unknown: ";
 		break;
 	}
@@ -154,6 +154,9 @@ bool SetupSupport(){
 	
 	if(gl_extensions.find("GL_ATI_meminfo") != std::string::npos){
 		sFreeTexMemNum = 0x87FC;
+	}
+	if (gl_extensions.find("GL_ARB_bindless_texture") != std::string::npos) {
+		cout << "Bindless Textures Available!" << endl;
 	}
 	return status;
 }

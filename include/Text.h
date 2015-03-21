@@ -25,11 +25,12 @@ namespace gl {
 			float shift, gamma;
 		};
 		std::string text;
+		GLuint vao;
 		vertex_buffer_type* buffer;
 		texture_font_type * font;
 		texture_atlas_type *atlas;
 		std::shared_ptr<Shader> shader;
-		TextRenderer(std::shared_ptr<Shader> shdr, texture_font_type * fnt, vertex_buffer_type* vbuf,texture_atlas_type *atls) : font(fnt),buffer(vbuf),shader(shdr),atlas(atls)
+		TextRenderer(std::shared_ptr<Shader> shdr, texture_font_type * fnt, vertex_buffer_type* vbuf, texture_atlas_type *atls) : font(fnt), buffer(vbuf), shader(shdr), atlas(atls), vao(0)
 		{}
 	public:
 		~TextRenderer();

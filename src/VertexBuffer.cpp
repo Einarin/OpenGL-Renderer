@@ -63,6 +63,7 @@ namespace gl {
 	VertexBuffer VertexBufferBuilder::build(){
 		VertData vbuff = assemble();
 		char* buffer = (char*)_aligned_malloc(vbuff.m_vertSize*m_vertexCount, 16);
+		std::cout << "alloc new " << std::hex << (unsigned int)buffer << std::endl;
 		vbuff.m_buffer = buffer;
 		vbuff.m_ownsBuffer = true;
 		return VertexBuffer(std::move(vbuff));

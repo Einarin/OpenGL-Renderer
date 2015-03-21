@@ -127,6 +127,7 @@ int main(int argc, char* argv[])
 	TextRenderer* fps = textMan.getTextRenderer("DejaVuSans.ttf",32);
 	fps->loadAscii();
 	//draw a frame right away so we don't look frozen
+	glClearColor(0.f, 0.f, 0.f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glEnable(GL_BLEND); //text is alpha blended
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -146,29 +147,29 @@ int main(int argc, char* argv[])
 	camera.SetTarget(vec3(0.0,0.0,0.0));
 	camera.SetAspectRatio(static_cast<float>(width)/static_cast<float>(height));
 		
-	//hdr.init();
-	//hdr.setup(glm::ivec2(width, height));
+	hdr.init();
+	hdr.setup(glm::ivec2(width, height));
 
 	cout << "generating assets...\n";
 	
 	//Sphere cube(32,vec2(0.0,0.0),vec2(1.0));
-	SkyBox skybox;
-	skybox.init();
-	skybox.download();
-	skybox.setImageAsync("assets/Skybox/skybox");
+	//SkyBox skybox;
+	//skybox.init();
+	//skybox.download();
+	//skybox.setImageAsync("assets/Skybox/skybox");
 
 	TextRenderer* textRenderer = textMan.getTextRenderer("DejaVuSans.ttf", 24);
 	textRenderer->loadAscii();
 	vec2 end = textRenderer->addText("Hello World!", vec2(5, 5), vec4(1.0, 1.0, 1.0, 1.0));
 
-	checkGlError("setup text");
+	//checkGlError("setup text");
 
 	AssetManager assetManager;
 
-	/*StarRenderer star;
+	StarRenderer star;
 	if(!star.load()) DebugBreak();
 
-	Cube cube;
+	/*Cube cube;
 	cube.generate(2,vec3(0));
 	cube.ModelMatrix = mat4();
 	cube.init();
@@ -212,7 +213,7 @@ int main(int argc, char* argv[])
 	//model->save(Model::cachename("E:/Downloads/dragon_adult_flycycle.obj"));
 	//std::shared_ptr<Model> model2 = assetManager.loadModel("assets/falcon3.fbx");
 	Scene scene;
-	//scene.loadDemo(assetManager);
+	scene.loadDemo(assetManager);
 	//bool result = scene.saveFile("assets/testScene.xml");
 	//Scene scene2;
 	//scene2.loadFile("assets/testScene.xml", assetManager);
@@ -239,7 +240,7 @@ int main(int argc, char* argv[])
 	ps.download();
 
 	DynamicPatchSphere psr;
-	psr.init(8);
+	psr.init(8);*/
 
 	glPointSize(3.0f);
 
@@ -248,7 +249,7 @@ int main(int argc, char* argv[])
 
 	cout << "compiling shaders...\n";
 
-	auto noiseShader = Shader::Allocate();
+	/*auto noiseShader = Shader::Allocate();
 	auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 	auto fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
 	vs->compile("#version 330\n"
@@ -264,7 +265,7 @@ int main(int argc, char* argv[])
 	noiseShader->link();
 	Billboard noisebb;
 	noisebb.init();
-	noisebb.download();
+	noisebb.download();*/
 
 	LightingShader ls;
 	ls.init();
@@ -279,7 +280,7 @@ int main(int argc, char* argv[])
 	boundingBoxShader.init();
 	MvpShader mvpbb(boundingBoxShader);
 
-	FramebufferObject fbo;
+	/*FramebufferObject fbo;
 	fbo.init();
 	fbo.Size = ivec2(1280,800);
 	//TexRef tex = TextureManager::Instance()->texFromFile("Hello.png");
@@ -310,14 +311,14 @@ int main(int argc, char* argv[])
 	bool drawNormals = false;
 	bool changingNormals = false;
 
-	/*auto tvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	auto tvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 	auto tcs = ShaderStage::Allocate(GL_TESS_CONTROL_SHADER);
 	auto tes = ShaderStage::Allocate(GL_TESS_EVALUATION_SHADER);
 	auto tfs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
 	tvs->compileFromFile("glsl/terrain.vert");
 	tcs->compileFromFile("glsl/terrain.tcs");
 	tes->compileFromFile("glsl/terrain.tes");
-	tfs->compileFromFile("glsl/color.frag");
+	tfs->compileFromFile("glsl/crater.frag");
 	auto tess = Shader::Allocate();
 	tess->attachStage(tvs);
 	tess->attachStage(tcs);
@@ -340,12 +341,10 @@ int main(int argc, char* argv[])
 	);
 	//tessbb.init();
 	//tessbb.download();
-	//TessCube tessCube;
-	//Face::buildLod(64);
-	//tessCube.tesselate(glm::mat4(), 1.0f, camera);
+	
 
 	//finish loading before we jump into the main loop
-	if(glQueue.processQueueUnit() || !asteroidsGenerated.isDone())
+	/*if(glQueue.processQueueUnit() || !asteroidsGenerated.isDone())
 	{
 		glfwPollEvents();
 	}
@@ -355,8 +354,12 @@ int main(int argc, char* argv[])
 		cursorGrabbed = true;
 	}*/
 
-	//ParticleSimulator particles;
-	//particles.setup(100);
+	TessCube tessCube;
+	Face::buildLod(64);
+	tessCube.tesselate(glm::mat4(), 1.0f, camera);
+
+	ParticleSimulator particles;
+	particles.setup(100);
 	glfwSwapBuffers(window);
 
 	while (!glfwWindowShouldClose(window))
@@ -406,7 +409,7 @@ int main(int argc, char* argv[])
 		
 		//bind fullscreen HDR buffer
 		//fbo.bind(GL_DRAW_FRAMEBUFFER);
-		//hdr.bind();
+		hdr.bind();
 
 		//draw
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -414,11 +417,11 @@ int main(int argc, char* argv[])
 		if (wireframe){
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		}
-		skybox.draw(&camera);
+		//skybox.draw(&camera);
 		checkGlError("draw skybox");
 		glEnable(GL_DEPTH_TEST);
 		
-		/*mls.bind();
+		mls.bind();
 		mls.setView(camera.GetViewMatrix());
 		mls.setProjection(camera.GetProjectionMatrix());
 		checkGlError("set view and projection matrices");
@@ -429,9 +432,10 @@ int main(int argc, char* argv[])
 		glUniform1i(s->getUniformLocation("levels"), levels);
 		checkGlError("setup model shader");
 
-		aRenderer.draw(mls);
-		//mls.setModel(mat4());
 		//ps.draw();
+		/*aRenderer.draw(mls);
+		//mls.setModel(mat4());
+		
 		checkGlError("asteroid renderer");
 		if(drawNormals){
 			mns.bind();
@@ -440,7 +444,7 @@ int main(int argc, char* argv[])
 			aRenderer.draw(mns);
 			//mns.setModel(mat4());
 			//ps.draw();
-		}
+		}*/
 		mvpbb.bind();
 		mvpbb.setView(camera.GetViewMatrix());
 		mvpbb.setProjection(camera.GetProjectionMatrix());
@@ -458,10 +462,13 @@ int main(int argc, char* argv[])
 				checkGlError("create DiffuseTexMvpShader");
 				dts.bind();
 				model->draw(dts);
-				
+				model->drawBoundingBoxes(&camera);
 				if (drawNormals) {
-					mns.bind();
+					//mns.bind();
 					LitTexMvpShader dns = ns;
+					dns.bind();
+					dts.setView(camera.GetViewMatrix());
+					dts.setProjection(camera.GetProjectionMatrix());
 					model->draw(dns);
 				}
 			}
@@ -508,7 +515,7 @@ int main(int argc, char* argv[])
 			}
 		}*/
 		//model2->drawBoundingBoxes(&camera);
-		/*star.modelMatrix = translate(mat4(),-vec3(light.position));
+		star.modelMatrix = translate(mat4(),-vec3(light.position));
 
 		tess->bind();
 		glPatchParameteri(GL_PATCH_VERTICES, 4);
@@ -521,11 +528,11 @@ int main(int argc, char* argv[])
 		);
 		//tessbb.bindVao();
 		//glDrawArrays(GL_PATCHES, 0, 4);
-		//tessCube.draw(tess);
+		tessCube.draw(tess);
 		
 		//particles.draw(camera);
-		//star.draw(&camera);
-		*/
+		star.draw(&camera);
+		
 		//End scene drawing
 		FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);
 		glDisable(GL_DEPTH_TEST);
@@ -534,7 +541,7 @@ int main(int argc, char* argv[])
 		if (wireframe){
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
-		//hdr.draw();
+		hdr.draw();
 		//tex->draw();
 		//depthTex->draw();
 		//noiseShader->bind();
@@ -553,7 +560,7 @@ int main(int argc, char* argv[])
 
 			int runs=0;
 			//process async work
-			if(glQueue.processQueueUnit() || assetManager.numberOfLoadsInFlight() > 0 ){
+			if(glQueue.processQueueUnit() /*|| assetManager.numberOfLoadsInFlight() > 0 */){
 				runs++;
 				loadingVal = 2.f;
 			}
@@ -628,7 +635,7 @@ int main(int argc, char* argv[])
 			}
 			
 			glm::vec3 position = camera.GetPosition();
-			ss << "(" << position[0] << ", " << position[1] << ", " << position[2] << ") ";
+			//ss << "(" << position[0] << ", " << position[1] << ", " << position[2] << ") ";
 			//ss << "   up    (" << cam[1][0] << ", " << cam[1][1] << ", " << cam[1][2] << ")\n";*/
 			ss2 << round(1.0 / fpstime);
 			ss2 << " FPS";
@@ -653,8 +660,8 @@ int main(int argc, char* argv[])
 		fpstime = glfwGetTime()-frameStart;
 	}
 	//delete dynamic allocations
-	delete fps;
-	delete textRenderer;
+	//delete fps;
+	//delete textRenderer;
 
 	//close window and shutdown glfw
 	//for some reason this is hideously slow sometimes (seems to be hanging on something...)
