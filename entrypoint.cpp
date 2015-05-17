@@ -1,8 +1,7 @@
 #define TEST
 
 #include "glincludes.h"
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <glm/ext.hpp>
 #include <random>
 #include "callbacks.h"
 #include <iostream>
@@ -127,6 +126,7 @@ int main(int argc, char* argv[])
 	TextRenderer* fps = textMan.getTextRenderer("DejaVuSans.ttf",32);
 	fps->loadAscii();
 	//draw a frame right away so we don't look frozen
+	glClearColor(0.f, 0.f, 0.f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glEnable(GL_BLEND); //text is alpha blended
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -146,29 +146,29 @@ int main(int argc, char* argv[])
 	camera.SetTarget(vec3(0.0,0.0,0.0));
 	camera.SetAspectRatio(static_cast<float>(width)/static_cast<float>(height));
 		
-	//hdr.init();
-	//hdr.setup(glm::ivec2(width, height));
+	hdr.init();
+	hdr.setup(glm::ivec2(width, height));
 
 	cout << "generating assets...\n";
 	
 	//Sphere cube(32,vec2(0.0,0.0),vec2(1.0));
-	SkyBox skybox;
-	skybox.init();
-	skybox.download();
-	skybox.setImageAsync("assets/Skybox/skybox");
+	//SkyBox skybox;
+	//skybox.init();
+	//skybox.download();
+	//skybox.setImageAsync("assets/Skybox/skybox");
 
 	TextRenderer* textRenderer = textMan.getTextRenderer("DejaVuSans.ttf", 24);
 	textRenderer->loadAscii();
 	vec2 end = textRenderer->addText("Hello World!", vec2(5, 5), vec4(1.0, 1.0, 1.0, 1.0));
 
-	checkGlError("setup text");
+	//checkGlError("setup text");
 
 	AssetManager assetManager;
 
-	/*StarRenderer star;
+	StarRenderer star;
 	if(!star.load()) DebugBreak();
 
-	Cube cube;
+	/*Cube cube;
 	cube.generate(2,vec3(0));
 	cube.ModelMatrix = mat4();
 	cube.init();
@@ -239,16 +239,16 @@ int main(int argc, char* argv[])
 	ps.download();
 
 	DynamicPatchSphere psr;
-	psr.init(8);
+	psr.init(8);*/
 
 	glPointSize(3.0f);
 
 	Light light;
-	light.position = vec3(2.0,-2.0,2.0);
+	light.position = vec3(-2.0,2.0,-2.0);
 
 	cout << "compiling shaders...\n";
 
-	auto noiseShader = Shader::Allocate();
+	/*auto noiseShader = Shader::Allocate();
 	auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 	auto fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
 	vs->compile("#version 330\n"
@@ -264,7 +264,7 @@ int main(int argc, char* argv[])
 	noiseShader->link();
 	Billboard noisebb;
 	noisebb.init();
-	noisebb.download();
+	noisebb.download();*/
 
 	LightingShader ls;
 	ls.init();
@@ -279,7 +279,7 @@ int main(int argc, char* argv[])
 	boundingBoxShader.init();
 	MvpShader mvpbb(boundingBoxShader);
 
-	FramebufferObject fbo;
+	/*FramebufferObject fbo;
 	fbo.init();
 	fbo.Size = ivec2(1280,800);
 	//TexRef tex = TextureManager::Instance()->texFromFile("Hello.png");
@@ -310,14 +310,14 @@ int main(int argc, char* argv[])
 	bool drawNormals = false;
 	bool changingNormals = false;
 
-	/*auto tvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	auto tvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 	auto tcs = ShaderStage::Allocate(GL_TESS_CONTROL_SHADER);
 	auto tes = ShaderStage::Allocate(GL_TESS_EVALUATION_SHADER);
 	auto tfs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
 	tvs->compileFromFile("glsl/terrain.vert");
 	tcs->compileFromFile("glsl/terrain.tcs");
 	tes->compileFromFile("glsl/terrain.tes");
-	tfs->compileFromFile("glsl/color.frag");
+	tfs->compileFromFile("glsl/crater.frag");
 	auto tess = Shader::Allocate();
 	tess->attachStage(tvs);
 	tess->attachStage(tcs);
@@ -340,12 +340,31 @@ int main(int argc, char* argv[])
 	);
 	//tessbb.init();
 	//tessbb.download();
-	//TessCube tessCube;
-	//Face::buildLod(64);
-	//tessCube.tesselate(glm::mat4(), 1.0f, camera);
+	
+	auto pvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	auto pfs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+	pvs->compileFromFile("glsl/mvpNormals.vert");
+	pfs->compileFromFile("glsl/lighting.frag");
+	auto pbr = Shader::Allocate();
+	pbr->attachStage(pvs);
+	pbr->attachStage(pfs);
+	pbr->addAttrib("in_Position",0);
+	pbr->addAttrib("in_Normal",1);
+	pbr->addAttrib("in_TexCoord",2);
+	pbr->link();
+	pbr->bind();
+	GLint projectionMatrixIndex = glGetUniformLocation(pbr->getId(), "projectionMatrix");
+	GLint viewMatrixIndex = glGetUniformLocation(pbr->getId(), "viewMatrix");
+	GLint modelMatrixIndex = glGetUniformLocation(pbr->getId(), "modelMatrix");
+	GLint cameraIndex = glGetUniformLocation(pbr->getId(), "cameraWorldPosition");
+	GLint lightIndex = glGetUniformLocation(pbr->getId(), "lightPosition");
+	GLint lightColorIndex = glGetUniformLocation(pbr->getId(), "lightColor");
+	GLint materialColorIndex = glGetUniformLocation(pbr->getId(), "materialColor");
+	GLint metalnessIndex = glGetUniformLocation(pbr->getId(), "metalness");
+	GLint roughnessIndex = glGetUniformLocation(pbr->getId(), "roughness");
 
 	//finish loading before we jump into the main loop
-	if(glQueue.processQueueUnit() || !asteroidsGenerated.isDone())
+	/*if(glQueue.processQueueUnit() || !asteroidsGenerated.isDone())
 	{
 		glfwPollEvents();
 	}
@@ -355,8 +374,16 @@ int main(int argc, char* argv[])
 		cursorGrabbed = true;
 	}*/
 
-	//ParticleSimulator particles;
-	//particles.setup(100);
+	TessCube tessCube;
+	Face::buildLod(64);
+	tessCube.tesselate(glm::mat4(), 1.0f, camera);
+
+	Sphere sphere(100);
+	sphere.init();
+	sphere.download();
+
+	ParticleSimulator particles;
+	particles.setup(100);
 	glfwSwapBuffers(window);
 
 	while (!glfwWindowShouldClose(window))
@@ -406,7 +433,7 @@ int main(int argc, char* argv[])
 		
 		//bind fullscreen HDR buffer
 		//fbo.bind(GL_DRAW_FRAMEBUFFER);
-		//hdr.bind();
+		hdr.bind();
 
 		//draw
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -414,11 +441,11 @@ int main(int argc, char* argv[])
 		if (wireframe){
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		}
-		skybox.draw(&camera);
+		//skybox.draw(&camera);
 		checkGlError("draw skybox");
 		glEnable(GL_DEPTH_TEST);
 		
-		/*mls.bind();
+		mls.bind();
 		mls.setView(camera.GetViewMatrix());
 		mls.setProjection(camera.GetProjectionMatrix());
 		checkGlError("set view and projection matrices");
@@ -429,9 +456,10 @@ int main(int argc, char* argv[])
 		glUniform1i(s->getUniformLocation("levels"), levels);
 		checkGlError("setup model shader");
 
-		aRenderer.draw(mls);
-		//mls.setModel(mat4());
 		//ps.draw();
+		/*aRenderer.draw(mls);
+		//mls.setModel(mat4());
+		
 		checkGlError("asteroid renderer");
 		if(drawNormals){
 			mns.bind();
@@ -440,7 +468,7 @@ int main(int argc, char* argv[])
 			aRenderer.draw(mns);
 			//mns.setModel(mat4());
 			//ps.draw();
-		}
+		}*/
 		mvpbb.bind();
 		mvpbb.setView(camera.GetViewMatrix());
 		mvpbb.setProjection(camera.GetProjectionMatrix());
@@ -458,10 +486,13 @@ int main(int argc, char* argv[])
 				checkGlError("create DiffuseTexMvpShader");
 				dts.bind();
 				model->draw(dts);
-				
+				model->drawBoundingBoxes(&camera);
 				if (drawNormals) {
-					mns.bind();
+					//mns.bind();
 					LitTexMvpShader dns = ns;
+					dns.bind();
+					dts.setView(camera.GetViewMatrix());
+					dts.setProjection(camera.GetProjectionMatrix());
 					model->draw(dns);
 				}
 			}
@@ -508,7 +539,7 @@ int main(int argc, char* argv[])
 			}
 		}*/
 		//model2->drawBoundingBoxes(&camera);
-		/*star.modelMatrix = translate(mat4(),-vec3(light.position));
+		star.modelMatrix = translate(mat4(),vec3(light.position));
 
 		tess->bind();
 		glPatchParameteri(GL_PATCH_VERTICES, 4);
@@ -522,10 +553,53 @@ int main(int argc, char* argv[])
 		//tessbb.bindVao();
 		//glDrawArrays(GL_PATCHES, 0, 4);
 		//tessCube.draw(tess);
-		
+
+		pbr->bind();
+		glUniformMatrix4fv(projectionMatrixIndex, 1, false, glm::value_ptr(camera.GetProjectionMatrix()));
+		glUniformMatrix4fv(viewMatrixIndex, 1, false, glm::value_ptr(camera.GetViewMatrix()));
+		glUniform3fv(cameraIndex, 1, glm::value_ptr(camera.GetPosition()));
+		glUniform3f(lightIndex, light.position.x, light.position.y, light.position.z);
+		glUniform3f(lightColorIndex, 10.f,10.f,10.f);
+		glUniform3f(materialColorIndex, 1.0f, 0.766f, 0.336f);//gold specular color
+		glUniform1f(metalnessIndex, 1.0f);//metal
+		glUniform1f(roughnessIndex, 0.25f);//rough
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::mat4()));
+		sphere.draw();
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(3.f, 0.f, 0.f)));
+		glUniform1f(roughnessIndex, 0.5f);//moderately smooth
+		sphere.draw();
+		glUniform3f(materialColorIndex, 0.14f, 0.54f, 0.96f); //blue plastic
+		glUniform1f(metalnessIndex, 0.f);//not a metal
+		glUniform1f(roughnessIndex, 0.75f);//smooth
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(-3.f,0.f,0.f)));
+		sphere.draw();
+		glUniform1f(roughnessIndex, 0.f);//rough
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(-6.f, 0.f, 0.f)));
+		sphere.draw();
+		glUniform3f(materialColorIndex, 0.02f, 0.02f, 0.02f); //charcoal
+		glUniform1f(metalnessIndex, 0.f);//not a metal
+		glUniform1f(roughnessIndex, 0.1f);//rough
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(-6.f, 3.f, 0.f)));
+		sphere.draw();
+		glUniform3f(materialColorIndex, 0.56f, 0.57f, 0.58f); //iron
+		glUniform1f(metalnessIndex, 1.f);//metal
+		glUniform1f(roughnessIndex, 0.5f);//semi-smooth
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(-3.f, 3.f, 0.f)));
+		sphere.draw();
+		glUniform3f(materialColorIndex, 0.81f, 0.81f, 0.81f); //snow
+		glUniform1f(metalnessIndex, 1.f);//not a metal
+		glUniform1f(roughnessIndex, 0.0f);//rough
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(0.f, 3.f, 0.f)));
+		sphere.draw();
+		glUniform3f(materialColorIndex, 0.0f, 0.21f, 0.0f); //grass
+		glUniform1f(metalnessIndex, 1.f);//not a metal
+		glUniform1f(roughnessIndex, 0.0f);//rough
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(3.f, 3.f, 0.f)));
+		sphere.draw();
+
 		//particles.draw(camera);
-		//star.draw(&camera);
-		*/
+		star.draw(&camera);
+		
 		//End scene drawing
 		FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);
 		glDisable(GL_DEPTH_TEST);
@@ -534,7 +608,7 @@ int main(int argc, char* argv[])
 		if (wireframe){
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
-		//hdr.draw();
+		hdr.draw();
 		//tex->draw();
 		//depthTex->draw();
 		//noiseShader->bind();
@@ -553,7 +627,7 @@ int main(int argc, char* argv[])
 
 			int runs=0;
 			//process async work
-			if(glQueue.processQueueUnit() || assetManager.numberOfLoadsInFlight() > 0 ){
+			if(glQueue.processQueueUnit() /*|| assetManager.numberOfLoadsInFlight() > 0 */){
 				runs++;
 				loadingVal = 2.f;
 			}
@@ -653,8 +727,8 @@ int main(int argc, char* argv[])
 		fpstime = glfwGetTime()-frameStart;
 	}
 	//delete dynamic allocations
-	delete fps;
-	delete textRenderer;
+	//delete fps;
+	//delete textRenderer;
 
 	//close window and shutdown glfw
 	//for some reason this is hideously slow sometimes (seems to be hanging on something...)

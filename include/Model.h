@@ -3,8 +3,8 @@
 #include "Light.h"
 #include "Mesh.h"
 #include "Camera.h"
+#include "Animation.h"
 #include <assimp/scene.h> // Output data structure
-
 #include <string>
 #include <vector>
 #include <map>
@@ -13,6 +13,13 @@ namespace gl {
 	
 class Model {
 protected:
+	struct Bone {
+		glm::mat4 model2LocalXform;
+		glm::mat4 mesh2BindXform;
+		glm::mat4 finalPosition(glm::mat4 animationXform) {
+			return model2LocalXform * animationXform * mesh2BindXform;
+		}
+	};
 	class ModelPart {
 	public:
 		ModelPart():parent(nullptr)
@@ -87,7 +94,8 @@ protected:
 	std::vector<TexRef> textures;
 	std::vector<Light> lights;
 	std::vector<Material> materials;
-	std::vector<glm::mat4> bones;
+	std::vector<Bone> bones;
+	std::vector<Animation> animations;
 	ModelPart rootPart;
 	std::map<std::string, int> boneMap;
 	char* meshbuff;
@@ -126,6 +134,16 @@ public:
 	void download();
 	void draw(LitTexMvpShader& s);
 	void drawBoundingBoxes(Camera* c);
+	int getAnimationCount() {
+		return animations.size();
+	}
+	std::string getAnimationName(int index) {
+		return animations[index].name;
+	}
+	int getSkinningBufferCount() {
+		return bones.size();
+	}
+	void setSkinningBuffer(int animationIndex, double time, glm::mat4* buffer);
 };
 
 } //namespace gl

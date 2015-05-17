@@ -20,6 +20,10 @@ void TextRenderer::loadAscii(){
 }
 
 glm::vec2 TextRenderer::addText(std::string text,glm::vec2 pos,glm::vec4 color){
+	if (vao = 0) {
+		glGenVertexArrays(1, &vao);
+	}
+	glBindVertexArray(vao);
 	wchar_t* wstr = new wchar_t[text.size()];
 	mbstowcs(wstr,text.c_str(),text.size());
 	//texture_font_load_glyphs((texture_font_t*)font,wstr);
@@ -53,14 +57,24 @@ glm::vec2 TextRenderer::addText(std::string text,glm::vec2 pos,glm::vec4 color){
 		}
 	}
 	delete[] wstr;
+	glBindVertexArray(0);
 	return pos;
 }
 
 void TextRenderer::clearText(){
+	if (vao = 0) {
+		glGenVertexArrays(1, &vao);
+	}
+	glBindVertexArray(vao);
 	vertex_buffer_clear((vertex_buffer_t*)buffer);
+	glBindVertexArray(0);
 }
 
 void TextRenderer::draw(glm::mat4 ortho){
+	if (vao = 0) {
+		glGenVertexArrays(1, &vao);
+	}
+	glBindVertexArray(vao);
 	shader->bind();
 	checkGlError("bind text shader");
 	glUniformMatrix4fv(shader->getUniformLocation("projection"), 1, GL_FALSE, glm::value_ptr(ortho));
@@ -69,9 +83,11 @@ void TextRenderer::draw(glm::mat4 ortho){
 	checkGlError("draw text atlas");
 	vertex_buffer_render( (vertex_buffer_t*)buffer, GL_TRIANGLES );
 	checkGlError("draw text buffer");
+	glBindVertexArray(0);
 }
 
-TextManager::TextManager() : manager((font_manager_type*)font_manager_new( 512, 512, 1 )),shader(Shader::Allocate())
+TextManager::TextManager() : manager((font_manager_type*)font_manager_new( 512, 512, 1 )),
+							shader(Shader::Allocate())
 {}
 
 TextManager::~TextManager(){

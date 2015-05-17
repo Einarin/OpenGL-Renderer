@@ -8,7 +8,7 @@
 #include "Semaphore.h"
 
 //use Standard library thread when available
-#define USE_STD_THREAD
+//#define USE_STD_THREAD
 
 //Visual Studio before 2012 doesn't have std::thread
 #ifdef _MSC_VER
@@ -44,10 +44,13 @@ using std::thread;
 #include "windows.h"
 #define MUTEX CRITICAL_SECTION
 //#define NEW_MUTEX CreateMutex(NULL,FALSE,NULL)
-#define NEW_MUTEX(m) InitializeCriticalSetion(m)
-#define ACQUIRE_MUTEX(m) while(WaitForSingleObject(m,INFINITE)!=0) { }
-#define TRY_MUTEX(m) 0==WaitForSingleObject(m,10)
-#define RELEASE_MUTEX(m) ReleaseMutex(m)
+#define NEW_MUTEX(m) InitializeCriticalSection(&m)
+//#define ACQUIRE_MUTEX(m) while(WaitForSingleObject(m,INFINITE)!=0) { }
+#define ACQUIRE_MUTEX(m) EnterCriticalSection(&m)
+//#define TRY_MUTEX(m) 0==WaitForSingleObject(m,10)
+#define TRY_MUTEX(m) TryEnterCriticalSection(&m)
+//#define RELEASE_MUTEX(m) ReleaseMutex(m)
+#define RELEASE_MUTEX(m) LeaveCriticalSection(&m)
 #define THREAD_ID DWORD
 typedef HANDLE thread;
 #endif

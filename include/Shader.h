@@ -32,6 +32,7 @@ namespace gl
 	public:
 		~Shader();
 		static ShaderRef Allocate();
+		static ShaderRef Create(std::string vs, std::string fs);
 		void attachStage(std::shared_ptr<ShaderStage> stage);
 		void addAttrib(std::string name, int index);
 		int getUniformLocation(std::string name);
