@@ -99,19 +99,24 @@ ThreadPool::ThreadPool():sharedState(new DispatchData){
 	for(int i=0;i<numberOfThreads;i++)
 	{
 		WorkerThreadData& current = sharedState->workerThreads[i];
-		#ifndef USE_STD_THREAD
-			current.mthread = CreateThread(NULL,0,WorkerThreadProc,(LPVOID)&sharedState,0,&current.threadId);
-			#ifdef _DEBUG
+		#ifdef _DEBUG
 			std::stringstream ss;
 			ss << "Thread Pool Worker " << workernum++;
 			std::string tmp = ss.str();
+		#endif
+		#ifndef USE_STD_THREAD
+			current.mthread = CreateThread(NULL,0,WorkerThreadProc,(LPVOID)&sharedState,0,&current.threadId);
 			
+#ifdef _DEBUG
 			SetThreadName(current.threadId,tmp.c_str());
 			#endif
 		#else
 			current.mthread = thread(WorkerThreadProc,(void*)&sharedState);
 			current.threadId = current.mthread.get_id();
 			current.mthread.detach();
+			#ifdef _DEBUG
+				SetThreadName(GetThreadId(current.mthread.native_handle()), tmp.c_str());
+			#endif
 		#endif
 	}
 	//sharedState.roundRobinIndex=0;
@@ -130,19 +135,24 @@ ThreadPool::ThreadPool(int numberOfThreads):sharedState(new DispatchData){
 	for(int i=0;i<numberOfThreads;i++)
 	{
 		WorkerThreadData& current = sharedState->workerThreads[i];
-		#ifndef USE_STD_THREAD
-			current.mthread = CreateThread(NULL,0,WorkerThreadProc,(LPVOID)&sharedState,0,&current.threadId);
-			#ifdef _DEBUG
+		#ifdef _DEBUG
 			std::stringstream ss;
 			ss << "Thread Pool Worker " << workernum++;
 			std::string tmp = ss.str();
+		#endif
+		#ifndef USE_STD_THREAD
+			current.mthread = CreateThread(NULL,0,WorkerThreadProc,(LPVOID)&sharedState,0,&current.threadId);
 			
-			SetThreadName(current.threadId,tmp.c_str());
+			#ifdef _DEBUG
+				SetThreadName(current.threadId,tmp.c_str());
 			#endif
 		#else
 			current.mthread = thread(WorkerThreadProc,(void*)&sharedState);
 			current.threadId = current.mthread.get_id();
 			current.mthread.detach();
+			#ifdef _DEBUG
+				SetThreadName(GetThreadId(current.mthread.native_handle()), tmp.c_str());
+			#endif
 		#endif
 	}
 	//sharedState.roundRobinIndex=0;

@@ -53,6 +53,7 @@ using namespace Assimp;
 #define VEC_COPY(v1,v2) v1.x=v2.x;v1.y=v2.y;v1.z=v2.z;
 #define COLOR_COPY(c1,c2) c1.r=c2.r;c1.g=c2.g;c1.b=c2.b
 #define RGBA_COPY(c1,c2) c1.r=c2.r;c1.g=c2.g;c1.b=c2.b;c1.a=c2.a
+#define QUAT_COPY(q1,q2) q1.w=q2.w;q1.x=q2.x;q1.y=q2.y;q1.z=q2.z
 
 class CoutProgressHandler : public Assimp::ProgressHandler
 {
@@ -336,7 +337,9 @@ bool Model::open(std::string filename){
 				if (it == boneMap.end()){
 					boneMap[mesh->mBones[j]->mName.C_Str()] = boneCount++;
 					glm::mat4* offset = (glm::mat4*)&mesh->mBones[j]->mOffsetMatrix;
-					bones.push_back(*offset);
+					Bone bone;
+					bone.mesh2BindXform = *offset;
+					bones.push_back(bone);
 				}
 			}
 		}
@@ -346,20 +349,39 @@ bool Model::open(std::string filename){
 	buildFromNode(scene, scene->mRootNode, glm::mat4(),&rootPart);
 
 	if (scene->HasAnimations()) {
+		animations.resize(scene->mNumAnimations);
 		std::cout << "Animations:\n";
 		for (int i = 0; i < scene->mNumAnimations; i++) {
 			aiAnimation* current = scene->mAnimations[i];
 			if (current->mName.length != 0) {
 				std::cout << "name: " << current->mName.C_Str() << std::endl;
+				animations[i].name = current->mName.C_Str();
 			}
 			std::cout << "duration: " << std::dec << current->mDuration << " ticks with " << current->mTicksPerSecond << " ticks per second" << std::endl;
+			animations[i].length = current->mDuration / current->mTicksPerSecond;
 			std::cout << "node anims:\n";
+			animations[i].bones.resize(current->mNumChannels);
 			for (int j = 0; j < current->mNumChannels; j++) {
 				aiNodeAnim* channel = current->mChannels[j];
+				animations[i].bones[j].boneIndex = boneMap[channel->mNodeName.C_Str()];
 				std::cout << "name: " << channel->mNodeName.C_Str() << std::endl;
+				//these must all be equal for now
 				std::cout << "position key count: " << channel->mNumPositionKeys << std::endl;
 				std::cout << "rotation key count: " << channel->mNumRotationKeys << std::endl;
 				std::cout << "scaling key count: " << channel->mNumScalingKeys << std::endl;
+				animations[i].bones[j].keyframes.resize(channel->mNumPositionKeys);
+				for (int k = 0; k < channel->mNumPositionKeys; k++) {
+					animations[i].bones[j].keyframes[k].time = channel->mPositionKeys[k].mTime;
+					VEC_COPY(
+						animations[i].bones[j].keyframes[k].position,
+						channel->mPositionKeys[k].mValue);
+					QUAT_COPY(
+						animations[i].bones[j].keyframes[k].rotation,
+						channel->mRotationKeys[k].mValue);
+					VEC_COPY(
+						animations[i].bones[j].keyframes[k].scaling,
+						channel->mScalingKeys[k].mValue);
+				}
 				std::cout << "pre state: ";
 				switch (channel->mPreState) {
 				case aiAnimBehaviour_CONSTANT:
@@ -598,6 +620,13 @@ void Model::draw(LitTexMvpShader& s){
 		drawPart(rootPart,s,ModelMatrix);
 	}
 }
+
+void Model::setSkinningBuffer(int animationIndex, double time, glm::mat4* buffer) {
+	for (int i = 0; i < bones.size(); i++) {
+		buffer[i] = bones[i].finalPosition(animations[animationIndex].getTransformAt(i, time));
+	}
+}
+
 //serialization stuff
 struct FlatModel{
 	uint32 nameoff;

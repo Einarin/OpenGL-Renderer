@@ -121,6 +121,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AABB.h" />
+    <ClInclude Include="include\Animation.h" />
     <ClInclude Include="include\AssetManager.h" />
     <ClInclude Include="include\AsteroidRenderer.h" />
     <ClInclude Include="include\callbacks.h" />
