@@ -155,6 +155,12 @@ bool SetupSupport(){
 	if(gl_extensions.find("GL_ATI_meminfo") != std::string::npos){
 		sFreeTexMemNum = 0x87FC;
 	}
+	if (gl_extensions.find("GL_ARB_bindless_texture") != std::string::npos){
+		cout << "Bindless Textures Available!" << endl;
+	}
+	else {
+		cout << "No Bindless Textures :(" << endl;
+	}
 	return status;
 }
 
