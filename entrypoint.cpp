@@ -1,8 +1,7 @@
 #define TEST
 
 #include "glincludes.h"
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <glm/ext.hpp>
 #include <random>
 #include "callbacks.h"
 #include <iostream>
@@ -213,7 +212,7 @@ int main(int argc, char* argv[])
 	//model->save(Model::cachename("E:/Downloads/dragon_adult_flycycle.obj"));
 	//std::shared_ptr<Model> model2 = assetManager.loadModel("assets/falcon3.fbx");
 	Scene scene;
-	scene.loadDemo(assetManager);
+	//scene.loadDemo(assetManager);
 	//bool result = scene.saveFile("assets/testScene.xml");
 	//Scene scene2;
 	//scene2.loadFile("assets/testScene.xml", assetManager);
@@ -245,7 +244,7 @@ int main(int argc, char* argv[])
 	glPointSize(3.0f);
 
 	Light light;
-	light.position = vec3(2.0,-2.0,2.0);
+	light.position = vec3(-2.0,2.0,-2.0);
 
 	cout << "compiling shaders...\n";
 
@@ -342,6 +341,27 @@ int main(int argc, char* argv[])
 	//tessbb.init();
 	//tessbb.download();
 	
+	auto pvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	auto pfs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+	pvs->compileFromFile("glsl/mvpNormals.vert");
+	pfs->compileFromFile("glsl/lighting.frag");
+	auto pbr = Shader::Allocate();
+	pbr->attachStage(pvs);
+	pbr->attachStage(pfs);
+	pbr->addAttrib("in_Position",0);
+	pbr->addAttrib("in_Normal",1);
+	pbr->addAttrib("in_TexCoord",2);
+	pbr->link();
+	pbr->bind();
+	GLint projectionMatrixIndex = glGetUniformLocation(pbr->getId(), "projectionMatrix");
+	GLint viewMatrixIndex = glGetUniformLocation(pbr->getId(), "viewMatrix");
+	GLint modelMatrixIndex = glGetUniformLocation(pbr->getId(), "modelMatrix");
+	GLint cameraIndex = glGetUniformLocation(pbr->getId(), "cameraWorldPosition");
+	GLint lightIndex = glGetUniformLocation(pbr->getId(), "lightPosition");
+	GLint lightColorIndex = glGetUniformLocation(pbr->getId(), "lightColor");
+	GLint materialColorIndex = glGetUniformLocation(pbr->getId(), "materialColor");
+	GLint metalnessIndex = glGetUniformLocation(pbr->getId(), "metalness");
+	GLint roughnessIndex = glGetUniformLocation(pbr->getId(), "roughness");
 
 	//finish loading before we jump into the main loop
 	/*if(glQueue.processQueueUnit() || !asteroidsGenerated.isDone())
@@ -357,6 +377,10 @@ int main(int argc, char* argv[])
 	TessCube tessCube;
 	Face::buildLod(64);
 	tessCube.tesselate(glm::mat4(), 1.0f, camera);
+
+	Sphere sphere(100);
+	sphere.init();
+	sphere.download();
 
 	ParticleSimulator particles;
 	particles.setup(100);
@@ -515,7 +539,7 @@ int main(int argc, char* argv[])
 			}
 		}*/
 		//model2->drawBoundingBoxes(&camera);
-		star.modelMatrix = translate(mat4(),-vec3(light.position));
+		star.modelMatrix = translate(mat4(),vec3(light.position));
 
 		tess->bind();
 		glPatchParameteri(GL_PATCH_VERTICES, 4);
@@ -528,8 +552,51 @@ int main(int argc, char* argv[])
 		);
 		//tessbb.bindVao();
 		//glDrawArrays(GL_PATCHES, 0, 4);
-		tessCube.draw(tess);
-		
+		//tessCube.draw(tess);
+
+		pbr->bind();
+		glUniformMatrix4fv(projectionMatrixIndex, 1, false, glm::value_ptr(camera.GetProjectionMatrix()));
+		glUniformMatrix4fv(viewMatrixIndex, 1, false, glm::value_ptr(camera.GetViewMatrix()));
+		glUniform3fv(cameraIndex, 1, glm::value_ptr(camera.GetPosition()));
+		glUniform3f(lightIndex, light.position.x, light.position.y, light.position.z);
+		glUniform3f(lightColorIndex, 10.f,10.f,10.f);
+		glUniform3f(materialColorIndex, 1.0f, 0.766f, 0.336f);//gold specular color
+		glUniform1f(metalnessIndex, 1.0f);//metal
+		glUniform1f(roughnessIndex, 0.25f);//rough
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::mat4()));
+		sphere.draw();
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(3.f, 0.f, 0.f)));
+		glUniform1f(roughnessIndex, 0.5f);//moderately smooth
+		sphere.draw();
+		glUniform3f(materialColorIndex, 0.14f, 0.54f, 0.96f); //blue plastic
+		glUniform1f(metalnessIndex, 0.f);//not a metal
+		glUniform1f(roughnessIndex, 0.75f);//smooth
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(-3.f,0.f,0.f)));
+		sphere.draw();
+		glUniform1f(roughnessIndex, 0.f);//rough
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(-6.f, 0.f, 0.f)));
+		sphere.draw();
+		glUniform3f(materialColorIndex, 0.02f, 0.02f, 0.02f); //charcoal
+		glUniform1f(metalnessIndex, 0.f);//not a metal
+		glUniform1f(roughnessIndex, 0.1f);//rough
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(-6.f, 3.f, 0.f)));
+		sphere.draw();
+		glUniform3f(materialColorIndex, 0.56f, 0.57f, 0.58f); //iron
+		glUniform1f(metalnessIndex, 1.f);//metal
+		glUniform1f(roughnessIndex, 0.5f);//semi-smooth
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(-3.f, 3.f, 0.f)));
+		sphere.draw();
+		glUniform3f(materialColorIndex, 0.81f, 0.81f, 0.81f); //snow
+		glUniform1f(metalnessIndex, 1.f);//not a metal
+		glUniform1f(roughnessIndex, 0.0f);//rough
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(0.f, 3.f, 0.f)));
+		sphere.draw();
+		glUniform3f(materialColorIndex, 0.0f, 0.21f, 0.0f); //grass
+		glUniform1f(metalnessIndex, 1.f);//not a metal
+		glUniform1f(roughnessIndex, 0.0f);//rough
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(3.f, 3.f, 0.f)));
+		sphere.draw();
+
 		//particles.draw(camera);
 		star.draw(&camera);
 		
@@ -635,7 +702,7 @@ int main(int argc, char* argv[])
 			}
 			
 			glm::vec3 position = camera.GetPosition();
-			//ss << "(" << position[0] << ", " << position[1] << ", " << position[2] << ") ";
+			ss << "(" << position[0] << ", " << position[1] << ", " << position[2] << ") ";
 			//ss << "   up    (" << cam[1][0] << ", " << cam[1][1] << ", " << cam[1][2] << ")\n";*/
 			ss2 << round(1.0 / fpstime);
 			ss2 << " FPS";
