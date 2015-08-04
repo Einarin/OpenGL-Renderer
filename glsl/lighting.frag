@@ -85,7 +85,7 @@ vec3 specular(vec3 lightDir, vec3 normal, vec3 viewDir, vec3 specularRGB, float 
 float lightFalloff(float lightDistance, float lightRadius){
     float lightNumerator = min(1 - pow(lightDistance/lightRadius,4),1.0);
     return (lightNumerator * lightNumerator)/((lightDistance*lightDistance)+1);
-}
+}	
 
 void main(void){
     //need to renormalize since components are linearly interpolated separately

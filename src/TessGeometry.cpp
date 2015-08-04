@@ -161,9 +161,9 @@ namespace gl {
 								indexBuffer[i++] = x + (y + 1)*(yTess + 1);
 							}
 						}
-						std::cout << "before " << xTess << ", " << yTess << std::endl;
+						//std::cout << "before " << xTess << ", " << yTess << std::endl;
 						//auto result = glQueue.async<void>([=]() {
-							std::cout << "uploading " << xTess << ", " << yTess << std::endl;
+							//std::cout << "uploading " << xTess << ", " << yTess << std::endl;
 							auto pvao = new VertexArrayObject;
 							s_vaos[xTess][yTess] = pvao;
 							pvao->bind();
@@ -177,7 +177,7 @@ namespace gl {
 						//});
 						//result.wait();
 						//glQueue.await(result);
-						std::cout << "after " << xTess << ", " << yTess << std::endl;
+						//std::cout << "after " << xTess << ", " << yTess << std::endl;
 					}
 				}
 				IsTesselated = true;

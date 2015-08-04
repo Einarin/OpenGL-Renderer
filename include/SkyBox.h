@@ -1,7 +1,7 @@
 #pragma once
 #include "glincludes.h"
 #include "Geometry.h"
-#include "Texture.h"
+#include "Texture2.h"
 #include "Renderer.h"
 #include "Camera.h"
 
@@ -13,7 +13,7 @@ class SkyBox : public Renderer
 protected:
 	bool initialized,downloaded;
 	std::shared_ptr<Shader> shader;
-	GlTextureCubeMap cubemap;
+	TextureCubeMap cubemap;
 	unsigned int texloc;
 	unsigned int vao;
 	unsigned int vbo;

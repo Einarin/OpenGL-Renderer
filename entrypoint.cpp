@@ -26,6 +26,7 @@
 #include "ParticleSimulator.h"
 #include "TessGeometry.h"
 #include "Scene.h"
+#include "ImageLoader.h"
 
 using namespace std;
 using namespace gl;
@@ -135,6 +136,7 @@ int main(int argc, char* argv[])
 	glfwSwapBuffers(window);
 
 	// BEGIN LOADING!
+	AssetManager assetManager;
 
 	//Camera setup
 	camera = Camera(); // vec3(0.,2.5,3.0),vec3(0,2.0,0),vec3(0,1.0,0)
@@ -152,10 +154,10 @@ int main(int argc, char* argv[])
 	cout << "generating assets...\n";
 	
 	//Sphere cube(32,vec2(0.0,0.0),vec2(1.0));
-	//SkyBox skybox;
-	//skybox.init();
-	//skybox.download();
-	//skybox.setImageAsync("assets/Skybox/skybox");
+	SkyBox skybox;
+	skybox.init();
+	skybox.download();
+	skybox.setImageAsync("assets/Skybox/skybox");
 
 	TextRenderer* textRenderer = textMan.getTextRenderer("DejaVuSans.ttf", 24);
 	textRenderer->loadAscii();
@@ -163,10 +165,26 @@ int main(int argc, char* argv[])
 
 	//checkGlError("setup text");
 
-	AssetManager assetManager;
-
 	StarRenderer star;
 	if(!star.load()) DebugBreak();
+
+	auto hello = assetManager.loadTextureFromFile("Hello");
+	std::shared_ptr<Texture2D> hello2 = assetManager.loadTextureFromFile("Hello");
+	//auto hello2 = TextureManager::Instance()->texFromFile("Hello.png");
+
+	Texture2D hello3;
+	hello3.init();
+	glActiveTexture(GL_TEXTURE0);
+	hello3.bind();
+	glm::ivec2 imgSize;
+	char* data;
+	int bufflen;
+	bool success = imageDataFromPngFile("Hello.png",
+		&imgSize, &data, &bufflen);
+	if (success) {
+		hello3.alloc(GL_RGBA, GL_SRGB8_ALPHA8, imgSize, GL_UNSIGNED_BYTE);
+		hello3.setImage(GL_RGBA, imgSize, (GLubyte*)data);
+	}
 
 	/*Cube cube;
 	cube.generate(2,vec3(0));
@@ -282,7 +300,7 @@ int main(int argc, char* argv[])
 	/*FramebufferObject fbo;
 	fbo.init();
 	fbo.Size = ivec2(1280,800);
-	//TexRef tex = TextureManager::Instance()->texFromFile("Hello.png");
+	TexRef tex = TextureManager::Instance()->texFromFile("Hello.png");
 	TexRef tex = TextureManager::Instance()->backedTex(GL_RGBA, fbo.Size, GL_FLOAT, GL_RGBA16F);
 	TexRef depthTex = TextureManager::Instance()->backedTex(GL_DEPTH_COMPONENT,fbo.Size,GL_FLOAT);
 	checkGlError("backedTex");
@@ -383,7 +401,7 @@ int main(int argc, char* argv[])
 	sphere.download();
 
 	ParticleSimulator particles;
-	particles.setup(100);
+	particles.setup(1);
 	glfwSwapBuffers(window);
 
 	while (!glfwWindowShouldClose(window))
@@ -392,7 +410,7 @@ int main(int argc, char* argv[])
 		double frameStart = glfwGetTime();
 
 		//kick off gpu transform feedback calculations
-		//particles.update();
+		particles.update();
 
 		//input handling
 		glfwPollEvents();
@@ -441,9 +459,12 @@ int main(int argc, char* argv[])
 		if (wireframe){
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		}
-		//skybox.draw(&camera);
+		skybox.draw(&camera);
 		checkGlError("draw skybox");
 		glEnable(GL_DEPTH_TEST);
+
+		//hello2->draw();
+		hello3.draw();
 		
 		mls.bind();
 		mls.setView(camera.GetViewMatrix());
@@ -597,7 +618,7 @@ int main(int argc, char* argv[])
 		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(3.f, 3.f, 0.f)));
 		sphere.draw();
 
-		//particles.draw(camera);
+		particles.draw(camera);
 		star.draw(&camera);
 		
 		//End scene drawing
@@ -608,7 +629,9 @@ int main(int argc, char* argv[])
 		if (wireframe){
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
-		hdr.draw();
+		//hdr.draw();
+		//hello->draw();
+		//static_cast<GlTexture2D*>(&*hello2)->draw();
 		//tex->draw();
 		//depthTex->draw();
 		//noiseShader->bind();

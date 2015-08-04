@@ -53,7 +53,7 @@ const char* frag =
 	"uniform samplerCube cubemap;\n"
 	"void main() {\n"
 	//"FragColor = (1.0/0.9)*(texture(cubemap,position.xyz)-0.1);\n"
-	"FragColor = texture(cubemap,position.xyz);\n"
+	"FragColor = vec4(texture(cubemap,position.xyz).rgb,1.0);\n"
 	"}\n";
 
 SkyBox::SkyBox(void):initialized(false),downloaded(false)
@@ -77,9 +77,7 @@ void SkyBox::init()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	glBindVertexArray(0);*/
 	cube.init();
-
 	cubemap.init();
-
 	bool shaderState = true;
 	auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 	shaderState &= vs->compile(vert);
@@ -133,15 +131,26 @@ void SkyBox::setImageAsync(std::string basepngfilename){
 			glm::ivec2 imgSize;
 			char* data;
 			int bufflen;
-			bool success = imageDataFromPngFile(
-			basepngfilename+suffixes[i]+".png",
-			&imgSize,&data,&bufflen);
+			std::string filename = basepngfilename + suffixes[i] + ".png";
+			bool success = imageDataFromPngFile(filename,&imgSize,&data,&bufflen);
 			int j = i;
 			glm::ivec2 size = imgSize;
-			GlTextureCubeMap* ptr = &cubemap;
+			TextureCubeMap* ptr = &cubemap;
+			/*if (i == 0){
+				glQueue.async([=](){
+					ptr->alloc(GL_RGBA, GL_SRGB8_ALPHA8, size, GL_UNSIGNED_BYTE);
+				});
+			}*/
+			if (!success) {
+				std::cout << "SkyBox: failed loading " << filename << "\n";
+				return;
+			}
 			glQueue.async([=](){//OpenGL work must be done on GL thread
-				ptr->setup(GL_RGBA,size,GL_UNSIGNED_BYTE,faces[j],GL_SRGB);
-				ptr->setImage(GL_RGBA,size,GL_UNSIGNED_BYTE,faces[j],data);
+				//ptr->setup(GL_RGBA,size,GL_UNSIGNED_BYTE,faces[j],GL_SRGB);
+				//ptr->setImage(GL_RGBA,size,GL_UNSIGNED_BYTE,faces[j],data);
+				ptr->bind();
+				ptr->allocFace(faces[j], GL_RGBA, GL_SRGB8_ALPHA8, size, GL_UNSIGNED_BYTE);
+				ptr->setFaceImage(faces[j], GL_RGBA, size, GL_UNSIGNED_BYTE, data);
 				free(data);
 			});
 		});

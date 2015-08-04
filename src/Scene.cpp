@@ -40,9 +40,9 @@ namespace gl {
 		m_models[5].localTransform = rotate(translate(mat4(), vec3(0.f, 4.f, 0.f)),90.f,vec3(1.f,0.f,0.f));
 		m_models[5].modelName = "assets/turret.fbx";
 		m_models[5].model = assetManager.loadModel(m_models[5].modelName);
-		m_models[6].localTransform = rotate(rotate(translate(mat4(), vec3(10.f, -10.f, 6.f)), 20.f, vec3(0.f, 1.f, 0.f)), -90.f, vec3(1.f, 0.f, 0.f));
+		/*m_models[6].localTransform = rotate(rotate(translate(mat4(), vec3(10.f, -10.f, 6.f)), 20.f, vec3(0.f, 1.f, 0.f)), -90.f, vec3(1.f, 0.f, 0.f));
 		m_models[6].modelName = "assets/fighter.fbx";
-		m_models[6].model = assetManager.loadModel(m_models[6].modelName);
+		m_models[6].model = assetManager.loadModel(m_models[6].modelName);*/
 		m_didLoad = true;
 	}
 
@@ -112,5 +112,6 @@ namespace gl {
 		}
 		printer.CloseElement();
 		fclose(fp);
+		return true;
 	}
 }

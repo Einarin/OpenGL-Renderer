@@ -49,10 +49,7 @@ namespace gl {
 		return TEXTURE_DRAWABLE; //All drawables are texture drawables by default
 	}
 
-	ScreenTexture::ScreenTexture(std::string resource):texture(TextureManager::Instance()->texFromFile(resource)){
-	}
-
-	ScreenTexture::ScreenTexture(TexRef tex):texture(tex){
+	ScreenTexture::ScreenTexture(Tex2D tex):texture(tex){
 	}
 
 	void ScreenTexture::draw(){

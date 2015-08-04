@@ -1,6 +1,7 @@
 #include "glincludes.h"
 #include <string>
 #include <iostream>
+#include <sstream>
 #ifdef _WIN32
 #include <Windows.h>
 #endif
@@ -44,6 +45,9 @@ void APIENTRY OpenglErrorCallback(GLenum source,
 						 const GLchar* message,
 						 const void* userParam)
 {
+	if (id == 131185){
+		return; //Nvidia driver message for binding a buffer
+	}
 	bool interrupt = false;
 	std::string text;
 	switch(severity){
@@ -61,6 +65,9 @@ void APIENTRY OpenglErrorCallback(GLenum source,
 		text = "Notification ";
 		break;
 	}
+	std::stringstream ss;
+	ss << "id " << id << " ";
+	text += ss.str();
 	switch(type){
 	case GL_DEBUG_TYPE_ERROR:
 		text += "Error: ";
@@ -82,7 +89,6 @@ void APIENTRY OpenglErrorCallback(GLenum source,
 		break;
 	case GL_DEBUG_TYPE_OTHER:
 	default:
-		return;
 		text += "Unknown: ";
 		break;
 	}

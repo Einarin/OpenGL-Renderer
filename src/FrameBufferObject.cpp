@@ -58,32 +58,32 @@ void FramebufferObject::bind(unsigned int target){
 	glBindFramebuffer(target,id);
 }
 
-void FramebufferObject::attachTexture(unsigned int target, unsigned int attachment, TexRef tex, unsigned int level){
+void FramebufferObject::attachTexture(unsigned int target, unsigned int attachment, Tex2D tex, unsigned int level){
 	bind(target);
 	glFramebufferTexture(target,attachment,
-		static_cast<GlTexture*>(&*tex)->getId(),
+		tex->getId(),
 		level);
 }
-void FramebufferObject::attachTexture1D(unsigned int target, unsigned int attachment, TexRef tex, unsigned int level){
+/*void FramebufferObject::attachTexture1D(unsigned int target, unsigned int attachment, Tex1D tex, unsigned int level){
 	bind(target);
 	glFramebufferTexture1D(target,attachment,
-		static_cast<GlTexture*>(&*tex)->getType(),
-		static_cast<GlTexture*>(&*tex)->getId(),
+		tex->getType(),
+		tex->getId(),
 		level);
-}
-void FramebufferObject::attachTexture2D(unsigned int target, unsigned int attachment, TexRef tex, unsigned int level){
+}*/
+void FramebufferObject::attachTexture2D(unsigned int target, unsigned int attachment, Tex2D tex, unsigned int level){
 	bind(target);
 	glFramebufferTexture2D(target,attachment,
-		static_cast<GlTexture*>(&*tex)->getType(),
-		static_cast<GlTexture*>(&*tex)->getId(),
+		tex->getType(),
+		tex->getId(),
 		level);
 }
-void FramebufferObject::attachTextureLayer(unsigned int target, unsigned int attachment, TexRef tex, unsigned int level, unsigned int layer){
+/*void FramebufferObject::attachTextureLayer(unsigned int target, unsigned int attachment, Tex3D tex, unsigned int level, unsigned int layer){
 	bind(target);
 	glFramebufferTextureLayer(target,attachment,
 		static_cast<GlTexture*>(&*tex)->getId(),
 		level,layer);
-}
+}*/
 void FramebufferObject::attachRenderbuffer(unsigned int target, unsigned int attachment, RenderbufferObject& buffer){
 	bind(target);
 	glFramebufferRenderbuffer(target,attachment,GL_RENDERBUFFER,buffer.getId());

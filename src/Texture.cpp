@@ -38,7 +38,7 @@ void GlTexture::nearestInterpolation()
 	}
 }
 
-GlTexture::GlTexture():id(0),backed(false),
+GlTexture::GlTexture():allocated(false),id(0),backed(false),
 	interpolation(GL_LINEAR),mapMode(GL_CLAMP)
 {}
 
