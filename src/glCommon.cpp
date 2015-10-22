@@ -103,7 +103,7 @@ void APIENTRY OpenglErrorCallback(GLenum source,
 	}
 	if(interrupt){
 		#ifdef _WIN32
-			DebugBreak();
+			//DebugBreak();
 		#endif
 	}
 }
@@ -152,6 +152,7 @@ bool SetupSupport(){
 		glDebugMessageCallback((GLDEBUGPROC)OpenglErrorCallback,nullptr);
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		cout << "KHR_debug on!" << endl;
 	}//*/
 	sFreeTexMemNum = 0;
 	if(gl_extensions.find("GL_NVX_gpu_memory_info") != std::string::npos){

@@ -74,6 +74,11 @@ if(id != m_id) {\
 			TEXTURE_BINDING_DEBUG_CHECK
 			glGenerateMipmap(target);
 		}
+		void setNoMipMaps() {
+			TEXTURE_BINDING_DEBUG_CHECK
+			glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0);
+			glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, 0);
+		}
 		~Texture(){
 			if (m_id != 0){
 				glDeleteTextures(1, &m_id);
@@ -106,6 +111,9 @@ if(id != m_id) {\
 			auto tex = new Texture2D();
 			tex->init();
 			tex->bind();
+			tex->setClampEdges();
+			tex->setLinearFiltering(false);
+			tex->setNoMipMaps();
 			tex->alloc(format, internalFormat, texSize, datatype);
 			return std::shared_ptr<Texture2D>(tex);
 		}

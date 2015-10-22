@@ -39,7 +39,7 @@ shared_ptr<Model> AssetManager::loadModel(string name){
 				});
 				if(!ptr->wasCached()){
 					std::cout << "saving optimized representation to disk...\n";
-					//ptr->save(Model::cachename(filename));
+					ptr->save(Model::cachename(filename));
 					std::cout << Model::cachename(filename) << " saved\n";
 				}
 			} else {

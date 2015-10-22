@@ -54,6 +54,7 @@ const char* frag =
 	"void main() {\n"
 	//"FragColor = (1.0/0.9)*(texture(cubemap,position.xyz)-0.1);\n"
 	"FragColor = vec4(texture(cubemap,position.xyz).rgb,1.0);\n"
+	//"FragColor = vec4(abs(position.xyz),1.0);\n"
 	"}\n";
 
 SkyBox::SkyBox(void):initialized(false),downloaded(false)
@@ -78,6 +79,10 @@ void SkyBox::init()
 	glBindVertexArray(0);*/
 	cube.init();
 	cubemap.init();
+	cubemap.bind();
+	cubemap.setNoMipMaps();
+	cubemap.setLinearFiltering(false);
+	cubemap.setWrapEdges();
 	bool shaderState = true;
 	auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 	shaderState &= vs->compile(vert);

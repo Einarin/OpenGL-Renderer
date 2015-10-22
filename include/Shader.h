@@ -1,6 +1,6 @@
 #pragma once
 #include "Refcounted.h"
-#include "Texture.h"
+#include "glincludes.h"
 #include <string>
 #include <list>
 #include <memory>
@@ -66,9 +66,8 @@ namespace gl
 		int shininessLocation;
 	public:
 		LitTexMvpShader(ShaderRef s);
-		inline void setDiffuseTex(TexRef tex){
+		inline void setDiffuseTexActive(){
 			glActiveTexture(GL_TEXTURE0);
-			tex->bind();
 		}
 		inline void setAmbient(glm::vec3 ambient){
 			glUniform3fv(ambientLocation,1,glm::value_ptr(ambient));

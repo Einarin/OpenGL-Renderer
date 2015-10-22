@@ -196,6 +196,8 @@ void ThreadPool::async(std::function<void()> workUnit){
 	//ReleaseSemaphore(sharedState->dispatchSemaphore,1,NULL);
 	sharedState->dispatchSemaphore.post();
 	//ResumeThread(sharedState.queuingThread);
+	
+	//workUnit();
 }
 
 WorkQueue::WorkQueue(){

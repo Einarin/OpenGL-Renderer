@@ -52,7 +52,7 @@ namespace gl{
 			}
 		}
 		virtual uint32 serialize(char** inbuff);
-		void deserialize(char* buf);
+		bool deserialize(char* buf); //returns false if we can't make sense of the buffer
 	private:
 		//assumes we don't own any buffers!
 		void copy(const Mesh& other);

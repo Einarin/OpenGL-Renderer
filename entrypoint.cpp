@@ -150,10 +150,10 @@ int main(int argc, char* argv[])
 		
 	hdr.init();
 	hdr.setup(glm::ivec2(width, height));
-
 	cout << "generating assets...\n";
 	
 	//Sphere cube(32,vec2(0.0,0.0),vec2(1.0));
+	TextureCubeMap::makeSeamless();
 	SkyBox skybox;
 	skybox.init();
 	skybox.download();
@@ -230,7 +230,7 @@ int main(int argc, char* argv[])
 	//model->save(Model::cachename("E:/Downloads/dragon_adult_flycycle.obj"));
 	//std::shared_ptr<Model> model2 = assetManager.loadModel("assets/falcon3.fbx");
 	Scene scene;
-	//scene.loadDemo(assetManager);
+	scene.loadDemo(assetManager);
 	//bool result = scene.saveFile("assets/testScene.xml");
 	//Scene scene2;
 	//scene2.loadFile("assets/testScene.xml", assetManager);
@@ -447,14 +447,15 @@ int main(int argc, char* argv[])
 		}
 
 		checkGlError("start main loop");
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		
 		//bind fullscreen HDR buffer
-		//fbo.bind(GL_DRAW_FRAMEBUFFER);
+		//fbo.bind(GL_DRAW_FRAMEBUFFER
 		hdr.bind();
-
+		//glDisable(GL_DEPTH_TEST);
 		//draw
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClearColor(0.3f, 0.6f, 0.4f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		checkGlError("clear screen");
 		if (wireframe){
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -464,7 +465,7 @@ int main(int argc, char* argv[])
 		glEnable(GL_DEPTH_TEST);
 
 		//hello2->draw();
-		hello3.draw();
+		//hello3.draw();
 		
 		mls.bind();
 		mls.setView(camera.GetViewMatrix());
@@ -629,7 +630,7 @@ int main(int argc, char* argv[])
 		if (wireframe){
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
-		//hdr.draw();
+		hdr.draw();
 		//hello->draw();
 		//static_cast<GlTexture2D*>(&*hello2)->draw();
 		//tex->draw();

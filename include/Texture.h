@@ -115,6 +115,8 @@ public:
 };
 
 class FileBackedGlTexture2D : public GlTexture2D {
+protected:
+	bool loading = false;
 public:
 	std::string filename;
 	bool sRGB;

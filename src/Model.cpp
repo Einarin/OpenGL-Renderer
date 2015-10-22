@@ -587,9 +587,11 @@ void Model::drawPart(ModelPart& part,LitTexMvpShader& s,const glm::mat4& parentT
 	s.setModel(localTransform);
 	for(auto m = part.meshes.begin();m != part.meshes.end();m++){
 		if(materials[m->materialIndex].diffuseTex.use_count() > 0){
-			s.setDiffuseTex(materials[m->materialIndex].diffuseTex);
+			s.setDiffuseTexActive();
+			materials[m->materialIndex].diffuseTex->bind();
 		} else {
-			s.setDiffuseTex(TextureManager::Instance()->missingTex());
+			s.setDiffuseTexActive();
+			TextureManager::Instance()->missingTex()->bind();
 		}
 		s.setAmbient(materials[m->materialIndex].ambient);
 		s.setSpecular(materials[m->materialIndex].specular);
@@ -910,7 +912,13 @@ bool Model::loadCache(std::string filename){
 		current->name = namebuff+flatlist[i].nameoff;
 		current->meshes.resize((int)(flatlist[i].meshlistoff+flatlist[i].meshlistsize)-flatlist[i].meshlistoff);
 		for(int j = flatlist[i].meshlistoff;j<(int)(flatlist[i].meshlistoff+flatlist[i].meshlistsize);j++){
-			current->meshes[j-flatlist[i].meshlistoff].deserialize(meshbuff+meshindbuff[j]);
+			if (!(current->meshes[j - flatlist[i].meshlistoff].deserialize(meshbuff + meshindbuff[j]))) {
+				//bailing out at this point is difficult
+				std::cout << "Loading meshes from cache for " << filename << " failed. Attempting to bail out and reload but crashes and leaks likely!\n";
+				rootPart = ModelPart();
+				status = false;
+				goto cleanup;
+			}
 		}
 		current->localTransform = flatlist[i].localTransform;
 		int count = 0;
