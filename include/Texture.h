@@ -5,38 +5,37 @@
 
 namespace gl
 {
-class Texture {\
-protected:
-	bool allocated;
-	unsigned int type;
-public:
-	Texture():allocated(false)
-	{}
-	virtual void init()=0;
-	virtual void alloc()=0;
-	virtual void bind()
-	{}
-	virtual void unbind()=0;
-	virtual void dealloc()
-	{}
-	virtual void linearInterpolation()=0;
-	virtual void nearestInterpolation()=0;
-	virtual void wrap()=0;
-	virtual void clamp()=0;
-	virtual void mirror()=0;
 
-	//liable to be slow, intended for debugging only!
-	virtual void draw()=0;
-
-	virtual ~Texture(){
-		if(allocated){
-			dealloc();
-			allocated = false;
+	class GlTexture {
+	protected:
+		bool allocated;
+		unsigned int id;
+		bool backed;
+		GLenum type;
+		GLenum mapMode;
+		GLenum interpolation;
+		void setInterpolation();
+		void setMapping();
+	public:
+		GlTexture();
+		virtual ~GlTexture();
+		virtual void init();
+		unsigned int getId();
+		GLenum getType(){
+			return type;
 		}
-	}
-};
+		virtual void bind();
+		virtual void unbind();
+		virtual void linearInterpolation();
+		virtual void nearestInterpolation();
+		virtual void wrap();
+		virtual void clamp();
+		virtual void mirror();
+		virtual void alloc() = 0;
+		virtual void dealloc() = 0;
+	};
 
-typedef std::shared_ptr<Texture> TexRef;
+typedef std::shared_ptr<GlTexture> TexRef;
 
 class TextureManager {
 protected:
@@ -65,34 +64,6 @@ public:
 	virtual TexRef depthTex(unsigned int format,glm::ivec2 size, unsigned int datatype);
 	virtual TexRef missingTex();
 	virtual void contextLost();
-};
-
-class GlTexture : public Texture {
-protected:
-	unsigned int id;
-    bool backed;
-	GLenum type;
-	GLenum mapMode;
-	GLenum interpolation;
-	void setInterpolation();
-	void setMapping();
-public:
-	GlTexture();
-	virtual ~GlTexture();
-	virtual void init();
-	unsigned int getId();
-	GLenum getType(){
-		return type;
-	}
-	virtual void bind();
-	virtual void unbind();
-	virtual void linearInterpolation();
-	virtual void nearestInterpolation();
-	virtual void wrap();
-	virtual void clamp();
-	virtual void mirror();
-	virtual void alloc()=0;
-	virtual void dealloc()=0;
 };
 
 class GlTexture2D : public GlTexture {
@@ -144,6 +115,8 @@ public:
 };
 
 class FileBackedGlTexture2D : public GlTexture2D {
+protected:
+	bool loading = false;
 public:
 	std::string filename;
 	bool sRGB;

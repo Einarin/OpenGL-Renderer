@@ -257,14 +257,14 @@ void IndexedGeometry::init(){
 	glGenBuffers(1, &ibo);
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	VertexAttribBuilder b;
+	/*VertexAttribBuilder b;
 	b.setSize(sizeof(vertex));
 	b.attrib(FLOAT_ATTRIB,3);
 	b.attrib(FLOAT_ATTRIB,3);
 	b.attrib(FLOAT_ATTRIB,3);
 	b.attrib(FLOAT_ATTRIB,3);
 	//b.attrib(FLOAT_ATTRIB,4);
-	b.build();
+	b.build();*/
 	/*glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(vertex), 0);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)12);
@@ -281,25 +281,75 @@ void IndexedGeometry::init(){
 void IndexedGeometry::download(){
 	if(!initialized ||verts.size() == 0 || indices.size() == 0)
 		DebugBreak();
+	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER,verts.size() * sizeof(vertex),&verts[0],GL_STATIC_DRAW);
+	VertexAttribBuilder b;
+	b.setSize(sizeof(vertex));
+	b.attrib(FLOAT_ATTRIB, 3);
+	b.attrib(FLOAT_ATTRIB, 3);
+	b.attrib(FLOAT_ATTRIB, 3);
+	b.attrib(FLOAT_ATTRIB, 3);
+	b.build();
 #ifdef _DEBUG
-	glBindBuffer(GL_ARRAY_BUFFER,0);
+	//glBindBuffer(GL_ARRAY_BUFFER,0);
 #endif
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	//checkGlError("glBindBuffer elements");
+	checkGlError("glBindBuffer elements");
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER,indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
-	//checkGlError("glBufferData elements");
+	checkGlError("glBufferData elements");
 #ifdef _DEBUG
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+	glBindVertexArray(0);
 #endif
+	
 	downloaded = true;
 }
 
 void IndexedGeometry::draw(){
+	/*glGenVertexArrays(1, &vao);
+	glGenBuffers(1, &vbo);
+	glGenBuffers(1, &ibo);
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(vertex), 0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)12);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)24);
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(3, 3, GL_FLOAT, false, sizeof(vertex), (const GLvoid*)36);
+	glEnableVertexAttribArray(3);
+	VertexAttribBuilder b;
+	b.setSize(sizeof(vertex));
+	b.attrib(FLOAT_ATTRIB, 3);
+	b.attrib(FLOAT_ATTRIB, 3);
+	b.attrib(FLOAT_ATTRIB, 3);
+	b.attrib(FLOAT_ATTRIB, 3);
+	b.build();
+	glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(vertex), &verts[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+	checkGlError("drawelements");
+	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (GLvoid*)0);*/
 	if(!initialized || !downloaded)
 		return;
 	glBindVertexArray(vao);
+	GLint ab;
+	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &ab);
+	//std::cout << "skybox fbo: " << ab << std::endl;
+	//glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	/*VertexAttribBuilder b;
+	b.setSize(sizeof(vertex));
+	b.attrib(FLOAT_ATTRIB, 3);
+	b.attrib(FLOAT_ATTRIB, 3);
+	b.attrib(FLOAT_ATTRIB, 3);
+	b.attrib(FLOAT_ATTRIB, 3);
+	b.build();*/
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+	//glEnableClientState(GL_VERTEX_ARRAY);
+	//glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	glDrawElements(GL_TRIANGLES,indices.size(),GL_UNSIGNED_INT,(GLvoid*)0);
 	//glDrawArrays(GL_POINTS,0,verts.size());
 	checkGlError("drawelements");

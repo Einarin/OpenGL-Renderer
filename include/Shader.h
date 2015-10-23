@@ -1,6 +1,6 @@
 #pragma once
 #include "Refcounted.h"
-#include "Texture.h"
+#include "glincludes.h"
 #include <string>
 #include <list>
 #include <memory>
@@ -32,6 +32,7 @@ namespace gl
 	public:
 		~Shader();
 		static ShaderRef Allocate();
+		static ShaderRef Create(std::string vs, std::string fs);
 		void attachStage(std::shared_ptr<ShaderStage> stage);
 		void addAttrib(std::string name, int index);
 		int getUniformLocation(std::string name);
@@ -65,9 +66,8 @@ namespace gl
 		int shininessLocation;
 	public:
 		LitTexMvpShader(ShaderRef s);
-		inline void setDiffuseTex(TexRef tex){
+		inline void setDiffuseTexActive(){
 			glActiveTexture(GL_TEXTURE0);
-			tex->bind();
 		}
 		inline void setAmbient(glm::vec3 ambient){
 			glUniform3fv(ambientLocation,1,glm::value_ptr(ambient));

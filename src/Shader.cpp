@@ -64,6 +64,16 @@ Shader::Shader() : id(0){
 std::shared_ptr<Shader> Shader::Allocate(){
 	return std::shared_ptr<Shader>(new Shader());
 }
+std::shared_ptr<Shader> Shader::Create(std::string vs, std::string fs) {
+	Shader* shader = new Shader();
+	auto vss = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	auto fss = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+	vss->compileFromFile(vs);
+	fss->compileFromFile(fs);
+	shader->attachStage(vss);
+	shader->attachStage(fss);
+	return std::shared_ptr<Shader>(shader);
+}
 Shader::~Shader(){
 	glDeleteProgram(id);
 }

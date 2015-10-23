@@ -10,8 +10,8 @@ namespace gl {
 		bool m_initialized;
 		FramebufferObject m_fbo;
 		FramebufferObject m_bloomFbo;
-		TexRef m_fpTex;
-		TexRef m_bloomTex;
+		Tex2D m_fpTex;
+		Tex2D m_bloomTex;
 		ShaderRef m_shader;
 		ShaderRef m_bloomShader;
 		Billboard m_bb;

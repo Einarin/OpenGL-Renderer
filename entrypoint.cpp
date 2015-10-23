@@ -1,8 +1,7 @@
 #define TEST
 
 #include "glincludes.h"
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <glm/ext.hpp>
 #include <random>
 #include "callbacks.h"
 #include <iostream>
@@ -27,6 +26,7 @@
 #include "ParticleSimulator.h"
 #include "TessGeometry.h"
 #include "Scene.h"
+#include "ImageLoader.h"
 
 using namespace std;
 using namespace gl;
@@ -127,6 +127,7 @@ int main(int argc, char* argv[])
 	TextRenderer* fps = textMan.getTextRenderer("DejaVuSans.ttf",32);
 	fps->loadAscii();
 	//draw a frame right away so we don't look frozen
+	glClearColor(0.f, 0.f, 0.f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glEnable(GL_BLEND); //text is alpha blended
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -135,6 +136,7 @@ int main(int argc, char* argv[])
 	glfwSwapBuffers(window);
 
 	// BEGIN LOADING!
+	AssetManager assetManager;
 
 	//Camera setup
 	camera = Camera(); // vec3(0.,2.5,3.0),vec3(0,2.0,0),vec3(0,1.0,0)
@@ -148,26 +150,50 @@ int main(int argc, char* argv[])
 		
 	hdr.init();
 	hdr.setup(glm::ivec2(width, height));
-
 	cout << "generating assets...\n";
 	
 	//Sphere cube(32,vec2(0.0,0.0),vec2(1.0));
+	TextureCubeMap::makeSeamless();
 	SkyBox skybox;
 	skybox.init();
 	skybox.download();
 	skybox.setImageAsync("assets/Skybox/skybox");
 
+	TextRenderer* textRenderer = textMan.getTextRenderer("DejaVuSans.ttf", 24);
+	textRenderer->loadAscii();
+	vec2 end = textRenderer->addText("Hello World!", vec2(5, 5), vec4(1.0, 1.0, 1.0, 1.0));
+
+	//checkGlError("setup text");
+
 	StarRenderer star;
 	if(!star.load()) DebugBreak();
 
-	Cube cube;
+	auto hello = assetManager.loadTextureFromFile("Hello");
+	std::shared_ptr<Texture2D> hello2 = assetManager.loadTextureFromFile("Hello");
+	//auto hello2 = TextureManager::Instance()->texFromFile("Hello.png");
+
+	Texture2D hello3;
+	hello3.init();
+	glActiveTexture(GL_TEXTURE0);
+	hello3.bind();
+	glm::ivec2 imgSize;
+	char* data;
+	int bufflen;
+	bool success = imageDataFromPngFile("Hello.png",
+		&imgSize, &data, &bufflen);
+	if (success) {
+		hello3.alloc(GL_RGBA, GL_SRGB8_ALPHA8, imgSize, GL_UNSIGNED_BYTE);
+		hello3.setImage(GL_RGBA, imgSize, (GLubyte*)data);
+	}
+
+	/*Cube cube;
 	cube.generate(2,vec3(0));
 	cube.ModelMatrix = mat4();
 	cube.init();
 	cube.download();
 	
 	cout << "loading models...\n";
-	AssetManager assetManager;
+	
 	const unsigned int asteroidFactor=5;
 	AsteroidRenderer aRenderer;
 	if(!aRenderer.setup()) DebugBreak();
@@ -195,7 +221,7 @@ int main(int argc, char* argv[])
 		glQueue.processQueueUnit();
 	}//*/
 	//aRenderer.buildTree();
-    auto astMade = aRenderer.addAsteroidAsync(translate(mat4(),vec3(0.f,10.f,0.f)),vec3(0.f));
+    //auto astMade = aRenderer.addAsteroidAsync(translate(mat4(),vec3(0.f,10.f,0.f)),vec3(0.f));
 	
 	//std::shared_ptr<Model> model = assetManager.loadModel("assets/Suit Helmet.fbx");
 	//std::shared_ptr<Model> model = assetManager.loadModel("E:/Downloads/dragon_adult_flycycle.obj");
@@ -205,11 +231,11 @@ int main(int argc, char* argv[])
 	//std::shared_ptr<Model> model2 = assetManager.loadModel("assets/falcon3.fbx");
 	Scene scene;
 	scene.loadDemo(assetManager);
-	bool result = scene.saveFile("assets/testScene.xml");
+	//bool result = scene.saveFile("assets/testScene.xml");
 	//Scene scene2;
 	//scene2.loadFile("assets/testScene.xml", assetManager);
 	//result &= scene2.saveFile("assets/testScene2.xml");
-	cout << "status: " << (result ? "true" : "false") << endl;
+	//cout << "status: " << (result ? "true" : "false") << endl;
 
     /*CpuPool.async([&](){
 		model = new Model("assets/missile.obj");
@@ -220,7 +246,7 @@ int main(int argc, char* argv[])
 		});
 	});//*/
 
-	bb = new Billboard(-0.5f,-0.5f,1.f,1.f);
+	/*bb = new Billboard(-0.5f,-0.5f,1.f,1.f);
 	bb->init();
 	bb->download();
 	checkGlError("geometry");
@@ -231,16 +257,16 @@ int main(int argc, char* argv[])
 	ps.download();
 
 	DynamicPatchSphere psr;
-	psr.init(8);
+	psr.init(8);*/
 
 	glPointSize(3.0f);
 
 	Light light;
-	light.position = vec3(2.0,-2.0,2.0);
+	light.position = vec3(-2.0,2.0,-2.0);
 
 	cout << "compiling shaders...\n";
 
-	auto noiseShader = Shader::Allocate();
+	/*auto noiseShader = Shader::Allocate();
 	auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 	auto fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
 	vs->compile("#version 330\n"
@@ -256,7 +282,7 @@ int main(int argc, char* argv[])
 	noiseShader->link();
 	Billboard noisebb;
 	noisebb.init();
-	noisebb.download();
+	noisebb.download();*/
 
 	LightingShader ls;
 	ls.init();
@@ -270,16 +296,11 @@ int main(int argc, char* argv[])
 	ColorPosShader boundingBoxShader;
 	boundingBoxShader.init();
 	MvpShader mvpbb(boundingBoxShader);
-	TextRenderer* textRenderer = textMan.getTextRenderer("DejaVuSans.ttf",24);
-	textRenderer->loadAscii();
-	vec2 end = textRenderer->addText("Hello World!",vec2(5,5),vec4(1.0,1.0,1.0,1.0));
 
-	checkGlError("setup text");
-
-	FramebufferObject fbo;
+	/*FramebufferObject fbo;
 	fbo.init();
 	fbo.Size = ivec2(1280,800);
-	//TexRef tex = TextureManager::Instance()->texFromFile("Hello.png");
+	TexRef tex = TextureManager::Instance()->texFromFile("Hello.png");
 	TexRef tex = TextureManager::Instance()->backedTex(GL_RGBA, fbo.Size, GL_FLOAT, GL_RGBA16F);
 	TexRef depthTex = TextureManager::Instance()->backedTex(GL_DEPTH_COMPONENT,fbo.Size,GL_FLOAT);
 	checkGlError("backedTex");
@@ -292,7 +313,7 @@ int main(int argc, char* argv[])
 		DebugBreak();
 	}
 	FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);
-
+	*/
 //	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glCullFace(GL_BACK);
 	glEnable(GL_CULL_FACE);
@@ -314,7 +335,7 @@ int main(int argc, char* argv[])
 	tvs->compileFromFile("glsl/terrain.vert");
 	tcs->compileFromFile("glsl/terrain.tcs");
 	tes->compileFromFile("glsl/terrain.tes");
-	tfs->compileFromFile("glsl/color.frag");
+	tfs->compileFromFile("glsl/crater.frag");
 	auto tess = Shader::Allocate();
 	tess->attachStage(tvs);
 	tess->attachStage(tcs);
@@ -335,14 +356,33 @@ int main(int argc, char* argv[])
 					 vec3(-1, 1, 0)
 
 	);
-	tessbb.init();
-	tessbb.download();
-	TessCube tessCube;
-	Face::buildLod(64);
-	//tessCube.tesselate(glm::mat4(), 1.0f, camera);
+	//tessbb.init();
+	//tessbb.download();
+	
+	auto pvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+	auto pfs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+	pvs->compileFromFile("glsl/mvpNormals.vert");
+	pfs->compileFromFile("glsl/lighting.frag");
+	auto pbr = Shader::Allocate();
+	pbr->attachStage(pvs);
+	pbr->attachStage(pfs);
+	pbr->addAttrib("in_Position",0);
+	pbr->addAttrib("in_Normal",1);
+	pbr->addAttrib("in_TexCoord",2);
+	pbr->link();
+	pbr->bind();
+	GLint projectionMatrixIndex = glGetUniformLocation(pbr->getId(), "projectionMatrix");
+	GLint viewMatrixIndex = glGetUniformLocation(pbr->getId(), "viewMatrix");
+	GLint modelMatrixIndex = glGetUniformLocation(pbr->getId(), "modelMatrix");
+	GLint cameraIndex = glGetUniformLocation(pbr->getId(), "cameraWorldPosition");
+	GLint lightIndex = glGetUniformLocation(pbr->getId(), "lightPosition");
+	GLint lightColorIndex = glGetUniformLocation(pbr->getId(), "lightColor");
+	GLint materialColorIndex = glGetUniformLocation(pbr->getId(), "materialColor");
+	GLint metalnessIndex = glGetUniformLocation(pbr->getId(), "metalness");
+	GLint roughnessIndex = glGetUniformLocation(pbr->getId(), "roughness");
 
 	//finish loading before we jump into the main loop
-	if(glQueue.processQueueUnit() || !asteroidsGenerated.isDone())
+	/*if(glQueue.processQueueUnit() || !asteroidsGenerated.isDone())
 	{
 		glfwPollEvents();
 	}
@@ -352,8 +392,17 @@ int main(int argc, char* argv[])
 		cursorGrabbed = true;
 	}*/
 
+	TessCube tessCube;
+	Face::buildLod(64);
+	tessCube.tesselate(glm::mat4(), 1.0f, camera);
+
+	Sphere sphere(100);
+	sphere.init();
+	sphere.download();
+
 	ParticleSimulator particles;
-	particles.setup(100);
+	particles.setup(1);
+	glfwSwapBuffers(window);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -385,8 +434,8 @@ int main(int argc, char* argv[])
 			levels--;
 		}
 		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_P)){
-			aRenderer.reset();
-			asteroidsGenerated=true;
+			//aRenderer.reset();
+			//asteroidsGenerated=true;
 		}
 		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_N)){
 			if(!changingNormals){
@@ -398,14 +447,15 @@ int main(int argc, char* argv[])
 		}
 
 		checkGlError("start main loop");
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		
 		//bind fullscreen HDR buffer
-		//fbo.bind(GL_DRAW_FRAMEBUFFER);
+		//fbo.bind(GL_DRAW_FRAMEBUFFER
 		hdr.bind();
-
+		//glDisable(GL_DEPTH_TEST);
 		//draw
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClearColor(0.3f, 0.6f, 0.4f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		checkGlError("clear screen");
 		if (wireframe){
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -413,6 +463,9 @@ int main(int argc, char* argv[])
 		skybox.draw(&camera);
 		checkGlError("draw skybox");
 		glEnable(GL_DEPTH_TEST);
+
+		//hello2->draw();
+		//hello3.draw();
 		
 		mls.bind();
 		mls.setView(camera.GetViewMatrix());
@@ -425,9 +478,10 @@ int main(int argc, char* argv[])
 		glUniform1i(s->getUniformLocation("levels"), levels);
 		checkGlError("setup model shader");
 
-		aRenderer.draw(mls);
-		//mls.setModel(mat4());
 		//ps.draw();
+		/*aRenderer.draw(mls);
+		//mls.setModel(mat4());
+		
 		checkGlError("asteroid renderer");
 		if(drawNormals){
 			mns.bind();
@@ -436,7 +490,7 @@ int main(int argc, char* argv[])
 			aRenderer.draw(mns);
 			//mns.setModel(mat4());
 			//ps.draw();
-		}
+		}*/
 		mvpbb.bind();
 		mvpbb.setView(camera.GetViewMatrix());
 		mvpbb.setProjection(camera.GetProjectionMatrix());
@@ -454,12 +508,13 @@ int main(int argc, char* argv[])
 				checkGlError("create DiffuseTexMvpShader");
 				dts.bind();
 				model->draw(dts);
-				/*mls.bind();
-				mls.setModel(mat4());
-				model->draw();*/
+				model->drawBoundingBoxes(&camera);
 				if (drawNormals) {
-					mns.bind();
+					//mns.bind();
 					LitTexMvpShader dns = ns;
+					dns.bind();
+					dts.setView(camera.GetViewMatrix());
+					dts.setProjection(camera.GetProjectionMatrix());
 					model->draw(dns);
 				}
 			}
@@ -506,7 +561,7 @@ int main(int argc, char* argv[])
 			}
 		}*/
 		//model2->drawBoundingBoxes(&camera);
-		star.modelMatrix = translate(mat4(),-vec3(light.position));
+		star.modelMatrix = translate(mat4(),vec3(light.position));
 
 		tess->bind();
 		glPatchParameteri(GL_PATCH_VERTICES, 4);
@@ -519,11 +574,54 @@ int main(int argc, char* argv[])
 		);
 		//tessbb.bindVao();
 		//glDrawArrays(GL_PATCHES, 0, 4);
-		tessCube.draw(tess);
-		
+		//tessCube.draw(tess);
+
+		pbr->bind();
+		glUniformMatrix4fv(projectionMatrixIndex, 1, false, glm::value_ptr(camera.GetProjectionMatrix()));
+		glUniformMatrix4fv(viewMatrixIndex, 1, false, glm::value_ptr(camera.GetViewMatrix()));
+		glUniform3fv(cameraIndex, 1, glm::value_ptr(camera.GetPosition()));
+		glUniform3f(lightIndex, light.position.x, light.position.y, light.position.z);
+		glUniform3f(lightColorIndex, 10.f,10.f,10.f);
+		glUniform3f(materialColorIndex, 1.0f, 0.766f, 0.336f);//gold specular color
+		glUniform1f(metalnessIndex, 1.0f);//metal
+		glUniform1f(roughnessIndex, 0.25f);//rough
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::mat4()));
+		sphere.draw();
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(3.f, 0.f, 0.f)));
+		glUniform1f(roughnessIndex, 0.5f);//moderately smooth
+		sphere.draw();
+		glUniform3f(materialColorIndex, 0.14f, 0.54f, 0.96f); //blue plastic
+		glUniform1f(metalnessIndex, 0.f);//not a metal
+		glUniform1f(roughnessIndex, 0.75f);//smooth
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(-3.f,0.f,0.f)));
+		sphere.draw();
+		glUniform1f(roughnessIndex, 0.f);//rough
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(-6.f, 0.f, 0.f)));
+		sphere.draw();
+		glUniform3f(materialColorIndex, 0.02f, 0.02f, 0.02f); //charcoal
+		glUniform1f(metalnessIndex, 0.f);//not a metal
+		glUniform1f(roughnessIndex, 0.1f);//rough
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(-6.f, 3.f, 0.f)));
+		sphere.draw();
+		glUniform3f(materialColorIndex, 0.56f, 0.57f, 0.58f); //iron
+		glUniform1f(metalnessIndex, 1.f);//metal
+		glUniform1f(roughnessIndex, 0.5f);//semi-smooth
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(-3.f, 3.f, 0.f)));
+		sphere.draw();
+		glUniform3f(materialColorIndex, 0.81f, 0.81f, 0.81f); //snow
+		glUniform1f(metalnessIndex, 1.f);//not a metal
+		glUniform1f(roughnessIndex, 0.0f);//rough
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(0.f, 3.f, 0.f)));
+		sphere.draw();
+		glUniform3f(materialColorIndex, 0.0f, 0.21f, 0.0f); //grass
+		glUniform1f(metalnessIndex, 1.f);//not a metal
+		glUniform1f(roughnessIndex, 0.0f);//rough
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(3.f, 3.f, 0.f)));
+		sphere.draw();
+
 		particles.draw(camera);
 		star.draw(&camera);
-
+		
 		//End scene drawing
 		FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);
 		glDisable(GL_DEPTH_TEST);
@@ -533,6 +631,8 @@ int main(int argc, char* argv[])
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
 		hdr.draw();
+		//hello->draw();
+		//static_cast<GlTexture2D*>(&*hello2)->draw();
 		//tex->draw();
 		//depthTex->draw();
 		//noiseShader->bind();
@@ -551,7 +651,7 @@ int main(int argc, char* argv[])
 
 			int runs=0;
 			//process async work
-			if(glQueue.processQueueUnit() || assetManager.numberOfLoadsInFlight() > 0 ){
+			if(glQueue.processQueueUnit() /*|| assetManager.numberOfLoadsInFlight() > 0 */){
 				runs++;
 				loadingVal = 2.f;
 			}
@@ -575,7 +675,7 @@ int main(int argc, char* argv[])
 						//do we have GPU memory?
 						int freeMem = FreeGpuMemoryMB();
 						//Obviously we need MOAR ASTEROIDS!
-						if(false && freeMem > 100000 && asteroidsGenerated.isDone() && asteroidsGenerated){
+						/*if(false && freeMem > 100000 && asteroidsGenerated.isDone() && asteroidsGenerated){
 							const int count = 5;
 							cout << "Generating " << count << " asteroids with " << freeMem << " bytes available" << endl;
 							CpuPool.async([&aRenderer,asteroidsGenerated,count,time]() mutable{
@@ -602,7 +702,7 @@ int main(int argc, char* argv[])
 								}
 								asteroidsGenerated.set(success);
 							});
-						} else {
+						} else*/ {
 							if(dt > 5){ //lets not oversleep!
 								//cout << "s " << dt << " ";
 #ifdef USE_STD_THREAD
@@ -617,7 +717,7 @@ int main(int argc, char* argv[])
 				}
 				time = glfwGetTime()-frameStart;
 			}
-			ss3 << aRenderer.asteroidCount() << " asteroids";
+			//ss3 << aRenderer.asteroidCount() << " asteroids";
 			fps->addText(ss3.str(),vec2(5,height-96),vec4(1.f));
 			if(runs > 0 || loadingVal > 0.f){
 				if(runs > 0) lastruns = runs;
@@ -651,8 +751,8 @@ int main(int argc, char* argv[])
 		fpstime = glfwGetTime()-frameStart;
 	}
 	//delete dynamic allocations
-	delete fps;
-	delete textRenderer;
+	//delete fps;
+	//delete textRenderer;
 
 	//close window and shutdown glfw
 	//for some reason this is hideously slow sometimes (seems to be hanging on something...)

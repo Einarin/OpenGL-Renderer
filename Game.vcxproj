@@ -60,6 +60,8 @@
       </PrecompiledHeaderFile>
       <CompileAsManaged>false</CompileAsManaged>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -121,6 +123,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AABB.h" />
+    <ClInclude Include="include\Animation.h" />
     <ClInclude Include="include\AssetManager.h" />
     <ClInclude Include="include\AsteroidRenderer.h" />
     <ClInclude Include="include\callbacks.h" />
@@ -134,6 +137,7 @@
     <ClInclude Include="include\ft2build.h" />
     <ClInclude Include="include\Geometry.h" />
     <ClInclude Include="include\HighDynamicRangeResolve.h" />
+    <ClInclude Include="include\Primitives.h" />
     <ClInclude Include="include\Property.h" />
     <ClInclude Include="include\glincludes.h" />
     <ClInclude Include="include\ImageLoader.h" />
@@ -154,18 +158,21 @@
     <ClInclude Include="include\StarRenderer.h" />
     <ClInclude Include="include\Text.h" />
     <ClInclude Include="include\Texture.h" />
+    <ClInclude Include="include\Texture2.h" />
     <ClInclude Include="include\ThreadPool.h" />
     <ClInclude Include="include\tinyxml2.h" />
     <ClInclude Include="include\TransformFeedback.h" />
     <ClInclude Include="include\Vertex.h" />
     <ClInclude Include="include\VertexArrayObject.h" />
     <ClInclude Include="include\VertexAttribBuilder.h" />
+    <ClInclude Include="Material.h" />
     <ClInclude Include="ParticleSimulator.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="entrypoint.cpp" />
     <ClCompile Include="lz4-r112\lz4.c" />
     <ClCompile Include="lz4-r112\lz4hc.c" />
+    <ClCompile Include="Material.cpp" />
     <ClCompile Include="ParticleSimulator.cpp" />
     <ClCompile Include="src\AABB.cpp" />
     <ClCompile Include="src\AssetManager.cpp" />
@@ -184,15 +191,18 @@
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Model.cpp" />
     <ClCompile Include="src\noise.cpp" />
+    <ClCompile Include="src\Primitives.cpp" />
     <ClCompile Include="src\Quaternion.cpp" />
     <ClCompile Include="src\RenderBufferObject.cpp" />
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\SkyBox.cpp" />
+    <ClCompile Include="src\Source.cpp" />
     <ClCompile Include="src\StarRenderer.cpp" />
     <ClCompile Include="src\TessGeometry.cpp" />
     <ClCompile Include="src\Text.cpp" />
     <ClCompile Include="src\Texture.cpp" />
+    <ClCompile Include="src\Texture2.cpp" />
     <ClCompile Include="src\ThreadPool.cpp" />
     <ClCompile Include="src\tinyxml2.cpp" />
     <ClCompile Include="src\TransformFeedback.cpp" />

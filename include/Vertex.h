@@ -7,6 +7,7 @@
 
 #define VERTEX_MAX_TEXCOORDS 1 //AI_MAX_NUMBER_OF_TEXTURECOORDS
 #define VERTEX_MAX_TEXCOLORS 1 //AI_MAX_NUMBER_OF_COLOR_SETS
+#define VERTEX_MAX_BONES 4
 
 namespace gl{
 	class VertexTextured{
@@ -30,6 +31,8 @@ namespace gl{
 		glm::vec2 tc[VERTEX_MAX_TEXCOORDS];
 		glm::vec4 colors[VERTEX_MAX_TEXCOLORS];
 		static void configAttrib();
+		int bones[VERTEX_MAX_BONES];
+		float weights[VERTEX_MAX_BONES];
 	};
 	/*template<typename numType>
 	class SmartVertexBuffer{

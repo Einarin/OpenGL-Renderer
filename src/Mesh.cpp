@@ -41,7 +41,7 @@ uint32 Mesh::serialize(char** inbuff){
 	return bufflen;
 }
 
-void Mesh::deserialize(char* buff){
+bool Mesh::deserialize(char* buff){
 	//make sure we don't already have data
 	assert(vertSize == 0);
 	assert(indSize == 0);
@@ -66,9 +66,15 @@ void Mesh::deserialize(char* buff){
 		.vertexCount(head->vertCount);
 	vertices = vbb.fillUnownedBuffer(buff+head->vertoff);
 	vertSize = vertices.vertSizeBytes();
-	assert(head->vertsize == vertSize); //If this fails than our computed VertexBuffer didn't match the original storing one. This shouldn't ever happen...
+	if (head->vertsize != vertSize) { //If this fails than our computed VertexBuffer didn't match the original storing one. This shouldn't ever happen...
+		std::cout << "Computed vertex size " << head->vertsize << " doesn't match stored size " << vertSize << "!\nThis is a bug in Mesh Serialization. " << __FILE__ << ":" << __LINE__ << std::endl;
+		vertices = VertexBuffer(); //clear vertex buffer
+		vertSize = 0;
+		return false;
+	}
 	indices = (unsigned int*)(buff+head->indoff);
 	indSize = head->indsize;
+	return true;
 }
 
 void Mesh::copy(const Mesh& other)

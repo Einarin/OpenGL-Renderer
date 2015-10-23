@@ -1,6 +1,6 @@
 #pragma once
 #include "glm/glm.hpp"
-#include "Texture.h"
+#include "Texture2.h"
 #include "RenderBufferObject.h"
 
 namespace gl {
@@ -26,11 +26,11 @@ public:
 	static void BindDisplayBuffer(unsigned int target);
 	void bind(unsigned int target);
 	/// unless you're doing fancy things you can just use this
-	void attachTexture(unsigned int target, unsigned int attachment, TexRef tex, unsigned int level=0);
-	void attachTexture1D(unsigned int target, unsigned int attachment, TexRef tex, unsigned int level=0);
-	void attachTexture2D(unsigned int target, unsigned int attachment, TexRef tex, unsigned int level=0);
+	void attachTexture(unsigned int target, unsigned int attachment, Tex2D tex, unsigned int level=0);
+	//void attachTexture1D(unsigned int target, unsigned int attachment, Tex2D tex, unsigned int level=0);
+	void attachTexture2D(unsigned int target, unsigned int attachment, Tex2D tex, unsigned int level=0);
 	/// This is used for 3D textures
-	void attachTextureLayer(unsigned int target, unsigned int attachment, TexRef tex, unsigned int level=0, unsigned int layer=0);
+	//void attachTextureLayer(unsigned int target, unsigned int attachment, Tex3D tex, unsigned int level=0, unsigned int layer=0);
 	//For convenience the Renderbuffers are owned by the FBO for now
 	void attachDepthStencilRenderbuffer(unsigned int format);
 	void attachDepthRenderbuffer(unsigned int format);

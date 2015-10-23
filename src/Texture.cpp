@@ -38,7 +38,7 @@ void GlTexture::nearestInterpolation()
 	}
 }
 
-GlTexture::GlTexture():id(0),backed(false),
+GlTexture::GlTexture():allocated(false),id(0),backed(false),
 	interpolation(GL_LINEAR),mapMode(GL_CLAMP)
 {}
 
@@ -308,6 +308,7 @@ TexRef GlTextureManager::texFromRGBA8888(char* buff, glm::ivec2 size, bool sRGB)
 	return TexRef(tex);
 }
 void FileBackedGlTexture2D::init(){
+	loading = true;
 	GlTexture2D::init();
 	/*if(!backed){
 		if(!loadPngToGlTex2D(filename,(GlTexture2D*)this))
@@ -328,11 +329,12 @@ void FileBackedGlTexture2D::init(){
 			if (data){
 				free(data);
 			}
+			loading = false;
 		});
 	});
 }
 void FileBackedGlTexture2D::bind(){
-	if(!allocated || !backed){
+	if(!loading && !allocated || !backed){
 		init();
 	}
 	GlTexture2D::bind();

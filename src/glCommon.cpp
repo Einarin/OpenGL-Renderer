@@ -1,6 +1,7 @@
 #include "glincludes.h"
 #include <string>
 #include <iostream>
+#include <sstream>
 #ifdef _WIN32
 #include <Windows.h>
 #endif
@@ -44,6 +45,9 @@ void APIENTRY OpenglErrorCallback(GLenum source,
 						 const GLchar* message,
 						 const void* userParam)
 {
+	if (id == 131185){
+		return; //Nvidia driver message for binding a buffer
+	}
 	bool interrupt = false;
 	std::string text;
 	switch(severity){
@@ -61,6 +65,9 @@ void APIENTRY OpenglErrorCallback(GLenum source,
 		text = "Notification ";
 		break;
 	}
+	std::stringstream ss;
+	ss << "id " << id << " ";
+	text += ss.str();
 	switch(type){
 	case GL_DEBUG_TYPE_ERROR:
 		text += "Error: ";
@@ -82,7 +89,6 @@ void APIENTRY OpenglErrorCallback(GLenum source,
 		break;
 	case GL_DEBUG_TYPE_OTHER:
 	default:
-		return;
 		text += "Unknown: ";
 		break;
 	}
@@ -97,7 +103,7 @@ void APIENTRY OpenglErrorCallback(GLenum source,
 	}
 	if(interrupt){
 		#ifdef _WIN32
-			DebugBreak();
+			//DebugBreak();
 		#endif
 	}
 }
@@ -146,6 +152,7 @@ bool SetupSupport(){
 		glDebugMessageCallback((GLDEBUGPROC)OpenglErrorCallback,nullptr);
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		cout << "KHR_debug on!" << endl;
 	}//*/
 	sFreeTexMemNum = 0;
 	if(gl_extensions.find("GL_NVX_gpu_memory_info") != std::string::npos){
@@ -154,6 +161,12 @@ bool SetupSupport(){
 	
 	if(gl_extensions.find("GL_ATI_meminfo") != std::string::npos){
 		sFreeTexMemNum = 0x87FC;
+	}
+	if (gl_extensions.find("GL_ARB_bindless_texture") != std::string::npos){
+		cout << "Bindless Textures Available!" << endl;
+	}
+	else {
+		cout << "No Bindless Textures :(" << endl;
 	}
 	return status;
 }

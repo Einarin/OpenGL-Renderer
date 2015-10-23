@@ -2,6 +2,7 @@
 #include "VertexArrayObject.h"
 #include "TransformFeedback.h"
 #include "Camera.h"
+#include "Texture.h"
 
 namespace gl {
 

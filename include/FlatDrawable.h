@@ -1,6 +1,6 @@
 #pragma once
 #include "Geometry.h"
-#include "Texture.h"
+#include "Texture2.h"
 
 namespace gl{
 
@@ -25,10 +25,9 @@ public:
 
 class ScreenTexture : public ScreenDrawable {
 protected:
-	TexRef texture;
+	Tex2D texture;
 public:
-	ScreenTexture(std::string resource);
-	ScreenTexture(TexRef texture);
+	ScreenTexture(Tex2D texture);
 	virtual void draw();
 };
 

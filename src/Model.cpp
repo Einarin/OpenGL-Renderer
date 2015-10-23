@@ -11,6 +11,8 @@
 #include <fstream>
 #include <cstdint>
 #include <deque>
+#include <map>
+#include <queue>
 //for file modification
 #ifdef _WIN32
 #include <Windows.h>
@@ -51,6 +53,7 @@ using namespace Assimp;
 #define VEC_COPY(v1,v2) v1.x=v2.x;v1.y=v2.y;v1.z=v2.z;
 #define COLOR_COPY(c1,c2) c1.r=c2.r;c1.g=c2.g;c1.b=c2.b
 #define RGBA_COPY(c1,c2) c1.r=c2.r;c1.g=c2.g;c1.b=c2.b;c1.a=c2.a
+#define QUAT_COPY(q1,q2) q1.w=q2.w;q1.x=q2.x;q1.y=q2.y;q1.z=q2.z
 
 class CoutProgressHandler : public Assimp::ProgressHandler
 {
@@ -73,9 +76,9 @@ Model::~Model(){
 	if(meshbuff) delete[] meshbuff;
 }
 
-Model::Model() : m_loaded(false),m_downloaded(false),m_cached(false),meshbuff(nullptr){
+Model::Model() : m_loaded(false), m_downloaded(false), m_cached(false), m_hasBones(false), meshbuff(nullptr){
 }
-Model::Model(std::string filename) : m_loaded(false),m_downloaded(false),m_cached(false),meshbuff(nullptr){
+Model::Model(std::string filename) : m_loaded(false), m_downloaded(false), m_cached(false), m_hasBones(false), meshbuff(nullptr){
 	open(filename);
 }
 bool Model::open(std::string filename){
@@ -122,27 +125,50 @@ bool Model::open(std::string filename){
 	importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,aiPrimitiveType_POINT | aiPrimitiveType_LINE);
 	importer.SetProgressHandler(new CoutProgressHandler());
 	const aiScene* scene = importer.ReadFile(filename
-								,aiProcess_CalcTangentSpace 
-								| aiProcess_ValidateDataStructure
-								| aiProcess_Triangulate 
+								, //aiProcess_CalcTangentSpace 
+								//| aiProcess_ValidateDataStructure
+								 aiProcess_Triangulate 
 								| aiProcess_JoinIdenticalVertices
 								| aiProcess_GenSmoothNormals 
 								| aiProcess_GenUVCoords
 								| aiProcess_TransformUVCoords 
-								| aiProcess_OptimizeMeshes 
-								| aiProcess_ImproveCacheLocality
-								| aiProcess_OptimizeGraph 
-								| aiProcess_RemoveRedundantMaterials
-								| aiProcess_FindDegenerates
-								| aiProcess_FindInvalidData
-								| aiProcess_SortByPType
-								| aiProcess_Debone
+								//| aiProcess_OptimizeMeshes 
+								//| aiProcess_ImproveCacheLocality
+								//| aiProcess_OptimizeGraph 
+								//| aiProcess_RemoveRedundantMaterials
+								//| aiProcess_FindDegenerates
+								//| aiProcess_FindInvalidData
+								//| aiProcess_SortByPType
+								//| aiProcess_Debone
 								);
 	std::cout << "processing " << filename << " scene..." << std::endl;
 	if(scene == NULL){
 		std::cout << importer.GetErrorString() << std::endl;
 		return m_loaded;
 	}
+	std::cout << "Scene tree:\n";
+	std::deque<aiNode*> queue;
+	queue.push_back(scene->mRootNode);
+	queue.push_back(nullptr);
+	while (!queue.empty()) {
+		aiNode* front = queue.front();
+		queue.pop_front();
+		if (front == nullptr) {
+			std::cout << std::endl;
+			if (!queue.empty() && queue.front() != nullptr) {
+				queue.push_back(nullptr);
+			}
+			continue;
+		} else {
+			std::cout << "|";
+		}
+		std::cout << front->mName.C_Str() ;
+		for (int i = 0; i < front->mNumChildren; i++) {
+			queue.push_back(front->mChildren[i]);
+		}
+	}
+	std::cout << std::endl;
+
 	if(scene->HasTextures()){
 		std::cout << filepath << " contains " << scene->mNumTextures << "textures\n";
 		loadTextures(scene);
@@ -299,8 +325,97 @@ bool Model::open(std::string filename){
 			
 		}
 	}
+	//we have to do a first pass over the meshes to built a list of bones
+	int boneCount = 0;
+	for (int i = 0; i < scene->mNumMeshes; i++){
+		aiMesh* mesh = scene->mMeshes[i];
+		if (mesh->HasBones()){
+			m_hasBones = true;
+			for (int j = 0; j < mesh->mNumBones; j++){
+				std::string name = mesh->mBones[j]->mName.C_Str();
+				auto it = boneMap.find(name);
+				if (it == boneMap.end()){
+					boneMap[mesh->mBones[j]->mName.C_Str()] = boneCount++;
+					glm::mat4* offset = (glm::mat4*)&mesh->mBones[j]->mOffsetMatrix;
+					Bone bone;
+					bone.mesh2BindXform = *offset;
+					bones.push_back(bone);
+				}
+			}
+		}
+	}
 	
+	//Now that we loaded all the support structures walk the scene graph for real
 	buildFromNode(scene, scene->mRootNode, glm::mat4(),&rootPart);
+
+	if (scene->HasAnimations()) {
+		animations.resize(scene->mNumAnimations);
+		std::cout << "Animations:\n";
+		for (int i = 0; i < scene->mNumAnimations; i++) {
+			aiAnimation* current = scene->mAnimations[i];
+			if (current->mName.length != 0) {
+				std::cout << "name: " << current->mName.C_Str() << std::endl;
+				animations[i].name = current->mName.C_Str();
+			}
+			std::cout << "duration: " << std::dec << current->mDuration << " ticks with " << current->mTicksPerSecond << " ticks per second" << std::endl;
+			animations[i].length = current->mDuration / current->mTicksPerSecond;
+			std::cout << "node anims:\n";
+			animations[i].bones.resize(current->mNumChannels);
+			for (int j = 0; j < current->mNumChannels; j++) {
+				aiNodeAnim* channel = current->mChannels[j];
+				animations[i].bones[j].boneIndex = boneMap[channel->mNodeName.C_Str()];
+				std::cout << "name: " << channel->mNodeName.C_Str() << std::endl;
+				//these must all be equal for now
+				std::cout << "position key count: " << channel->mNumPositionKeys << std::endl;
+				std::cout << "rotation key count: " << channel->mNumRotationKeys << std::endl;
+				std::cout << "scaling key count: " << channel->mNumScalingKeys << std::endl;
+				animations[i].bones[j].keyframes.resize(channel->mNumPositionKeys);
+				for (int k = 0; k < channel->mNumPositionKeys; k++) {
+					animations[i].bones[j].keyframes[k].time = channel->mPositionKeys[k].mTime;
+					VEC_COPY(
+						animations[i].bones[j].keyframes[k].position,
+						channel->mPositionKeys[k].mValue);
+					QUAT_COPY(
+						animations[i].bones[j].keyframes[k].rotation,
+						channel->mRotationKeys[k].mValue);
+					VEC_COPY(
+						animations[i].bones[j].keyframes[k].scaling,
+						channel->mScalingKeys[k].mValue);
+				}
+				std::cout << "pre state: ";
+				switch (channel->mPreState) {
+				case aiAnimBehaviour_CONSTANT:
+					std::cout << "constant\n";
+					break;
+				case aiAnimBehaviour_LINEAR:
+					std::cout << "linear\n";
+					break;
+				case aiAnimBehaviour_REPEAT:
+					std::cout << "repeat\n";
+					break;
+				case aiAnimBehaviour_DEFAULT:
+				default:
+					std::cout << "default\n";
+				}
+				std::cout << "post state: ";
+				switch (channel->mPostState) {
+				case aiAnimBehaviour_CONSTANT:
+					std::cout << "constant\n";
+					break;
+				case aiAnimBehaviour_LINEAR:
+					std::cout << "linear\n";
+					break;
+				case aiAnimBehaviour_REPEAT:
+					std::cout << "repeat\n";
+					break;
+				case aiAnimBehaviour_DEFAULT:
+				default:
+					std::cout << "default\n";
+				}
+			}
+		}
+	}
+
 	calcAABB();
 	for(auto it = sProcessSteps.begin();it != sProcessSteps.end();it++){
 		(*it)(this);
@@ -363,6 +478,7 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 	output.name = aim.mName.C_Str();
 	output.hasNormals = aim.HasNormals();
 	output.hasTangents = aim.HasTangentsAndBitangents();
+	output.hasBones = aim.HasBones();
 	output.numUVChannels = aim.GetNumUVChannels();
 	output.numVertexColorChannels = aim.GetNumColorChannels();
 	output.materialIndex = aim.mMaterialIndex;
@@ -370,6 +486,7 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 	output.ownsBuffers = true;
 	output.indSize = aim.mNumFaces*3;
 	output.indices = new unsigned int[output.indSize];
+	
 	unsigned int pos=0;
 	for(int i=0;i<(int)aim.mNumFaces;i++){
 		for(int j=0;j<(int)aim.mFaces[j].mNumIndices;j++){
@@ -379,15 +496,38 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 	for (int i = 0; i<AI_MAX_NUMBER_OF_TEXTURECOORDS; i++){
 		output.numUVComponents[i] = aim.mNumUVComponents[i];
 	}
+	//we need to figure out what bones apply to each vertex
+	//we want to prioritize bones with the most weight, so that
+	//we drop the least important contributors if an index has too many weights
+	
+	std::vector<std::priority_queue<std::pair<float, int>>> storage;
+	storage.resize(aim.mNumVertices);
+	for (int i = 0; i < aim.mNumBones; i++){
+		std::string name = aim.mBones[i]->mName.C_Str();
+		int boneId = boneMap[name];
+		for (int j = 0; j < aim.mBones[i]->mNumWeights; j++){
+			int index = aim.mBones[i]->mWeights[j].mVertexId;
+			float weight = aim.mBones[i]->mWeights[j].mWeight;
+			storage[index].push(std::make_pair(weight, boneId));
+		}
+	}
+	//Figure out the worst case for number of bones
+	int numBones = 0;
+	for (std::priority_queue<std::pair<float, int>>& q : storage) {
+		numBones = max(numBones, q.size());
+	}
+	std::cout << "will have " << numBones << "bone slots" << std::endl;
 	output.vertSize = aim.mNumVertices;
 	//output.vertices = new vertex[output.vertSize];
 	//Configure a vertex buffer to match our file
 	VertexBufferBuilder vbb;
+	
 	vbb.vertexCount(output.vertSize)
 		.hasNormal(output.hasNormals)
 		.hasTangent(output.hasTangents)
 		.hasTexCoord3D(output.numUVChannels) //OPT:for now we assume all UV coords are 3D
-		.hasVertColor(output.numVertexColorChannels);
+		.hasVertColor(output.numVertexColorChannels)
+		.hasBones(numBones);
 	//Now generate the actual buffer
 	output.vertices = vbb.build();
 	for(unsigned int i=0;i<aim.mNumVertices;i++){
@@ -414,7 +554,13 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 				RGBA_COPY(v.color(j),aim.mColors[j][i]);
 			}
 		}
+		for (int j = 0; j < numBones; j++){
+			v.boneId(j) = storage[i].top().second;
+			v.boneWeight(j) = storage[i].top().first;
+			storage[i].pop();
+		}
 	}
+	
 }
 
 void Model::initPart(ModelPart& part)
@@ -441,9 +587,11 @@ void Model::drawPart(ModelPart& part,LitTexMvpShader& s,const glm::mat4& parentT
 	s.setModel(localTransform);
 	for(auto m = part.meshes.begin();m != part.meshes.end();m++){
 		if(materials[m->materialIndex].diffuseTex.use_count() > 0){
-			s.setDiffuseTex(materials[m->materialIndex].diffuseTex);
+			s.setDiffuseTexActive();
+			materials[m->materialIndex].diffuseTex->bind();
 		} else {
-			s.setDiffuseTex(TextureManager::Instance()->missingTex());
+			s.setDiffuseTexActive();
+			TextureManager::Instance()->missingTex()->bind();
 		}
 		s.setAmbient(materials[m->materialIndex].ambient);
 		s.setSpecular(materials[m->materialIndex].specular);
@@ -474,6 +622,13 @@ void Model::draw(LitTexMvpShader& s){
 		drawPart(rootPart,s,ModelMatrix);
 	}
 }
+
+void Model::setSkinningBuffer(int animationIndex, double time, glm::mat4* buffer) {
+	for (int i = 0; i < bones.size(); i++) {
+		buffer[i] = bones[i].finalPosition(animations[animationIndex].getTransformAt(i, time));
+	}
+}
+
 //serialization stuff
 struct FlatModel{
 	uint32 nameoff;
@@ -757,7 +912,13 @@ bool Model::loadCache(std::string filename){
 		current->name = namebuff+flatlist[i].nameoff;
 		current->meshes.resize((int)(flatlist[i].meshlistoff+flatlist[i].meshlistsize)-flatlist[i].meshlistoff);
 		for(int j = flatlist[i].meshlistoff;j<(int)(flatlist[i].meshlistoff+flatlist[i].meshlistsize);j++){
-			current->meshes[j-flatlist[i].meshlistoff].deserialize(meshbuff+meshindbuff[j]);
+			if (!(current->meshes[j - flatlist[i].meshlistoff].deserialize(meshbuff + meshindbuff[j]))) {
+				//bailing out at this point is difficult
+				std::cout << "Loading meshes from cache for " << filename << " failed. Attempting to bail out and reload but crashes and leaks likely!\n";
+				rootPart = ModelPart();
+				status = false;
+				goto cleanup;
+			}
 		}
 		current->localTransform = flatlist[i].localTransform;
 		int count = 0;
