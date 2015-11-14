@@ -137,6 +137,7 @@
     <ClInclude Include="include\ft2build.h" />
     <ClInclude Include="include\Geometry.h" />
     <ClInclude Include="include\HighDynamicRangeResolve.h" />
+    <ClInclude Include="include\PbrRenderer.h" />
     <ClInclude Include="include\Primitives.h" />
     <ClInclude Include="include\Property.h" />
     <ClInclude Include="include\glincludes.h" />

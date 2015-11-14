@@ -27,6 +27,7 @@
 #include "TessGeometry.h"
 #include "Scene.h"
 #include "ImageLoader.h"
+#include "PbrRenderer.h"
 
 using namespace std;
 using namespace gl;
@@ -358,6 +359,55 @@ int main(int argc, char* argv[])
 	);
 	//tessbb.init();
 	//tessbb.download();
+
+	Sphere sphere(100);
+	sphere.init();
+	sphere.download();
+
+	PbrObject pbrObjects[]{
+		{ //rough gold
+			glm::mat4(), glm::vec3(1.0f, 0.766f, 0.336f), 1.0f, 0.25f,
+			sphere.vao,GL_UNSIGNED_INT,sphere.indices.size(),0
+		},
+		{ //moderately smooth gold
+			glm::translate(3.f, 0.f, 0.f),
+			glm::vec3(1.0f, 0.766f, 0.336f), 1.0f, 0.5f,
+			sphere.vao,GL_UNSIGNED_INT,sphere.indices.size(),0
+		},
+		{ //smooth blue plastic
+			glm::translate(-3.f, 0.f, 0.f),
+			glm::vec3(0.14f, 0.54f, 0.96f), 0.0f, 0.75f,
+			sphere.vao,GL_UNSIGNED_INT,sphere.indices.size(),0
+		},
+		{ //rough blue plastic
+			glm::translate(-6.f, 0.f, 0.f),
+			glm::vec3(0.14f, 0.54f, 0.96f), 0.0f, 0.0f,
+			sphere.vao,GL_UNSIGNED_INT,sphere.indices.size(),0
+		},
+		{ //charcoal
+			glm::translate(-6.f, 3.f, 0.f),
+			glm::vec3(0.02f, 0.02f, 0.02f), 0.f, 0.1f,
+			sphere.vao,GL_UNSIGNED_INT,sphere.indices.size(),0
+		},
+		{ //iron
+			glm::translate(-3.f, 3.f, 0.f),
+			glm::vec3(0.56f, 0.57f, 0.58f), 1.f, 0.5f,
+			sphere.vao,GL_UNSIGNED_INT,sphere.indices.size(),0
+		},
+		{ //snow
+			glm::translate(0.f, 3.f, 0.f),
+			glm::vec3(0.81f, 0.81f, 0.81f), 1.f, 0.0f,
+			sphere.vao,GL_UNSIGNED_INT,sphere.indices.size(),0
+		},
+		{ //grass
+			glm::translate(3.f, 3.f, 0.f),
+			glm::vec3(0.0f, 0.21f, 0.0f), 1.f, 0.0f,
+		sphere.vao,GL_UNSIGNED_INT,sphere.indices.size(),0
+		}
+	};
+
+	PbrRenderer pbrRenderer;
+	pbrRenderer.init();
 	
 	auto pvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 	auto pfs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
@@ -395,10 +445,6 @@ int main(int argc, char* argv[])
 	TessCube tessCube;
 	Face::buildLod(64);
 	tessCube.tesselate(glm::mat4(), 1.0f, camera);
-
-	Sphere sphere(100);
-	sphere.init();
-	sphere.download();
 
 	ParticleSimulator particles;
 	particles.setup(1);
@@ -576,13 +622,15 @@ int main(int argc, char* argv[])
 		//glDrawArrays(GL_PATCHES, 0, 4);
 		//tessCube.draw(tess);
 
+		pbrRenderer.draw(camera, light, pbrObjects, 8);
+
 		pbr->bind();
 		glUniformMatrix4fv(projectionMatrixIndex, 1, false, glm::value_ptr(camera.GetProjectionMatrix()));
 		glUniformMatrix4fv(viewMatrixIndex, 1, false, glm::value_ptr(camera.GetViewMatrix()));
 		glUniform3fv(cameraIndex, 1, glm::value_ptr(camera.GetPosition()));
 		glUniform3f(lightIndex, light.position.x, light.position.y, light.position.z);
 		glUniform3f(lightColorIndex, 10.f,10.f,10.f);
-		glUniform3f(materialColorIndex, 1.0f, 0.766f, 0.336f);//gold specular color
+		/*glUniform3f(materialColorIndex, 1.0f, 0.766f, 0.336f);//gold specular color
 		glUniform1f(metalnessIndex, 1.0f);//metal
 		glUniform1f(roughnessIndex, 0.25f);//rough
 		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::mat4()));
@@ -617,7 +665,7 @@ int main(int argc, char* argv[])
 		glUniform1f(metalnessIndex, 1.f);//not a metal
 		glUniform1f(roughnessIndex, 0.0f);//rough
 		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(3.f, 3.f, 0.f)));
-		sphere.draw();
+		sphere.draw();*/
 
 		particles.draw(camera);
 		star.draw(&camera);

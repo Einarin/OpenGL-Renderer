@@ -21,7 +21,7 @@ namespace gl{
 
 	class IndexedGeometry : public Geometry
     {
-	protected:
+	public:
 		unsigned int vao;
 		unsigned int vbo;
 		unsigned int ibo;
