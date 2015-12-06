@@ -112,5 +112,6 @@ namespace gl {
 		}
 		printer.CloseElement();
 		fclose(fp);
+		return true;
 	}
 }

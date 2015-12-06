@@ -966,7 +966,7 @@ void Model::drawBoundingBoxes(Camera* c){
 	if(m_loaded){
 		bbDrawShader.bind();
 		auto colorloc = static_cast<ShaderRef>(bbDrawShader)->getUniformLocation("color");
-		MvpShader mvp(bbDrawShader);
+		MvpShader mvp = bbDrawShader;
 		mvp.setProjection(c->GetProjectionMatrix());
 		mvp.setView(c->GetViewMatrix());
 		float modelColor[] = {1.0f,0.5f,0.0f,1.0f};
