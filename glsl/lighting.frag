@@ -1,4 +1,4 @@
-#version 330 core
+#version 430 core
 
 in vec3 vs_WorldNormal;
 in vec3 vs_EyeVector;
@@ -12,6 +12,8 @@ uniform vec3 cameraWorldPosition;
 uniform vec3 materialColor;
 uniform float roughness;
 uniform float metalness;
+
+uniform samplerCube environment;
 
 out vec4 fragColor;
 
@@ -85,7 +87,7 @@ vec3 specular(vec3 lightDir, vec3 normal, vec3 viewDir, vec3 specularRGB, float 
 float lightFalloff(float lightDistance, float lightRadius){
     float lightNumerator = min(1 - pow(lightDistance/lightRadius,4),1.0);
     return (lightNumerator * lightNumerator)/((lightDistance*lightDistance)+1);
-}	
+}
 
 void main(void){
     //need to renormalize since components are linearly interpolated separately
@@ -104,14 +106,20 @@ void main(void){
     //vec3 halfVec = normalize(normal + lightDirection);
     //float specularAngle = max(dot(halfVec,normal),0.0);
     //float specular = pow(specularAngle, 16.0); //constant controls the roughness of the material
-    
+
+
+
     float falloff = lightFalloff(lightDistance,1000.0);
     //vec3 lighting = lightColor * (specular + diffuse) / falloff;
     vec3 lighting = falloff * lightColor * max(dot(normal,lightDirection),0.0) * (diffuse + specular(lightDirection,normal,eyeDirection,specColor,mappedRough));
     //add some ambient lighting by approximating a light shining straight down
     //vec3 skyDir = vec3(0.0,1.0,0.0);
     //lighting += lightColor * 0.000001 /* max(dot(normal,skyDir),0.0)*/ * (diffuse + specular(skyDir,skyDir,skyDir,specColor,mappedRough));
-    lighting += 0.001 * materialColor.rgb;
+    //lighting += 0.001 * materialColor.rgb;
+    vec3 reflectVec = reflect(eyeDirection,normal);
+    float lod = textureQueryLevels(environment) * (1.0-roughness);
+    vec3 envSample = textureLod(environment,reflectVec,lod).rgb;
+    lighting += specColor * envSample;
     //Use HDR with simple tonmapping
     //This needs to be done after lighting is accumulated,
     //  because light adds linearly in real life

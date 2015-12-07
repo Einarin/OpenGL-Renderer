@@ -132,7 +132,7 @@ void SkyBox::setImageAsync(std::string basepngfilename){
 	cubemap.bind();
 	for(int i=0;i<6;i++){
 		//do the reading from disk and png decompression off of the main thread
-		IoPool.async([=](){
+		//IoPool.async([=](){
 			glm::ivec2 imgSize;
 			char* data;
 			int bufflen;
@@ -150,16 +150,19 @@ void SkyBox::setImageAsync(std::string basepngfilename){
 				std::cout << "SkyBox: failed loading " << filename << "\n";
 				return;
 			}
-			glQueue.async([=](){//OpenGL work must be done on GL thread
+			//glQueue.async([=](){//OpenGL work must be done on GL thread
 				//ptr->setup(GL_RGBA,size,GL_UNSIGNED_BYTE,faces[j],GL_SRGB);
 				//ptr->setImage(GL_RGBA,size,GL_UNSIGNED_BYTE,faces[j],data);
 				ptr->bind();
 				ptr->allocFace(faces[j], GL_RGBA, GL_SRGB8_ALPHA8, size, GL_UNSIGNED_BYTE);
 				ptr->setFaceImage(faces[j], GL_RGBA, size, GL_UNSIGNED_BYTE, data);
 				free(data);
-			});
-		});
+			//});
+		//});
 	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 10);
+	cubemap.setLinearFiltering(true);
+	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 }
 
 void SkyBox::draw(Camera* c){

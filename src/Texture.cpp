@@ -224,7 +224,7 @@ GlTexture::~GlTexture() {
 	glDeleteTextures(1,&id);
 }
 
-unsigned int GlTexture::getId()
+const unsigned int GlTexture::getId() const
 {
 	return id;
 }

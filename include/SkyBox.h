@@ -13,13 +13,14 @@ class SkyBox : public Renderer
 protected:
 	bool initialized,downloaded;
 	std::shared_ptr<Shader> shader;
-	TextureCubeMap cubemap;
+	
 	unsigned int texloc;
 	unsigned int vao;
 	unsigned int vbo;
 	unsigned int ibo;
 	Cube cube;
 public:
+	TextureCubeMap cubemap;
 	SkyBox(void);
 	~SkyBox(void);
 	void init();

@@ -31,6 +31,7 @@ namespace gl {
 		GLint m_materialColorIndex;
 		GLint m_metalnessIndex;
 		GLint m_roughnessIndex;
+		GLint m_environmentIndex;
 	public:
 		bool init() {
 			bool status = true;
@@ -56,15 +57,19 @@ namespace gl {
 			m_materialColorIndex = glGetUniformLocation(id, "materialColor");
 			m_metalnessIndex = glGetUniformLocation(id, "metalness");
 			m_roughnessIndex = glGetUniformLocation(id, "roughness");
+			m_environmentIndex = glGetUniformLocation(id, "environment");
 			return status;
 		}
-		void draw(Camera& camera,const Light& light, PbrObject* objects, int numObjects) {
+		void draw(Camera& camera,TextureCubeMap& env, Light& light, PbrObject* objects, int numObjects) {
 			m_shader->bind();
 			glUniformMatrix4fv(m_projectionMatrixIndex, 1, GL_FALSE, glm::value_ptr(camera.GetProjectionMatrix()));
 			glUniformMatrix4fv(m_viewMatrixIndex, 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
 			glUniform3fv(m_cameraIndex, 1, glm::value_ptr(camera.GetPosition()));
 			glUniform3f(m_lightIndex, light.position.x, light.position.y, light.position.z);
 			glUniform3f(m_lightColorIndex, 10.f, 10.f, 10.f);
+			glActiveTexture(GL_TEXTURE0);
+			env.bind();
+			glUniform1i(m_environmentIndex, 0);
 			for (int i = 0; i < numObjects; i++) {
 				glUniform3f(m_materialColorIndex, 1.0f, 0.766f, 0.336f);//gold specular color
 				glUniform3fv(m_materialColorIndex, 1, glm::value_ptr(objects[i].color));

@@ -7,6 +7,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#define SHADER(SOURCE) #SOURCE
+
 namespace gl
 {
 	class ShaderStage {

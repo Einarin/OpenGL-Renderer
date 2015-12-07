@@ -28,7 +28,7 @@ if(id != m_id) {\
 		Texture():m_id(0){ }
 	public:
 		const GLenum getType() const { return target; }
-		GLuint getId(){
+		const GLuint getId() const{
 			return m_id;
 		}
 		void init() {

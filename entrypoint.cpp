@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
 	//model->save(Model::cachename("E:/Downloads/dragon_adult_flycycle.obj"));
 	//std::shared_ptr<Model> model2 = assetManager.loadModel("assets/falcon3.fbx");
 	Scene scene;
-	scene.loadDemo(assetManager);
+	//scene.loadDemo(assetManager);
 	//bool result = scene.saveFile("assets/testScene.xml");
 	//Scene scene2;
 	//scene2.loadFile("assets/testScene.xml", assetManager);
@@ -366,7 +366,7 @@ int main(int argc, char* argv[])
 
 	PbrObject pbrObjects[]{
 		{ //rough gold
-			glm::mat4(), glm::vec3(1.0f, 0.766f, 0.336f), 1.0f, 0.25f,
+			glm::mat4(), glm::vec3(1.0f, 0.766f, 0.336f), 1.0f, 0.15f,
 			sphere.vao,GL_UNSIGNED_INT,sphere.indices.size(),0
 		},
 		{ //moderately smooth gold
@@ -391,7 +391,7 @@ int main(int argc, char* argv[])
 		},
 		{ //iron
 			glm::translate(-3.f, 3.f, 0.f),
-			glm::vec3(0.56f, 0.57f, 0.58f), 1.f, 0.5f,
+			glm::vec3(0.56f, 0.57f, 0.58f), 1.f, 0.9f,
 			sphere.vao,GL_UNSIGNED_INT,sphere.indices.size(),0
 		},
 		{ //snow
@@ -621,8 +621,7 @@ int main(int argc, char* argv[])
 		//tessbb.bindVao();
 		//glDrawArrays(GL_PATCHES, 0, 4);
 		//tessCube.draw(tess);
-
-		pbrRenderer.draw(camera, light, pbrObjects, 8);
+		pbrRenderer.draw(camera, skybox.cubemap, light, pbrObjects, 8);
 
 		pbr->bind();
 		glUniformMatrix4fv(projectionMatrixIndex, 1, false, glm::value_ptr(camera.GetProjectionMatrix()));

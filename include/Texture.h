@@ -20,7 +20,7 @@ namespace gl
 		GlTexture();
 		virtual ~GlTexture();
 		virtual void init();
-		unsigned int getId();
+		const unsigned int getId() const;
 		GLenum getType(){
 			return type;
 		}
