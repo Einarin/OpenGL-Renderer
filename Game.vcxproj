@@ -135,6 +135,7 @@
     <ClInclude Include="include\FlatDrawable.h" />
     <ClInclude Include="include\FrameBufferObject.h" />
     <ClInclude Include="include\ft2build.h" />
+    <ClInclude Include="include\GBuffer.h" />
     <ClInclude Include="include\Geometry.h" />
     <ClInclude Include="include\HighDynamicRangeResolve.h" />
     <ClInclude Include="include\PbrRenderer.h" />
@@ -171,6 +172,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="entrypoint.cpp" />
+    <ClCompile Include="src\GBuffer.cpp" />
     <ClCompile Include="lz4-r112\lz4.c" />
     <ClCompile Include="lz4-r112\lz4hc.c" />
     <ClCompile Include="Material.cpp" />

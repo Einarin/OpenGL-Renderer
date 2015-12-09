@@ -28,13 +28,14 @@ bool ShaderStage::compile(std::string source)
 	glGetShaderiv(id, GL_COMPILE_STATUS, &compiled);
 	GLsizei length;
 	glGetShaderiv(id,GL_INFO_LOG_LENGTH,&length);
-	GLchar* buff = new GLchar[length];
-	glGetShaderInfoLog(id,length,&length,buff);
-	//do something with error log
-	if (strlen(buff) > 0){
+	if (length > 0) {
+		GLchar* buff = new GLchar[length];
+		glGetShaderInfoLog(id,length,&length,buff);
+		//do something with error log
 		std::cout << buff << std::endl;
+		delete[] buff;
 	}
-	delete[] buff;
+	
 	if (compiled != GL_TRUE)
 	{
 		//shader failed to compile
@@ -105,13 +106,13 @@ bool Shader::link(){
 	glGetProgramiv(id,GL_LINK_STATUS, &linked);
 	GLsizei length;
 	glGetProgramiv(id,GL_INFO_LOG_LENGTH,&length);
-	GLchar* buff = new GLchar[length];
-	glGetProgramInfoLog(id,length,&length,buff);
-	//do something with error log
-	if (strlen(buff) > 0){
+	if (length > 0) {
+		GLchar* buff = new GLchar[length];
+		glGetProgramInfoLog(id,length,&length,buff);
+		//do something with error log
 		std::cout << buff << std::endl;
+		delete[] buff;
 	}
-	delete[] buff;
 	if(linked != GL_TRUE)
 	{
 		//shader failed to link

@@ -10,10 +10,11 @@ in vec4 tangent;
 in vec4 bitan;
 in vec4 eyevec;
 in vec4 lightvec;
+in vec4 worldPos;
 out vec4 FragColor;
 
 void main( void )
-{	
+{
 	vec3 norm = normalize(normal.xyz);
 	vec3 tang = normalize(tangent.xyz);
 	vec3 eye = normalize(eyevec.xyz);
@@ -33,7 +34,7 @@ void main( void )
 	}
 	//float disp = texCoords.w*0.33333;
 	//abs(dot(normalize(texCoords.rgb),norm))
-	
+
 	color = ambient + (100.0/length(lightvec.xyz))*(diff * diffuse + spec * specular);//vec3(1.0-disp,0.0,disp);//vec3(abs(tan.x));//vec3(0.8,0.4,0.8);
 	//color = *vec3();
 	float theta = abs(dot(eye,norm));

@@ -57,7 +57,7 @@ bool TexturedShader::init(){
 	auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 	auto fs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
 	success &= vs->compileFromFile("glsl/model.vert");
-	success &= fs->compileFromFile("glsl/model.frag");
+	success &= fs->compileFromFile("glsl/deferredModel.frag");
 	m_shader->addAttrib("in_Position",0);
 	m_shader->addAttrib("in_Normal",1);
 	m_shader->addAttrib("in_Tangent",2);

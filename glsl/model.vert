@@ -9,6 +9,7 @@ out vec4 tangent;
 out vec4 bitan;
 out vec4 eyevec;
 out vec4 lightvec;
+out vec4 worldPos;
 uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 projMatrix;
@@ -22,6 +23,7 @@ void main(void)
 	bitan = vec4(cross(normal.xyz,tangent.xyz),1.0);
 	texCoords = vec4(in_TexCoords.xyz,1.0);
 	vec4 position = modelMatrix * vec4(in_Position.xyz,1.0);
+	worldPos = position;
 	//position += normal * crater(in_TexCoords);
 	eyevec = camera - position;
 	lightvec = light + position;

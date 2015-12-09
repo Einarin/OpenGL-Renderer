@@ -38,7 +38,8 @@ namespace gl {
 			auto pvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
 			auto pfs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
 			status &= pvs->compileFromFile("glsl/mvpNormals.vert");
-			status &= pfs->compileFromFile("glsl/lighting.frag");
+			//status &= pfs->compileFromFile("glsl/lighting.frag");
+			status &= pfs->compileFromFile("glsl/uniformMaterialDeferred.frag");
 			m_shader = Shader::Allocate();
 			m_shader->attachStage(pvs);
 			m_shader->attachStage(pfs);
@@ -71,7 +72,6 @@ namespace gl {
 			env.bind();
 			glUniform1i(m_environmentIndex, 0);
 			for (int i = 0; i < numObjects; i++) {
-				glUniform3f(m_materialColorIndex, 1.0f, 0.766f, 0.336f);//gold specular color
 				glUniform3fv(m_materialColorIndex, 1, glm::value_ptr(objects[i].color));
 				glUniform1f(m_metalnessIndex, objects[i].metalness);//metal
 				glUniform1f(m_roughnessIndex, objects[i].roughness);//rough

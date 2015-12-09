@@ -46,11 +46,10 @@ if(id != m_id) {\
 		}
 		void setLinearFiltering(bool hasMipMaps){
 			TEXTURE_BINDING_DEBUG_CHECK
+			setMagFilter(GL_LINEAR);
 			if (hasMipMaps){
-				setMagFilter(GL_LINEAR_MIPMAP_LINEAR);
 				setMinFilter(GL_LINEAR_MIPMAP_LINEAR);
 			} else {
-				setMagFilter(GL_LINEAR);
 				setMinFilter(GL_LINEAR);
 			}
 		}

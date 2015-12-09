@@ -1,23 +1,21 @@
 #version 430 core
-
-in vec3 vs_WorldNormal;
-in vec3 vs_EyeVector;
-in vec3 vs_LightVector;
-in vec3 vs_WorldPosition;
-in float vs_LightDistance;
+in vec2 texCoords;
 
 uniform vec3 lightPosition;
 uniform vec3 lightColor;
 uniform vec3 cameraWorldPosition;
-uniform vec3 materialColor;
-uniform float roughness;
-uniform float metalness;
+uniform mat4 screenToWorld;
 
+uniform sampler2D albedos;
+uniform sampler2D normals;
+uniform sampler2D depthTex;
+uniform sampler2D worldTex;
 uniform samplerCube environment;
 
 out vec4 fragColor;
 
 const float pi = 3.14159265;
+
 
 //specular
 
@@ -103,11 +101,31 @@ float mip_map_level(in vec3 texture_coordinate)
 
 void main(void){
     //need to renormalize since components are linearly interpolated separately
-    vec3 normal = normalize(vs_WorldNormal);
-    vec3 lightdiff = lightPosition - vs_WorldPosition;
+    vec4 normalData = texture(normals,texCoords);
+    vec3 normal = normalData.rgb;
+    float roughness = normalData.a;
+    vec4 albedoData = texture(albedos,texCoords);
+    vec3 materialColor = albedoData.rgb;
+    float metalness = albedoData.a;
+    if(length(normal) == 0){
+      if(length(materialColor) == 0){
+        discard;
+      } else {
+        fragColor = vec4(materialColor,1.0);
+        return;
+      }
+    }
+    float depth = texture(depthTex,texCoords).r;
+    vec4 screenCoord4 = vec4(texCoords*2.0 - 1.0,depth,1.0);
+    //determine world position
+    vec4 worldCoord4 = screenToWorld * screenCoord4;
+    //vec3 worldPos = worldCoord4.xyz/worldCoord4.w;
+    vec3 worldPos = texture(worldTex,texCoords).rgb;
+
+    vec3 lightdiff = lightPosition - worldPos;
     vec3 lightDirection = normalize(lightdiff);
     float lightDistance = length(lightdiff);
-    vec3 eyeDirection = normalize(cameraWorldPosition - vs_WorldPosition);
+    vec3 eyeDirection = normalize(cameraWorldPosition - worldPos);
     vec3 reflectVec = reflect(eyeDirection,normal);
     //spherical Approximation
     float radius = 1.0;
@@ -144,5 +162,6 @@ void main(void){
     //  because light adds linearly in real life
     //vec3 toneMapped = lighting/(lighting+1.0);
     //write our output
+    gl_FragDepth = depth;
     fragColor = vec4(lighting,1.0);
 }

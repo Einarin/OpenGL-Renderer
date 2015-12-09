@@ -21,7 +21,9 @@ void onResizeWindow(GLFWwindow* window, int w, int h){
 	projectionMatrix = glm::perspective(45.f,aspect,-1.f,1.f);
 	orthoMatrix = glm::ortho(0.f,static_cast<float>(w),0.f,static_cast<float>(h),-1.f,1.f);
 	camera.SetAspectRatio(aspect);
-	hdr.setup(glm::ivec2(w, h));
+	glm::ivec2 size(w, h);
+	hdr.setup(size);
+	gBuffer.setup(size);
 	width = w;
 	height = h;
 }

@@ -28,6 +28,7 @@
 #include "Scene.h"
 #include "ImageLoader.h"
 #include "PbrRenderer.h"
+#include "GBuffer.h"
 
 using namespace std;
 using namespace gl;
@@ -40,6 +41,7 @@ glm::mat4 projectionMatrix;
 glm::mat4 orthoMatrix;
 int width, height;
 HighDynamicRangeResolve hdr;
+GBuffer gBuffer;
 int levels = 5;
 int tessFactor = 50;
 double fpsTarget = 60.0;
@@ -79,7 +81,7 @@ int main(int argc, char* argv[])
 		const GLFWvidmode* mode = glfwGetVideoMode(primary);
 		window = glfwCreateWindow(mode->width, mode->height, "Game", primary, NULL);
 	} else {
-		window = glfwCreateWindow(1280, 1280, "Game", NULL/*glfwGetPrimaryMonitor()*/, NULL);
+		window = glfwCreateWindow(1280, 800, "Game", NULL/*glfwGetPrimaryMonitor()*/, NULL);
 	}
 	if (!window)
 	{
@@ -148,7 +150,29 @@ int main(int argc, char* argv[])
 	camera.SetViewDistance(20000.f);
 	camera.SetTarget(vec3(0.0,0.0,0.0));
 	camera.SetAspectRatio(static_cast<float>(width)/static_cast<float>(height));
-		
+
+	gBuffer.init();
+	gBuffer.setup(glm::ivec2(width, height));
+	
+	auto lightShader = Shader::Allocate();
+	{
+		auto lvs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+		auto lfs = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+		lvs->compile("#version 330\n"
+			"in vec2 position;\n"
+			"out vec2 texCoords;\n"
+			"void main(void){\n"
+			"texCoords = 0.5*(position+1.0);\n"
+			"gl_Position = vec4(position,0.0,1.0);\n"
+			"}\n");
+		lfs->compileFromFile("glsl/deferredLight.frag");
+		lightShader->attachStage(lvs);
+		lightShader->attachStage(lfs);
+	}
+	lightShader->addAttrib("position", 0);
+	lightShader->link();
+	lightShader->bind();
+
 	hdr.init();
 	hdr.setup(glm::ivec2(width, height));
 	cout << "generating assets...\n";
@@ -231,7 +255,7 @@ int main(int argc, char* argv[])
 	//model->save(Model::cachename("E:/Downloads/dragon_adult_flycycle.obj"));
 	//std::shared_ptr<Model> model2 = assetManager.loadModel("assets/falcon3.fbx");
 	Scene scene;
-	//scene.loadDemo(assetManager);
+	scene.loadDemo(assetManager);
 	//bool result = scene.saveFile("assets/testScene.xml");
 	//Scene scene2;
 	//scene2.loadFile("assets/testScene.xml", assetManager);
@@ -247,10 +271,10 @@ int main(int argc, char* argv[])
 		});
 	});//*/
 
-	/*bb = new Billboard(-0.5f,-0.5f,1.f,1.f);
+	bb = new Billboard();//Billboard(-0.5f,-0.5f,1.f,1.f);
 	bb->init();
 	bb->download();
-	checkGlError("geometry");
+	/*checkGlError("geometry");
 	
 	PatchSphere ps;
 	ps.tesselate(8);
@@ -461,7 +485,7 @@ int main(int argc, char* argv[])
 		//input handling
 		glfwPollEvents();
 		handleKeys(window);
-		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_UP)){
+		/*if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_UP)){
 			bb->moveRel(0.f,.01f);
 		}
 		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_DOWN)){
@@ -472,7 +496,7 @@ int main(int argc, char* argv[])
 		}
 		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_RIGHT)){
 			bb->moveRel(.01f,0.f);
-		}
+		}*/
 		if(GLFW_PRESS == glfwGetKey(window,GLFW_KEY_PERIOD)){
 			levels++;
 		}
@@ -497,16 +521,18 @@ int main(int argc, char* argv[])
 		
 		//bind fullscreen HDR buffer
 		//fbo.bind(GL_DRAW_FRAMEBUFFER
-		hdr.bind();
+		//hdr.bind();
 		//glDisable(GL_DEPTH_TEST);
+		gBuffer.bind();
+		glDisable(GL_BLEND);
 		//draw
-		glClearColor(0.3f, 0.6f, 0.4f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		checkGlError("clear screen");
 		if (wireframe){
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		}
-		skybox.draw(&camera);
+		//skybox.draw(&camera);
 		checkGlError("draw skybox");
 		glEnable(GL_DEPTH_TEST);
 
@@ -628,46 +654,50 @@ int main(int argc, char* argv[])
 		glUniformMatrix4fv(viewMatrixIndex, 1, false, glm::value_ptr(camera.GetViewMatrix()));
 		glUniform3fv(cameraIndex, 1, glm::value_ptr(camera.GetPosition()));
 		glUniform3f(lightIndex, light.position.x, light.position.y, light.position.z);
-		glUniform3f(lightColorIndex, 10.f,10.f,10.f);
-		/*glUniform3f(materialColorIndex, 1.0f, 0.766f, 0.336f);//gold specular color
-		glUniform1f(metalnessIndex, 1.0f);//metal
-		glUniform1f(roughnessIndex, 0.25f);//rough
-		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::mat4()));
-		sphere.draw();
-		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(3.f, 0.f, 0.f)));
-		glUniform1f(roughnessIndex, 0.5f);//moderately smooth
-		sphere.draw();
-		glUniform3f(materialColorIndex, 0.14f, 0.54f, 0.96f); //blue plastic
-		glUniform1f(metalnessIndex, 0.f);//not a metal
-		glUniform1f(roughnessIndex, 0.75f);//smooth
-		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(-3.f,0.f,0.f)));
-		sphere.draw();
-		glUniform1f(roughnessIndex, 0.f);//rough
-		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(-6.f, 0.f, 0.f)));
-		sphere.draw();
-		glUniform3f(materialColorIndex, 0.02f, 0.02f, 0.02f); //charcoal
-		glUniform1f(metalnessIndex, 0.f);//not a metal
-		glUniform1f(roughnessIndex, 0.1f);//rough
-		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(-6.f, 3.f, 0.f)));
-		sphere.draw();
-		glUniform3f(materialColorIndex, 0.56f, 0.57f, 0.58f); //iron
-		glUniform1f(metalnessIndex, 1.f);//metal
-		glUniform1f(roughnessIndex, 0.5f);//semi-smooth
-		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(-3.f, 3.f, 0.f)));
-		sphere.draw();
-		glUniform3f(materialColorIndex, 0.81f, 0.81f, 0.81f); //snow
-		glUniform1f(metalnessIndex, 1.f);//not a metal
-		glUniform1f(roughnessIndex, 0.0f);//rough
-		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(0.f, 3.f, 0.f)));
-		sphere.draw();
-		glUniform3f(materialColorIndex, 0.0f, 0.21f, 0.0f); //grass
-		glUniform1f(metalnessIndex, 1.f);//not a metal
-		glUniform1f(roughnessIndex, 0.0f);//rough
-		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(glm::translate(3.f, 3.f, 0.f)));
-		sphere.draw();*/
+		glUniform3f(lightColorIndex, 100.0, 75.0, 50.0);
 
 		particles.draw(camera);
+
+		hdr.bind();
+		//FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glDisable(GL_DEPTH_TEST);
+		skybox.draw(&camera);
+		lightShader->bind();
+		
+		glUniform3fv(lightShader->getUniformLocation("cameraWorldPosition"), 1, glm::value_ptr(camera.GetPosition()));
+		glUniform3f(lightShader->getUniformLocation("lightPosition"), light.position.x, light.position.y, light.position.z);
+		glUniform3f(lightShader->getUniformLocation("lightColor"), 100.0, 75.0, 50.0);
+		glUniformMatrix4fv(lightShader->getUniformLocation("screenToWorld"), 1, GL_FALSE, glm::value_ptr(glm::inverse(camera.GetProjectionMatrix() * camera.GetViewMatrix())));
+		glUniform1i(lightShader->getUniformLocation("albedos"), 0);
+		glUniform1i(lightShader->getUniformLocation("normals"), 1);
+		glUniform1i(lightShader->getUniformLocation("depthTex"), 2);
+		glUniform1i(lightShader->getUniformLocation("environment"), 3);
+		glUniform1i(lightShader->getUniformLocation("worldTex"), 4);
+		glActiveTexture(GL_TEXTURE0);
+		gBuffer.Albedo->bind();
+		glActiveTexture(GL_TEXTURE1);
+		gBuffer.Normal->bind();
+		glActiveTexture(GL_TEXTURE2);
+		gBuffer.Depth->bind();
+		glActiveTexture(GL_TEXTURE3);
+		skybox.cubemap.bind();
+		skybox.cubemap.setLinearFiltering(true);
+		glActiveTexture(GL_TEXTURE4);
+		gBuffer.Position->bind();
+		glEnable(GL_DEPTH_TEST);
+		if (wireframe) {
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
+		bb->draw();
+		if (wireframe) {
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		}
+		
+
+		glEnable(GL_BLEND);
 		star.draw(&camera);
+
 		
 		//End scene drawing
 		FramebufferObject::BindDisplayBuffer(GL_DRAW_FRAMEBUFFER);

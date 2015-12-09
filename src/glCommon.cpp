@@ -103,7 +103,7 @@ void APIENTRY OpenglErrorCallback(GLenum source,
 	}
 	if(interrupt){
 		#ifdef _WIN32
-			//DebugBreak();
+			DebugBreak();
 		#endif
 	}
 }
