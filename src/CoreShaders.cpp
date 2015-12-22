@@ -69,6 +69,8 @@ bool TexturedShader::init(){
 	checkGlError("drawShader");
 	//glUniform4fv(m_shader->getUniformLocation("color"), 1, value_ptr(vec4(0.0, 0.0, 1.0, 1.0)));
 	//glUniform1f(m_shader->getUniformLocation("normalLength"), 0.05f);
+	glUniform1i(m_shader->getUniformLocation("diffuseTex"), 0);
+	glUniform1i(m_shader->getUniformLocation("normalTex"), 1);
 	return success;
 }
 

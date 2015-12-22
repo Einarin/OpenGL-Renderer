@@ -29,6 +29,7 @@
 #include "ImageLoader.h"
 #include "PbrRenderer.h"
 #include "GBuffer.h"
+#include "vidcap.h"
 
 using namespace std;
 using namespace gl;
@@ -474,12 +475,16 @@ int main(int argc, char* argv[])
 	particles.setup(1);
 	glfwSwapBuffers(window);
 
+	
+	VidCap vidCap;
+	vidCap.init(960,720);
+
 	while (!glfwWindowShouldClose(window))
 	{
 		//know when we got to the top of the render loop
 		double frameStart = glfwGetTime();
-
-		//kick off gpu transform feedback calculations
+			
+				//kick off gpu transform feedback calculations
 		particles.update();
 
 		//input handling
@@ -581,7 +586,7 @@ int main(int argc, char* argv[])
 				dts.bind();
 				model->draw(dts);
 				model->drawBoundingBoxes(&camera);
-				if (drawNormals) {
+				if (false && drawNormals) {
 					//mns.bind();
 					LitTexMvpShader dns = ns;
 					dns.bind();
@@ -708,12 +713,21 @@ int main(int argc, char* argv[])
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
 		hdr.draw();
+		if (drawNormals) {
+			glDisable(GL_BLEND);
+			gBuffer.Normal->draw();
+			glEnable(GL_BLEND);
+		}
 		//hello->draw();
 		//static_cast<GlTexture2D*>(&*hello2)->draw();
 		//tex->draw();
 		//depthTex->draw();
 		//noiseShader->bind();
 		//noisebb.draw();
+
+		vidCap.draw();
+		
+
 		
 		textRenderer->draw(orthoMatrix);
 		checkGlError("draw hello world");

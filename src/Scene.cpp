@@ -21,7 +21,7 @@ namespace gl {
 	void Scene::loadDemo(AssetManager& assetManager) {
 		m_models.resize(7);
 		//m_objects[0].localTransform = rotate(translate(mat4(), vec3(-5.f, -3.f, 0.f)), -20.f, vec3(0.f, 1.f, 0.f));
-		m_models[0].localTransform = scale(translate(mat4(), vec3(-5.f, 4.3f, 4.4f)), vec3(0.5f, 0.65f, 0.55f));
+		m_models[0].localTransform = rotate(scale(translate(mat4(), vec3(-5.f, 4.3f, 4.4f)), vec3(0.5f, 0.65f, 0.55f)), 180.f, vec3(0.f, 1.f, 1.f));
 		m_models[0].modelName = "assets/Suit Helmet.fbx";
 		m_models[0].model = assetManager.loadModel(m_models[0].modelName);
 		m_models[1].localTransform = rotate(translate(rotate(mat4(), 210.f, vec3(0.f, 1.f, 0.f)), vec3(-5.f, 0.f, -6.f)), -90.f, vec3(1.f, 0.f, 0.f));

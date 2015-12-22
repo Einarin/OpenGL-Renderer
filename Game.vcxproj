@@ -126,14 +126,17 @@
     <ClInclude Include="include\Animation.h" />
     <ClInclude Include="include\AssetManager.h" />
     <ClInclude Include="include\AsteroidRenderer.h" />
+    <ClInclude Include="include\BoneGeometry.h" />
     <ClInclude Include="include\callbacks.h" />
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\ContextManager.h" />
     <ClInclude Include="include\CoreShaders.h" />
     <ClInclude Include="include\DynamicPatchSphere.h" />
+    <ClInclude Include="include\escapi.h" />
     <ClInclude Include="include\FlatAssets.h" />
     <ClInclude Include="include\FlatDrawable.h" />
     <ClInclude Include="include\FrameBufferObject.h" />
+    <ClInclude Include="include\FrameProcessor.h" />
     <ClInclude Include="include\ft2build.h" />
     <ClInclude Include="include\GBuffer.h" />
     <ClInclude Include="include\Geometry.h" />
@@ -167,11 +170,15 @@
     <ClInclude Include="include\Vertex.h" />
     <ClInclude Include="include\VertexArrayObject.h" />
     <ClInclude Include="include\VertexAttribBuilder.h" />
+    <ClInclude Include="include\vidcap.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="ParticleSimulator.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="entrypoint.cpp" />
+    <ClCompile Include="include\FrameProcessor.cpp" />
+    <ClCompile Include="include\vidcap.cpp" />
+    <ClCompile Include="src\escapi.cpp" />
     <ClCompile Include="src\GBuffer.cpp" />
     <ClCompile Include="lz4-r112\lz4.c" />
     <ClCompile Include="lz4-r112\lz4hc.c" />

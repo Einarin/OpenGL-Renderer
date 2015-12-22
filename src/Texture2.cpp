@@ -53,7 +53,7 @@ namespace gl {
 				"uniform sampler2D tex;\n"
 				"void main(void){\n"
 				"vec4 frag = texture(tex,texCoord);\n"
-				"FragColor = vec4(frag.rgb,0.5);\n"
+				"FragColor = vec4(frag.rgb,1.0);\n"
 				"}\n");
 			shader->attachStage(vs);
 			shader->attachStage(fs);

@@ -116,11 +116,12 @@ void main(void){
       }
     }
     float depth = texture(depthTex,texCoords).r;
-    vec4 screenCoord4 = vec4(texCoords*2.0 - 1.0,depth,1.0);
+    vec4 screenCoord4 = vec4(vec3(texCoords,depth)*2.0 - 1.0,1.0);
     //determine world position
     vec4 worldCoord4 = screenToWorld * screenCoord4;
-    //vec3 worldPos = worldCoord4.xyz/worldCoord4.w;
-    vec3 worldPos = texture(worldTex,texCoords).rgb;
+    vec3 worldPos = worldCoord4.xyz/worldCoord4.w;
+    //vec3 worldPos2 = texture(worldTex,texCoords).rgb;
+    //vec3 worldDiff = abs(worldPos - worldPos2)
 
     vec3 lightdiff = lightPosition - worldPos;
     vec3 lightDirection = normalize(lightdiff);

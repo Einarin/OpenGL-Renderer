@@ -22,6 +22,7 @@ namespace gl
 		bool compileFromFile(std::string filename);
 		int getId();
 	};
+	typedef std::shared_ptr<ShaderStage> ShaderStageRef;
 
 	class Shader;
 	typedef std::shared_ptr<Shader> ShaderRef;
@@ -70,6 +71,9 @@ namespace gl
 		LitTexMvpShader(ShaderRef s);
 		inline void setDiffuseTexActive(){
 			glActiveTexture(GL_TEXTURE0);
+		}
+		inline void setNormalTexActive() {
+			glActiveTexture(GL_TEXTURE1);
 		}
 		inline void setAmbient(glm::vec3 ambient){
 			glUniform3fv(ambientLocation,1,glm::value_ptr(ambient));

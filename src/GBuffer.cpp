@@ -14,7 +14,7 @@ namespace gl {
 		Albedo = Texture2D::backedTexture(GL_RGBA, GL_RGBA8, size, GL_UNSIGNED_BYTE);
 		Normal = Texture2D::backedTexture(GL_RGBA, GL_RGBA16F, size, GL_FLOAT);
 		Depth = Texture2D::backedTexture(GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT32F, size, GL_FLOAT);
-		Position = Texture2D::backedTexture(GL_RGBA, GL_RGBA16F, size, GL_FLOAT);
+		Position = Texture2D::backedTexture(GL_RGBA, GL_RGBA32F, size, GL_FLOAT);
 		m_gBuffer.attachTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, Albedo);
 		m_gBuffer.attachTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, Normal);
 		m_gBuffer.attachTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, Position);
@@ -31,6 +31,6 @@ namespace gl {
 	{
 		m_gBuffer.bind(GL_DRAW_FRAMEBUFFER);
 		GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-		glDrawBuffers(3, drawBuffers);
+		glDrawBuffers(2, drawBuffers);
 	}
 }

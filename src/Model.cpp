@@ -125,21 +125,21 @@ bool Model::open(std::string filename){
 	importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,aiPrimitiveType_POINT | aiPrimitiveType_LINE);
 	importer.SetProgressHandler(new CoutProgressHandler());
 	const aiScene* scene = importer.ReadFile(filename
-								, //aiProcess_CalcTangentSpace 
-								//| aiProcess_ValidateDataStructure
-								 aiProcess_Triangulate 
+								, aiProcess_CalcTangentSpace 
+								| aiProcess_ValidateDataStructure
+								| aiProcess_Triangulate 
 								| aiProcess_JoinIdenticalVertices
 								| aiProcess_GenSmoothNormals 
 								| aiProcess_GenUVCoords
 								| aiProcess_TransformUVCoords 
-								//| aiProcess_OptimizeMeshes 
-								//| aiProcess_ImproveCacheLocality
-								//| aiProcess_OptimizeGraph 
-								//| aiProcess_RemoveRedundantMaterials
-								//| aiProcess_FindDegenerates
-								//| aiProcess_FindInvalidData
-								//| aiProcess_SortByPType
-								//| aiProcess_Debone
+								| aiProcess_OptimizeMeshes 
+								| aiProcess_ImproveCacheLocality
+								| aiProcess_OptimizeGraph 
+								| aiProcess_RemoveRedundantMaterials
+								| aiProcess_FindDegenerates
+								| aiProcess_FindInvalidData
+								| aiProcess_SortByPType
+								| aiProcess_Debone
 								);
 	std::cout << "processing " << filename << " scene..." << std::endl;
 	if(scene == NULL){
@@ -592,6 +592,10 @@ void Model::drawPart(ModelPart& part,LitTexMvpShader& s,const glm::mat4& parentT
 		} else {
 			s.setDiffuseTexActive();
 			TextureManager::Instance()->missingTex()->bind();
+		}
+		if (materials[m->materialIndex].normalTex.use_count() > 0) {
+			s.setNormalTexActive();
+			materials[m->materialIndex].normalTex->bind();
 		}
 		s.setAmbient(materials[m->materialIndex].ambient);
 		s.setSpecular(materials[m->materialIndex].specular);
