@@ -23,7 +23,7 @@ namespace gl {
 		std::vector<int> m_boneWeightOffset;
 		VertData() :m_ownsBuffer(false), m_buffer(nullptr)
 		{}
-#if _MSC_VER <= 1800 //MSVC doesn't generate automatic move constructors :(
+#if _MSC_VER <= 1900 //MSVC doesn't generate automatic move constructors :(
 		VertData(VertData&& o) : m_ownsBuffer(o.m_ownsBuffer), m_attrib(std::move(o.m_attrib)), m_buffer(o.m_buffer),
 			m_vertexCount(o.m_vertexCount), m_vertSize(o.m_vertSize), m_normOffset(o.m_normOffset), m_tanOffset(o.m_tanOffset),
 			m_tcOffset(std::move(o.m_tcOffset)), m_colorOffset(std::move(o.m_colorOffset)), m_boneIdOffset(std::move(o.m_boneIdOffset)),

@@ -555,6 +555,7 @@ void Model::buildMeshAt(const aiScene* scene, unsigned int meshIndex, Mesh& outp
 			}
 		}
 		for (int j = 0; j < numBones; j++){
+			if (storage[i].empty()) break;
 			v.boneId(j) = storage[i].top().second;
 			v.boneWeight(j) = storage[i].top().first;
 			storage[i].pop();

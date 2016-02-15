@@ -320,7 +320,7 @@ int main(int argc, char* argv[])
 		DebugBreak();
 	ColorPosShader boundingBoxShader;
 	boundingBoxShader.init();
-	MvpShader mvpbb(boundingBoxShader);
+	MvpShader mvpbb{ (ShaderRef)boundingBoxShader };
 
 	/*FramebufferObject fbo;
 	fbo.init();
