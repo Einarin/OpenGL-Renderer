@@ -1,4 +1,5 @@
 #include "glincludes.h"
+#include <glm/gtx/quaternion.hpp>
 #include "Model.h"
 #include "lz4.h"
 #include "lz4hc.h"
@@ -13,6 +14,7 @@
 #include <deque>
 #include <map>
 #include <queue>
+#include "BoneGeometry.h"
 //for file modification
 #ifdef _WIN32
 #include <Windows.h>
@@ -81,6 +83,16 @@ Model::Model() : m_loaded(false), m_downloaded(false), m_cached(false), m_hasBon
 Model::Model(std::string filename) : m_loaded(false), m_downloaded(false), m_cached(false), m_hasBones(false), meshbuff(nullptr){
 	open(filename);
 }
+
+template<typename T>
+void printQuat(std::ostream& os, T quat) {
+	//convert to euler angles for printing
+	glm::quat q;
+	QUAT_COPY(q, quat);
+	glm::vec3 angles = glm::eulerAngles(q);
+	os << "x=" << angles.x << " y=" << angles.y << " z=" << angles.z;
+}
+
 bool Model::open(std::string filename){
 	double startTime = glfwGetTime();
 	filepath = filename;
@@ -359,7 +371,7 @@ bool Model::open(std::string filename){
 			}
 			std::cout << "duration: " << std::dec << current->mDuration << " ticks with " << current->mTicksPerSecond << " ticks per second" << std::endl;
 			animations[i].length = current->mDuration / current->mTicksPerSecond;
-			std::cout << "node anims:\n";
+			std::cout << "node anims: " << current->mNumChannels << "\n";
 			animations[i].bones.resize(current->mNumChannels);
 			for (int j = 0; j < current->mNumChannels; j++) {
 				aiNodeAnim* channel = current->mChannels[j];
@@ -371,7 +383,15 @@ bool Model::open(std::string filename){
 				std::cout << "scaling key count: " << channel->mNumScalingKeys << std::endl;
 				animations[i].bones[j].keyframes.resize(channel->mNumPositionKeys);
 				for (int k = 0; k < channel->mNumPositionKeys; k++) {
-					animations[i].bones[j].keyframes[k].time = channel->mPositionKeys[k].mTime;
+					std::cout << "keyframe " << k << std::endl;
+					animations[i].bones[j].keyframes[k].time = channel->mPositionKeys[k].mTime / current->mTicksPerSecond;
+					std::cout << "Position: " << channel->mPositionKeys[k].mValue.x << " "
+						<< channel->mPositionKeys[k].mValue.y << " " << channel->mPositionKeys[k].mValue.z << std::endl;
+					std::cout << "Rotation ";
+					printQuat(std::cout, channel->mRotationKeys[k].mValue);
+					std::cout << std::endl;
+					std::cout << "Scaling " << channel->mScalingKeys[k].mValue.x << " "
+						<< channel->mScalingKeys[k].mValue.y << " " << channel->mScalingKeys[k].mValue.z << std::endl;
 					VEC_COPY(
 						animations[i].bones[j].keyframes[k].position,
 						channel->mPositionKeys[k].mValue);
@@ -448,6 +468,10 @@ void Model::buildFromNode(const aiScene* scene, aiNode* node, glm::mat4 transfor
 	std::cout << "processing node " << node->mName.C_Str() << "..." << std::endl;
 	std::vector<int> currentLights;
 	glm::mat4 nodeTransform = *((glm::mat4*)&node->mTransformation);
+	auto boneEntry = boneMap.find(node->mName.C_Str());
+	if (boneEntry != boneMap.end()) {
+		bones[boneEntry->second].model2LocalXform = nodeTransform;
+	}
 	for(int i=0;i < lights.size();i++){
 		if(lights[i].name == node->mName.C_Str()){
 			currentLights.push_back(i);
@@ -617,7 +641,13 @@ void Model::download(){
 	downloadPart(rootPart);
 	m_downloaded = true;
 }
-void Model::draw(LitTexMvpShader& s){
+void Model::draw(LitTexMvpShader& s, double time){
+	s.bind();
+	std::vector<glm::mat4> transforms(bones.size());
+	for (int i = 0; i < bones.size(); i++) {
+		transforms[i] = animations[0].getTransformAt(i, time);
+	}
+	glUniformMatrix4fv(s.shader()->getUniformLocation("bones"), bones.size(), GL_FALSE, glm::value_ptr(transforms[0]));
 	if(m_loaded && m_downloaded){
 		drawPart(rootPart,s,ModelMatrix);
 	}
@@ -1000,6 +1030,66 @@ void Model::drawBoundingBoxes(Camera* c){
 				stack.push_back(&*it);
 			}
 		}
+	}
+}
+bool bDrawShaderSetup = false;
+BoneGeometry bg;
+ShaderRef bgs;
+void Model::drawBones(Camera* c, double time) {
+	if (!bDrawShaderSetup) {
+		bg.download();
+		bgs = Shader::Allocate();
+		auto vs = ShaderStage::Allocate(GL_VERTEX_SHADER);
+		auto ps = ShaderStage::Allocate(GL_FRAGMENT_SHADER);
+		vs->compile(SHADER(#version 330\n
+			in vec3 position; \n
+			in vec3 normal; \n
+			out vec4 vsNormal; \n
+			uniform mat4 mvpMat; \n
+			uniform mat4 normMat; \n
+			void main() {
+			\n
+				vsNormal = normMat * vec4(normal, 0.0); \n
+				gl_Position = mvpMat * vec4(position, 1.0);\n
+			}\n
+		));
+		ps->compile(SHADER(#version 330\n
+			in vec4 vsNormal; \n
+			out vec4 fragData[3]; \n
+			void main() {
+			\n
+				vec3 color;
+			if (gl_FrontFacing) {
+				color = vec3(0.1, 0.1, 1.0);
+			}
+			else {
+				color = vec3(1.0, 0.0, 0.0);
+			}
+			fragData[0] = vec4(color, 0.0); \n
+				fragData[1] = vec4(normalize(vsNormal.xyz), 0.0); \n
+				fragData[2] = vec4(1.0);\n
+			}\n
+		));
+		bgs->attachStage(vs);
+		bgs->attachStage(ps);
+		bgs->addAttrib("position", 0);
+		bgs->addAttrib("normal", 1);
+		bgs->link();
+		bgs->bind();
+	} else {
+		bgs->bind();
+	}
+	glm::mat4 proj = c->GetProjectionMatrix();
+	glm::mat4 view = c->GetViewMatrix();
+	for (int i = 0; i < animations[0].bones.size();i++) {
+		Bone& b = bones[animations[0].bones[i].boneIndex];
+		
+		//time = 0;
+		glm::mat4 model = ModelMatrix * b.model2LocalXform * animations[0].getTransformAt(i, time) * b.mesh2BindXform;
+		glm::mat4 norm = glm::transpose(glm::inverse(view*model));
+		glUniformMatrix4fv(bgs->getUniformLocation("mvpMat"), 1, GL_FALSE, glm::value_ptr(proj*view*model));
+		glUniformMatrix4fv(bgs->getUniformLocation("normMat"), 1, GL_FALSE, glm::value_ptr(norm));
+		bg.draw();
 	}
 }
 

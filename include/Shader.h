@@ -58,6 +58,7 @@ namespace gl
 		void setModel(glm::mat4 modelMatrix);
 		void setView(glm::mat4 viewMatrix);
 		void setProjection(glm::mat4 projectionMatrix);
+		inline ShaderRef shader() { return m_shader; }
 	};
 
 	class LitTexMvpShader : public MvpShader {

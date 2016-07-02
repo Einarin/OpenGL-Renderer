@@ -132,8 +132,9 @@ public:
 	}
 	void init();
 	void download();
-	void draw(LitTexMvpShader& s);
+	void draw(LitTexMvpShader& s, double time);
 	void drawBoundingBoxes(Camera* c);
+	void drawBones(Camera* c, double time);
 	int getAnimationCount() {
 		return animations.size();
 	}

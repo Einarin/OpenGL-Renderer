@@ -126,6 +126,7 @@
     <ClInclude Include="include\Animation.h" />
     <ClInclude Include="include\AssetManager.h" />
     <ClInclude Include="include\AsteroidRenderer.h" />
+    <ClInclude Include="include\BoneGeometry.h" />
     <ClInclude Include="include\callbacks.h" />
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\ContextManager.h" />

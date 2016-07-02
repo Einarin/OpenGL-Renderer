@@ -25,9 +25,9 @@ namespace gl {
 		glm::mat4 getTransformAt(int boneId, double time) {
 			double dt = fmod(time,length);
 			int before = 0;
-			int after = bones[boneId].keyframes.size();
+			int after = bones[boneId].keyframes.size() - 1;
 			while (after - before > 1) {
-				int pos = (after - before) / 2;
+				int pos = (after - before) / 2 + before;
 				double val = bones[boneId].keyframes[pos].time;
 				if (val > dt) {
 					after = pos;

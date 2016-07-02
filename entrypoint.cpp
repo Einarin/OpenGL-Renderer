@@ -473,7 +473,7 @@ int main(int argc, char* argv[])
 	ParticleSimulator particles;
 	particles.setup(1);
 	glfwSwapBuffers(window);
-
+	double startTime = glfwGetTime();
 	while (!glfwWindowShouldClose(window))
 	{
 		//know when we got to the top of the render loop
@@ -579,7 +579,8 @@ int main(int argc, char* argv[])
 				dts.setProjection(camera.GetProjectionMatrix());
 				checkGlError("create DiffuseTexMvpShader");
 				dts.bind();
-				model->draw(dts);
+				model->draw(dts, frameStart - startTime);
+				model->drawBones(&camera, frameStart - startTime);
 				model->drawBoundingBoxes(&camera);
 				if (drawNormals) {
 					//mns.bind();
@@ -587,8 +588,11 @@ int main(int argc, char* argv[])
 					dns.bind();
 					dts.setView(camera.GetViewMatrix());
 					dts.setProjection(camera.GetProjectionMatrix());
-					model->draw(dns);
+					model->draw(dns, frameStart - startTime);
 				}
+				//glDisable(GL_DEPTH_TEST);
+				//model->drawBones(&camera,frameStart - startTime);
+				//glEnable(GL_DEPTH_TEST);
 			}
 		}
 

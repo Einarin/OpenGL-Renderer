@@ -107,14 +107,14 @@ void main(void){
     vec4 albedoData = texture(albedos,texCoords);
     vec3 materialColor = albedoData.rgb;
     float metalness = albedoData.a;
-    if(length(normal) == 0){
+    /*if(length(normal) == 0){
       if(length(materialColor) == 0){
         discard;
       } else {
         fragColor = vec4(materialColor,1.0);
         return;
       }
-    }
+    }*/
     float depth = texture(depthTex,texCoords).r;
     vec4 screenCoord4 = vec4(texCoords*2.0 - 1.0,depth,1.0);
     //determine world position
